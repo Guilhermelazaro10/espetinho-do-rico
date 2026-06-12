@@ -86,9 +86,9 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
       </aside>
 
       <div className="flex min-h-dvh w-full flex-col lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-rico-wood/25 bg-rico-light/92 backdrop-blur">
+        <header className="safe-area-top sticky top-0 z-20 border-b border-rico-wood/25 bg-rico-light/92 backdrop-blur">
           <div className="h-1 w-full bg-brasa-gradiente" />
-          <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-7">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-7 sm:py-4">
             <h1 className="font-display text-xl text-rico-dark sm:text-2xl">{titulo}</h1>
             <div className="flex items-center gap-3">
               {acoes}
@@ -103,11 +103,11 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
           </div>
         </header>
 
-        <main className="w-full flex-1 px-4 py-6 pb-24 sm:px-7 lg:pb-8">{children}</main>
+        <main className="safe-area-content-bottom w-full flex-1 px-4 py-6 sm:px-7 lg:pb-8">{children}</main>
       </div>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-flutuante backdrop-blur lg:hidden"
+        className="safe-area-bottom-nav fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pt-2 shadow-flutuante backdrop-blur lg:hidden"
         aria-label="Navegacao principal"
       >
         {itens.map(({ href, rotulo, Icone }) => {

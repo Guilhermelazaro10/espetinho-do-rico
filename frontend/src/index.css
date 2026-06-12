@@ -81,6 +81,26 @@
   background-position: center;
 }
 
+@utility safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility safe-area-header-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+}
+
+@utility safe-area-bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
+}
+
+@utility safe-area-content-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8.75rem);
+}
+
+@utility safe-area-kds-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+}
+
 @layer base {
   body {
     @apply bg-creme font-sans text-carvao antialiased;

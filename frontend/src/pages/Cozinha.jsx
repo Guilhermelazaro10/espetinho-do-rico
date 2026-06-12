@@ -48,23 +48,23 @@ export default function Cozinha() {
     <div className="min-h-dvh bg-carvao text-rico-light">
       <ToasterGlobal />
 
-      <header className="flex items-center justify-between border-b border-creme/10 px-4 py-3">
-        <div className="flex items-center gap-2">
+      <header className="safe-area-header-top sticky top-0 z-20 flex items-center justify-between border-b border-creme/10 bg-carvao/95 px-4 pb-3 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-2">
           <ChefHat size={18} className="text-brasa-clara" />
-          <span className="font-display text-lg leading-none">Espetinho do Rico</span>
+          <span className="truncate font-display text-lg leading-none">Espetinho do Rico</span>
           <span className="rounded-full bg-brasa-gradiente px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
             Cozinha
           </span>
         </div>
         <a
           href="#/"
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-rico-light/50 transition hover:bg-rico-light/10 hover:text-rico-light"
+          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-rico-light/65 transition hover:bg-rico-light/10 hover:text-rico-light active:scale-95"
         >
           <ArrowLeft size={14} /> Caixa
         </a>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-2">
+      <main className="safe-area-kds-bottom mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-2">
         <Coluna
           titulo={`Na fila · ${naFila.length}`}
           vazio="Nenhum pedido aguardando"
