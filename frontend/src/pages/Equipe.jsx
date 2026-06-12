@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { KeyRound, Plus, RefreshCw, ShieldCheck, UserMinus, Users } from 'lucide-react';
+import {
+  Copy, ExternalLink, KeyRound, Plus, RefreshCw, Share2, ShieldCheck,
+  Smartphone, UserMinus, Users, Wifi,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api } from '../lib/api';
 import { PAPEIS } from '../lib/constantes';
@@ -9,12 +12,18 @@ export default function Equipe({ sessao, aoSair }) {
   const [usuarios, setUsuarios] = useState([]);
   const [form, setForm] = useState({ nome: '', papel: PAPEIS.GARCOM, tamanhoPin: 4 });
   const [pinGerado, setPinGerado] = useState(null);
+  const [rede, setRede] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
     try {
-      setUsuarios(await api.usuarios.listar());
+      const [lista, redeAtual] = await Promise.all([
+        api.usuarios.listar(),
+        api.rede.info(),
+      ]);
+      setUsuarios(lista);
+      setRede(redeAtual);
     } catch (e) {
       notificar.erro('Equipe indisponivel', e.message);
     } finally {
@@ -68,6 +77,32 @@ export default function Equipe({ sessao, aoSair }) {
     }
   }
 
+  async function copiarLinkGarcom() {
+    const link = rede?.urlPreferencialGarcom;
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      notificar.sucesso('Link copiado', 'Envie para os garcons pelo WhatsApp');
+    } catch {
+      notificar.erro('Nao foi possivel copiar', link);
+    }
+  }
+
+  async function compartilharLinkGarcom() {
+    const link = rede?.urlPreferencialGarcom;
+    if (!link) return;
+    const texto = `Acesso Garcom - Espetinho do Rico: ${link}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Acesso Garcom', text: texto, url: link });
+        return;
+      } catch {
+        return;
+      }
+    }
+    await copiarLinkGarcom();
+  }
+
   const ativos = usuarios.filter((usuario) => usuario.ativo).length;
 
   const acoes = (
@@ -85,6 +120,62 @@ export default function Equipe({ sessao, aoSair }) {
     <AppShell titulo="Equipe" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         <section className="space-y-4">
+          <div className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-media ring-1 ring-rico-wood/10">
+            <div className="flex items-start gap-3">
+              <span className="rounded-xl bg-rico-red/10 p-3 text-rico-red">
+                <Smartphone size={22} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-rico-dark">
+                  Acesso dos garcons
+                </h2>
+                <p className="mt-1 text-sm font-semibold text-carvao-suave">
+                  Link atual para celulares na mesma rede Wi-Fi do caixa.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-rico-dark p-3 text-rico-light">
+              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+                <Wifi size={14} /> Rede atual
+              </p>
+              <p className="mt-1 break-all text-sm font-bold">
+                {rede?.urlPreferencialGarcom ?? 'Detectando rede local...'}
+              </p>
+              {rede?.nomeComputador && (
+                <p className="mt-1 text-xs font-semibold text-rico-light/45">
+                  {rede.nomeComputador} - porta {rede.porta}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={copiarLinkGarcom}
+                disabled={!rede?.urlPreferencialGarcom}
+                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-rico-red text-sm font-bold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40"
+              >
+                <Copy size={17} /> Copiar
+              </button>
+              <button
+                type="button"
+                onClick={compartilharLinkGarcom}
+                disabled={!rede?.urlPreferencialGarcom}
+                className="flex h-12 items-center justify-center gap-2 rounded-xl border border-rico-wood/45 bg-white text-sm font-bold text-rico-dark transition active:scale-[0.98] disabled:opacity-40"
+              >
+                <Share2 size={17} /> Enviar
+              </button>
+            </div>
+
+            <a
+              href={rede?.urlPreferencialGarcom ?? '#/garcom'}
+              className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-rico-wood/14 text-sm font-bold text-rico-dark ring-1 ring-rico-wood/30"
+            >
+              <ExternalLink size={16} /> Abrir modo garcom
+            </a>
+          </div>
+
           <form onSubmit={cadastrar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
             <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
               <Users size={16} /> Novo funcionario

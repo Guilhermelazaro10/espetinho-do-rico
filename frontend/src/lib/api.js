@@ -87,6 +87,9 @@ export const api = {
   relatorios: {
     faturamento: (periodo = 'dia') => requisitar(`/relatorios/faturamento?periodo=${periodo}`),
   },
+  rede: {
+    info: () => requisitar('/rede'),
+  },
 };
 
 // Formata CENTAVOS como moeda brasileira

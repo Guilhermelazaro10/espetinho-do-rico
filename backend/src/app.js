@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const routes = require('./routes');
@@ -28,6 +29,18 @@ const origemRedeLocal = (origem) =>
   process.env.ALLOW_LAN_ORIGINS === 'true' &&
   /^http:\/\/(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+):\d+$/.test(origem);
 
+function ipsPrivados() {
+  return Object.values(os.networkInterfaces())
+    .flat()
+    .filter((iface) => iface && iface.family === 'IPv4' && !iface.internal)
+    .map((iface) => iface.address)
+    .filter((ip) =>
+      /^10\./.test(ip) ||
+      /^192\.168\./.test(ip) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
+    );
+}
+
 app.use(
   cors({
     origin(origem, callback) {
@@ -52,6 +65,20 @@ app.get('/health', async (req, res) => {
     prisma.mesa.count(),
   ]);
   res.json({ status: 'ok', produtos, mesas });
+});
+
+app.get('/api/rede', (req, res) => {
+  const porta = req.socket.localPort || Number(process.env.PORT || 3001);
+  const ips = ipsPrivados();
+  const urlsGarcom = ips.map((ip) => `http://${ip}:${porta}/#/garcom`);
+
+  res.json({
+    nomeComputador: os.hostname(),
+    porta,
+    ips,
+    urlsGarcom,
+    urlPreferencialGarcom: urlsGarcom[0] ?? `http://IP-DO-COMPUTADOR:${porta}/#/garcom`,
+  });
 });
 
 // Rotas públicas: login e stream de sinalização SSE

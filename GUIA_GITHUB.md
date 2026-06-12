@@ -65,25 +65,25 @@ Use uma destas opcoes:
 4. Tag:
 
 ```text
-v1.0.5
+v1.0.6
 ```
 
 5. Titulo:
 
 ```text
-Espetinho do Rico PDV 1.0.5
+Espetinho do Rico PDV 1.0.6
 ```
 
 6. Anexe um destes arquivos:
 
 ```text
-$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV Setup 1.0.5.exe
+$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV Setup 1.0.6.exe
 ```
 
 ou
 
 ```text
-$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV 1.0.5.exe
+$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV 1.0.6.exe
 ```
 
 7. Clique em `Publish release`.
@@ -95,7 +95,7 @@ No notebook do seu pai, basta baixar o `.exe` pela pagina da Release.
 Copie este arquivo:
 
 ```text
-$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV Setup 1.0.5.exe
+$env:USERPROFILE\Desktop\PVD\dist-desktop\Espetinho do Rico PDV Setup 1.0.6.exe
 ```
 
 e rode no notebook dele.
