@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-desktop/
+frontend/dist/
+lan-out.txt
+lan-err.txt
+*.log
+.claude/
+
+# Banco SQLite local e variaveis de ambiente
+backend/.env
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+
+# Cupons simulados (fallback da impressora termica) e backups do banco
+backend/cupons/
+backend/backups/

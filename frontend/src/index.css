@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+/* ============================================================
+   Design System — Espetinho do Rico · "Rústico Moderno"
+   Paleta oficial da marca registrada como tokens do Tailwind.
+   ============================================================ */
+@theme {
+  /* Primária / Ação — Vinho Escuro */
+  --color-rico-red: #b32a2a;
+  --color-rico-wood: #d4a96e;
+  --color-rico-dark: #3f2b1d;
+  --color-rico-light: #fffcf7;
+  --color-vinho: #b32a2a;
+  --color-vinho-profundo: #8f1f1f;
+  --color-vinho-claro: #ca3c3c;
+
+  /* Fundo Base Claro — Creme / Off-White */
+  --color-creme: #fffcf7;
+  --color-creme-escuro: #f3eadb;
+
+  /* Texto Primário / Fundo Dark — Marrom Carvão */
+  --color-carvao: #3f2b1d;
+  --color-carvao-claro: #6d4f37;
+  --color-carvao-suave: #9a8068;
+
+  /* Destaque / Status — Brasa (degradê laranja) */
+  --color-brasa: #d4a96e;
+  --color-brasa-clara: #f0c583;
+
+  /* Tipografia */
+  --font-display: 'Alfa Slab One', serif;
+  --font-sans: 'Inter', 'Poppins', system-ui, sans-serif;
+
+  /* Sombras sutis — acabamento refinado, nunca duras */
+  --shadow-suave: 0 1px 2px rgb(63 43 29 / 0.05), 0 8px 24px rgb(63 43 29 / 0.08);
+  --shadow-media: 0 8px 20px rgb(63 43 29 / 0.1), 0 18px 48px rgb(63 43 29 / 0.12);
+  --shadow-flutuante: 0 18px 60px rgb(63 43 29 / 0.18), 0 4px 12px rgb(63 43 29 / 0.1);
+  --shadow-brasa: 0 10px 24px rgb(179 42 42 / 0.25);
+
+  /* Animações dos toasts */
+  --animate-toast-in: toast-in 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  --animate-toast-out: toast-out 0.22s ease-in forwards;
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.97);
+    }
+  }
+}
+
+/* Utilitário do degradê oficial de destaque */
+@utility bg-brasa-gradiente {
+  background-image: linear-gradient(135deg, #b32a2a, #d4a96e);
+}
+
+@utility bg-madeira-gradiente {
+  background-image: linear-gradient(135deg, #d4a96e, #f0d1a1);
+}
+
+@utility bg-login-rico {
+  background-image:
+    linear-gradient(180deg, rgb(63 43 29 / 0.5), rgb(63 43 29 / 0.82)),
+    url('/logo_full.png');
+  background-size: cover;
+  background-position: center;
+}
+
+@layer base {
+  body {
+    @apply bg-creme font-sans text-carvao antialiased;
+  }
+
+  * {
+    scrollbar-color: #d4a96e #fffcf7;
+  }
+}

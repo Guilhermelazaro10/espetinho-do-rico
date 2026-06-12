@@ -1,0 +1,66 @@
+{
+  "name": "espetinho-do-rico",
+  "version": "1.0.3",
+  "private": true,
+  "description": "Sistema PDV - Espetinho do Rico",
+  "main": "desktop/main.cjs",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build:frontend": "npm run build -w frontend",
+    "seed": "npm run seed -w backend",
+    "lan": "npm run build:frontend && node scripts/lan-server.cjs",
+    "desktop": "npm run build:frontend && electron .",
+    "desktop:pack": "npm run build:frontend && electron-builder --win --dir",
+    "desktop:dist": "npm run build:frontend && electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "br.com.espetinhodorico.pdv",
+    "productName": "Espetinho do Rico PDV",
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/src",
+        "to": "backend/src"
+      },
+      {
+        "from": "backend/prisma",
+        "to": "backend/prisma"
+      },
+      {
+        "from": "backend/node_modules",
+        "to": "backend/node_modules"
+      },
+      {
+        "from": "frontend/dist",
+        "to": "frontend/dist"
+      }
+    ],
+    "win": {
+      "icon": "desktop/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Espetinho do Rico PDV"
+    }
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2"
+  }
+}

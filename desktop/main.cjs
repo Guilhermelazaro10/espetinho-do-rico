@@ -1,0 +1,170 @@
+const { app, BrowserWindow, dialog, shell } = require('electron');
+const fs = require('fs');
+const http = require('http');
+const net = require('net');
+const path = require('path');
+
+function logDesktop(...partes) {
+  const linha = `[${new Date().toISOString()}] ${partes.map(String).join(' ')}\n`;
+  try {
+    fs.appendFileSync(path.join(app.getPath('userData'), 'desktop.log'), linha);
+  } catch {
+    // O log nunca deve impedir a abertura do PDV.
+  }
+}
+
+function rootPath(...partes) {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, ...partes)
+    : path.join(__dirname, '..', ...partes);
+}
+
+function garantirBanco() {
+  const dadosDir = path.join(app.getPath('userData'), 'data');
+  fs.mkdirSync(dadosDir, { recursive: true });
+
+  const bancoDestino = path.join(dadosDir, 'pdv.db');
+  const bancoSeed = rootPath('backend', 'prisma', 'dev.db');
+
+  if (!fs.existsSync(bancoDestino) && fs.existsSync(bancoSeed)) {
+    fs.copyFileSync(bancoSeed, bancoDestino);
+  }
+
+  logDesktop('database', bancoDestino);
+  process.env.DATABASE_URL = `file:${bancoDestino.replace(/\\/g, '/')}`;
+  return bancoDestino;
+}
+
+function portaLivre() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+}
+
+async function iniciarServidor() {
+  garantirBanco();
+  const port = await portaLivre();
+  const url = `http://127.0.0.1:${port}`;
+
+  process.env.NODE_ENV = 'production';
+  process.env.FRONTEND_DIST = rootPath('frontend', 'dist');
+  process.env.ALLOWED_ORIGINS = url;
+
+  logDesktop('frontend_dist', process.env.FRONTEND_DIST);
+  const expressApp = require(rootPath('backend', 'src', 'app.js'));
+  const server = http.createServer(expressApp);
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', resolve);
+  });
+
+  logDesktop('server_started', url);
+  return { server, url };
+}
+
+async function criarJanela(url) {
+  const sessao = BrowserWindow.getAllWindows();
+  for (const aberta of sessao) aberta.close();
+
+  const janela = new BrowserWindow({
+    width: 1366,
+    height: 860,
+    minWidth: 1024,
+    minHeight: 720,
+    backgroundColor: '#3f2b1d',
+    title: 'Espetinho do Rico - PDV',
+    autoHideMenuBar: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  await janela.webContents.session.clearCache();
+  await janela.webContents.session.clearStorageData({
+    storages: ['serviceworkers', 'cachestorage'],
+  });
+
+  janela.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
+    shell.openExternal(targetUrl);
+    return { action: 'deny' };
+  });
+
+  janela.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    logDesktop('renderer_console', level, message, sourceId, line);
+  });
+  janela.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    logDesktop('did_fail_load', errorCode, errorDescription, validatedURL);
+  });
+  janela.webContents.on('did-finish-load', () => {
+    logDesktop('did_finish_load', janela.webContents.getURL());
+  });
+
+  if (!app.isPackaged || process.env.PDV_DEVTOOLS === 'true') {
+    janela.webContents.openDevTools({ mode: 'detach' });
+  }
+
+  const health = await new Promise((resolve) => {
+    http
+      .get(`${url}/health`, (res) => {
+        res.resume();
+        resolve(res.statusCode);
+      })
+      .on('error', (erro) => resolve(`erro:${erro.message}`));
+  });
+  logDesktop('health_before_load', health);
+
+  await janela.loadURL(url);
+
+  setTimeout(async () => {
+    if (janela.isDestroyed()) return;
+    try {
+      const estado = await janela.webContents.executeJavaScript(
+        `({
+          url: location.href,
+          title: document.title,
+          bodyText: document.body?.innerText?.slice(0, 200) || '',
+          rootChildren: document.getElementById('root')?.children?.length || 0,
+          scripts: Array.from(document.scripts).map((s) => s.src)
+        })`
+      );
+      logDesktop('renderer_state', JSON.stringify(estado));
+
+      if (estado.rootChildren === 0) {
+        await janela.webContents.executeJavaScript(`
+          document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#3f2b1d;color:#fffcf7;font-family:Inter,Arial,sans-serif;padding:32px;text-align:center"><div><h1 style="margin:0 0 12px;font-size:28px">PDV carregou, mas a interface nao iniciou</h1><p style="margin:0 0 8px">Feche e abra novamente. Se continuar, envie o arquivo desktop.log.</p><p style="opacity:.7;font-size:13px">${url}</p></div></div>';
+        `);
+      }
+    } catch (erro) {
+      logDesktop('renderer_state_error', erro.message);
+    }
+  }, 3500);
+}
+
+let servidor = null;
+
+app.whenReady().then(async () => {
+  try {
+    servidor = await iniciarServidor();
+    await criarJanela(servidor.url);
+  } catch (erro) {
+    dialog.showErrorBox(
+      'Falha ao iniciar o PDV',
+      `${erro.message}\n\nVerifique se o aplicativo tem permissao para gravar dados locais.`
+    );
+    app.quit();
+  }
+});
+
+app.on('window-all-closed', () => {
+  if (servidor?.server) servidor.server.close();
+  app.quit();
+});

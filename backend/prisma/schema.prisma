@@ -1,0 +1,116 @@
+// Schema do PDV "Espetinho do Rico"
+// Banco: SQLite (arquivo local dev.db)
+//
+// Convenções:
+//  - Valores monetários SEMPRE em CENTAVOS (inteiros) — aritmética exata.
+//  - SQLite não suporta enums no Prisma: os valores canônicos vivem em
+//    src/constantes.js (PAPEIS, STATUS_MESA, TIPOS_PEDIDO) e toda escrita
+//    é validada na camada de serviço.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Produto {
+  id        Int          @id @default(autoincrement())
+  nome      String
+  preco     Int // centavos
+  categoria String
+  ativo     Boolean      @default(true) // soft delete: preserva relatórios passados
+  itens     ItemPedido[]
+
+  @@map("produtos")
+}
+
+model Mesa {
+  id         Int         @id @default(autoincrement())
+  numero     Int         @unique
+  status     String      @default("LIVRE") // LIVRE | OCUPADA | AGUARDANDO_PAGAMENTO
+  taxaAtiva  Boolean     @default(false) @map("taxa_ativa") // taxa de serviço 10% na conta atual
+  pedidos    Pedido[]
+  pagamentos Pagamento[]
+
+  @@map("mesas")
+}
+
+model Pedido {
+  id                 Int          @id @default(autoincrement())
+  tipo               String       @default("MESA") // MESA | DELIVERY | BALCAO
+  mesa               Mesa?        @relation(fields: [mesaId], references: [id])
+  mesaId             Int?         @map("mesa_id") // obrigatório só para tipo MESA
+  clienteNome        String?      @map("cliente_nome") // DELIVERY e BALCAO
+  clienteTelefone    String?      @map("cliente_telefone") // DELIVERY
+  clienteEndereco    String?      @map("cliente_endereco") // DELIVERY
+  taxaEntrega        Int          @default(0) @map("taxa_entrega") // centavos, DELIVERY
+  total              Int          @default(0) // centavos, congelado na criação (itens + entrega)
+  taxaServico        Int          @default(0) @map("taxa_servico") // centavos, gravado no fechamento
+  status             String       @default("aberto") // aberto | em_preparo | entregue | pago | cancelado
+  formaPagamento     String?      @map("forma_pagamento") // dinheiro | cartao | pix | multiplo
+  motivoCancelamento String?      @map("motivo_cancelamento")
+  criadoEm           DateTime     @default(now()) @map("criado_em")
+  itens              ItemPedido[]
+  pagamentos         Pagamento[]
+
+  @@index([status])
+  @@index([tipo])
+  @@index([criadoEm])
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id            Int     @id @default(autoincrement())
+  pedido        Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  pedidoId      Int     @map("pedido_id")
+  produto       Produto @relation(fields: [produtoId], references: [id])
+  produtoId     Int     @map("produto_id")
+  quantidade    Int     @default(1)
+  precoUnitario Int     @map("preco_unitario") // centavos, congelado no momento da venda
+  observacao    String?
+
+  @@map("itens_pedido")
+}
+
+// Fonte de verdade da gaveta: cada lançamento de pagamento recebido.
+// Pagamentos PARCIAIS de mesa ficam com liquidado=false até o saldo zerar;
+// pagamentos de delivery/balcão apontam para o pedido.
+model Pagamento {
+  id        Int      @id @default(autoincrement())
+  mesa      Mesa?    @relation(fields: [mesaId], references: [id])
+  mesaId    Int?     @map("mesa_id")
+  pedido    Pedido?  @relation(fields: [pedidoId], references: [id])
+  pedidoId  Int?     @map("pedido_id")
+  forma     String // dinheiro | cartao | pix
+  valor     Int // centavos, líquido (troco já descontado)
+  liquidado Boolean  @default(true) // false = parcial aguardando o saldo da mesa zerar
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  @@index([criadoEm])
+  @@map("pagamentos")
+}
+
+model Usuario {
+  id      Int     @id @default(autoincrement())
+  nome    String
+  pinHash String  @map("pin_hash") // scrypt salt:hash
+  papel   String // GERENTE | GARCOM
+  ativo   Boolean @default(true) // desligamento preserva histórico/auditoria
+
+  @@map("usuarios")
+}
+
+// Trilha de auditoria de ações sensíveis (pagamentos, cancelamentos, remoções)
+model Auditoria {
+  id       Int      @id @default(autoincrement())
+  usuario  String // snapshot "nome (papel)" — imutável mesmo se o usuário mudar
+  acao     String
+  detalhe  String
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  @@index([criadoEm])
+  @@map("auditoria")
+}
