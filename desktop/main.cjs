@@ -1,7 +1,6 @@
 const { app, BrowserWindow, dialog, shell } = require('electron');
 const fs = require('fs');
 const http = require('http');
-const net = require('net');
 const path = require('path');
 
 function logDesktop(...partes) {
@@ -35,26 +34,18 @@ function garantirBanco() {
   return bancoDestino;
 }
 
-function portaLivre() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.unref();
-    server.on('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address();
-      server.close(() => resolve(port));
-    });
-  });
-}
-
 async function iniciarServidor() {
   garantirBanco();
-  const port = await portaLivre();
+  const port = Number(process.env.PORT || 3001);
   const url = `http://127.0.0.1:${port}`;
 
   process.env.NODE_ENV = 'production';
   process.env.FRONTEND_DIST = rootPath('frontend', 'dist');
-  process.env.ALLOWED_ORIGINS = url;
+  process.env.ALLOWED_ORIGINS = [
+    url,
+    `http://localhost:${port}`,
+  ].join(',');
+  process.env.ALLOW_LAN_ORIGINS = 'true';
 
   logDesktop('frontend_dist', process.env.FRONTEND_DIST);
   const expressApp = require(rootPath('backend', 'src', 'app.js'));
@@ -62,10 +53,10 @@ async function iniciarServidor() {
 
   await new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(port, '127.0.0.1', resolve);
+    server.listen(port, '0.0.0.0', resolve);
   });
 
-  logDesktop('server_started', url);
+  logDesktop('server_started', url, 'lan_port', port);
   return { server, url };
 }
 
@@ -156,9 +147,14 @@ app.whenReady().then(async () => {
     servidor = await iniciarServidor();
     await criarJanela(servidor.url);
   } catch (erro) {
+    const mensagem =
+      erro.code === 'EADDRINUSE'
+        ? 'A porta 3001 ja esta em uso. Feche outro PDV aberto ou pare o modo telefone antes de abrir novamente.'
+        : `${erro.message}\n\nVerifique se o aplicativo tem permissao para gravar dados locais.`;
+
     dialog.showErrorBox(
       'Falha ao iniciar o PDV',
-      `${erro.message}\n\nVerifique se o aplicativo tem permissao para gravar dados locais.`
+      mensagem
     );
     app.quit();
   }
