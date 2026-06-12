@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Flame, Delete, ArrowRight, Beef, Beer, UtensilsCrossed, ChevronLeft,
   Plus, Minus, Trash2, Send, Loader2, Monitor, LogOut, CloudOff, RefreshCw,
+  ShoppingCart, X, Search, ArrowLeft, CheckCircle2,
 } from 'lucide-react';
 import { api, moeda } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
@@ -9,19 +10,17 @@ import { adicionarNaFila, listarFila, sincronizarFila } from '../lib/filaOffline
 
 const ICONES_CATEGORIA = { Espetos: Beef, Bebidas: Beer };
 
-/*
- * Módulo Garçom — mobile first, dark mode de salão, tolerante a queda de rede:
- * pedido sem conexão entra na fila local e é reenviado quando a rede volta.
- */
 export default function Garcom({ aoSair }) {
-  const [etapa, setEtapa] = useState('mesa'); // mesa | cardapio
+  const [etapa, setEtapa] = useState('mesa');
   const [numero, setNumero] = useState('');
   const [mesa, setMesa] = useState(null);
   const [abrindo, setAbrindo] = useState(false);
   const [produtos, setProdutos] = useState([]);
   const [erroCardapio, setErroCardapio] = useState(false);
   const [categoria, setCategoria] = useState(null);
+  const [busca, setBusca] = useState('');
   const [carrinho, setCarrinho] = useState([]);
+  const [comandaAberta, setComandaAberta] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [tamanhoFila, setTamanhoFila] = useState(listarFila().length);
 
@@ -32,7 +31,7 @@ export default function Garcom({ aoSair }) {
       .then(setProdutos)
       .catch((e) => {
         setErroCardapio(true);
-        notificar.erro('Cardápio indisponível', e.message);
+        notificar.erro('Cardapio indisponivel', e.message);
       });
   }, []);
 
@@ -40,22 +39,15 @@ export default function Garcom({ aoSair }) {
     carregarCardapio();
   }, [carregarCardapio]);
 
-  // Fila offline: tenta sincronizar quando a rede volta e a cada 30s
   const sincronizar = useCallback(async () => {
     if (listarFila().length === 0) return;
     const resultado = await sincronizarFila((p) => api.pedidos.criar(p));
     setTamanhoFila(resultado.restantes);
     if (resultado.enviados > 0) {
-      notificar.sucesso(
-        `${resultado.enviados} pedido(s) da fila enviado(s)`,
-        'Conexão restabelecida'
-      );
+      notificar.sucesso(`${resultado.enviados} pedido(s) enviado(s)`, 'Fila sincronizada');
     }
     if (resultado.descartados > 0) {
-      notificar.erro(
-        `${resultado.descartados} pedido(s) da fila rejeitado(s)`,
-        'Confira com o caixa antes de relançar'
-      );
+      notificar.erro(`${resultado.descartados} pedido(s) rejeitado(s)`, 'Confira com o caixa');
     }
   }, []);
 
@@ -87,20 +79,18 @@ export default function Garcom({ aoSair }) {
       const mesas = await api.mesas.listar();
       const alvo = mesas.find((m) => m.numero === Number(numero));
       if (!alvo) {
-        notificar.erro(`Mesa ${numero} não existe`, 'Confira o número e tente de novo');
+        notificar.erro(`Mesa ${numero} nao existe`, 'Confira o numero e tente novamente');
         return;
       }
       if (alvo.status === 'fechando') {
-        notificar.erro(
-          `Mesa ${alvo.numero} aguardando conta`,
-          'Peça ao caixa para reabrir o consumo'
-        );
+        notificar.erro(`Mesa ${alvo.numero} aguardando conta`, 'Peca ao caixa para reabrir');
         return;
       }
       setMesa(alvo);
       setEtapa('cardapio');
+      setComandaAberta(false);
     } catch (e) {
-      notificar.erro('Não foi possível abrir a mesa', e.message);
+      notificar.erro('Nao foi possivel abrir a mesa', e.message);
     } finally {
       setAbrindo(false);
     }
@@ -116,6 +106,7 @@ export default function Garcom({ aoSair }) {
       }
       return [...linhas, { produto, quantidade: 1, observacao: '' }];
     });
+    if (navigator.vibrate) navigator.vibrate(18);
   }
 
   function mudarQuantidade(indice, delta) {
@@ -130,15 +121,21 @@ export default function Garcom({ aoSair }) {
     setCarrinho((linhas) => linhas.map((l, i) => (i === indice ? { ...l, observacao } : l)));
   }
 
-  function limparComanda() {
-    setCarrinho([]);
+  function trocarMesa() {
     setMesa(null);
     setNumero('');
+    setBusca('');
+    setComandaAberta(false);
     setEtapa('mesa');
   }
 
+  function limparComanda() {
+    setCarrinho([]);
+    trocarMesa();
+  }
+
   async function enviarPedido() {
-    if (enviando || carrinho.length === 0) return; // trava anti-toque-duplo
+    if (enviando || carrinho.length === 0) return;
     setEnviando(true);
     const corpo = {
       mesaId: mesa.id,
@@ -150,23 +147,16 @@ export default function Garcom({ aoSair }) {
     };
     try {
       await api.pedidos.criar(corpo);
-      notificar.sucesso(
-        `Pedido da mesa ${mesa.numero} enviado!`,
-        `${totalItens} ${totalItens === 1 ? 'item' : 'itens'} · ${moeda(total)}`
-      );
+      notificar.sucesso(`Pedido da mesa ${mesa.numero} enviado`, `${totalItens} item(ns) - ${moeda(total)}`);
       limparComanda();
     } catch (e) {
       if (e.offline) {
-        // Sem rede: o pedido NÃO se perde — entra na fila local
         adicionarNaFila(corpo);
         setTamanhoFila(listarFila().length);
-        notificar.brasa(
-          `Pedido da mesa ${mesa.numero} na fila offline`,
-          'Será enviado sozinho quando a rede voltar'
-        );
+        notificar.brasa(`Pedido da mesa ${mesa.numero} na fila`, 'Sera enviado quando a rede voltar');
         limparComanda();
       } else {
-        notificar.erro('Pedido não enviado', `${e.message} — os itens continuam na comanda.`);
+        notificar.erro('Pedido nao enviado', `${e.message} - os itens continuam na comanda`);
       }
     } finally {
       setEnviando(false);
@@ -177,38 +167,55 @@ export default function Garcom({ aoSair }) {
     <div className="flex min-h-dvh flex-col bg-carvao text-rico-light">
       <ToasterGlobal />
 
-      {/* Cabeçalho compacto de salão */}
-      <header className="flex items-center justify-between border-b border-creme/10 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Flame size={18} className="text-brasa-clara" />
-          <span className="font-display text-lg leading-none">Espetinho do Rico</span>
-          <span className="rounded-full bg-rico-red px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-            Garçom
-          </span>
-          {tamanhoFila > 0 && (
-            <button
-              onClick={sincronizar}
-              className="flex items-center gap-1 rounded-full bg-brasa-gradiente px-2 py-0.5 text-[10px] font-bold text-white shadow-brasa"
-              aria-label={`${tamanhoFila} pedidos na fila offline — tocar para reenviar`}
+      <header className="sticky top-0 z-30 border-b border-creme/10 bg-carvao/95 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            {etapa === 'cardapio' ? (
+              <button
+                onClick={trocarMesa}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-light/10 text-rico-light ring-1 ring-rico-light/10 active:scale-95"
+                aria-label="Voltar para escolher mesa"
+              >
+                <ArrowLeft size={22} />
+              </button>
+            ) : (
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa">
+                <Flame size={22} />
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-display text-lg leading-tight">Espetinho do Rico</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-rico-wood">
+                {etapa === 'cardapio' && mesa ? `Mesa ${String(mesa.numero).padStart(2, '0')}` : 'Modo garcom'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {tamanhoFila > 0 && (
+              <button
+                onClick={sincronizar}
+                className="flex h-11 items-center gap-1.5 rounded-2xl bg-brasa-gradiente px-3 text-xs font-extrabold text-white shadow-brasa active:scale-95"
+                aria-label={`${tamanhoFila} pedidos na fila offline`}
+              >
+                <CloudOff size={17} /> {tamanhoFila}
+              </button>
+            )}
+            <a
+              href="#/"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rico-light/8 text-rico-light/70 ring-1 ring-rico-light/10 active:scale-95"
+              aria-label="Ir para o caixa"
             >
-              <CloudOff size={11} /> {tamanhoFila} na fila
+              <Monitor size={20} />
+            </a>
+            <button
+              onClick={aoSair}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rico-light/8 text-rico-light/70 ring-1 ring-rico-light/10 active:scale-95"
+              aria-label="Sair"
+            >
+              <LogOut size={20} />
             </button>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <a
-            href="#/"
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-rico-light/50 transition hover:bg-rico-light/10 hover:text-rico-light"
-          >
-            <Monitor size={14} /> Caixa
-          </a>
-          <button
-            onClick={aoSair}
-            className="rounded-lg p-1.5 text-rico-light/40 transition hover:bg-rico-light/10 hover:text-rico-light"
-            aria-label="Sair"
-          >
-            <LogOut size={14} />
-          </button>
+          </div>
         </div>
       </header>
 
@@ -224,16 +231,14 @@ export default function Garcom({ aoSair }) {
       ) : (
         <TelaCardapio
           mesa={mesa}
-          cardapio={{ categorias, categoria, setCategoria, produtos }}
-          comanda={{ linhas: carrinho, total, totalItens, enviando }}
-          acoes={{ voltar: () => setEtapa('mesa'), adicionarProduto, mudarQuantidade, mudarObservacao, enviarPedido }}
+          cardapio={{ categorias, categoria, setCategoria, produtos, busca, setBusca }}
+          comanda={{ linhas: carrinho, total, totalItens, enviando, comandaAberta, setComandaAberta }}
+          acoes={{ voltar: trocarMesa, adicionarProduto, mudarQuantidade, mudarObservacao, enviarPedido }}
         />
       )}
     </div>
   );
 }
-
-/* ---------- Etapa 1: abrir a mesa ---------- */
 
 function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarregarCardapio }) {
   const teclas = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'limpar', '0', 'apagar'];
@@ -245,219 +250,295 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 pb-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
       {erroCardapio && (
         <button
           onClick={recarregarCardapio}
-          className="mb-4 flex items-center justify-center gap-2 rounded-xl border-2 border-brasa/40 px-3 py-2 text-sm font-bold text-brasa-clara"
+          className="mb-4 flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 border-brasa/40 px-4 py-3 text-sm font-extrabold text-brasa-clara active:scale-[0.98]"
         >
-          <RefreshCw size={14} /> Cardápio falhou — tocar para recarregar
+          <RefreshCw size={18} /> Recarregar cardapio
         </button>
       )}
 
-      <p className="text-center text-xs font-bold uppercase tracking-[0.3em] text-rico-light/50">
-        Abrir mesa
-      </p>
+      <div className="rounded-[1.35rem] border border-rico-light/10 bg-rico-light/[0.06] p-4 shadow-flutuante">
+        <p className="text-center text-xs font-extrabold uppercase tracking-[0.28em] text-rico-light/50">
+          Digite a mesa
+        </p>
 
-      {/* Display gigante do número */}
-      <div className="mt-3 flex h-24 items-center justify-center rounded-xl bg-rico-light/5 ring-1 ring-rico-light/10">
-        <span className={`font-display text-6xl ${numero ? 'text-rico-light' : 'text-rico-light/20'}`}>
-          {numero || '00'}
-        </span>
+        <div className="mt-3 flex h-28 items-center justify-center rounded-2xl bg-rico-light/7 ring-1 ring-rico-light/10">
+          <span className={`font-display text-7xl leading-none ${numero ? 'text-rico-light' : 'text-rico-light/20'}`}>
+            {numero || '00'}
+          </span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          {teclas.map((tecla) => (
+            <button
+              key={tecla}
+              onClick={() => digitar(tecla)}
+              className="flex min-h-[68px] items-center justify-center rounded-2xl bg-rico-light/10 text-3xl font-extrabold text-rico-light ring-1 ring-rico-light/10 transition active:scale-95 active:bg-rico-red"
+              aria-label={tecla === 'apagar' ? 'Apagar' : tecla === 'limpar' ? 'Limpar' : tecla}
+            >
+              {tecla === 'apagar' ? (
+                <Delete size={26} />
+              ) : tecla === 'limpar' ? (
+                <span className="text-sm font-extrabold uppercase text-rico-light/65">Limpar</span>
+              ) : (
+                tecla
+              )}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={abrirMesa}
+          disabled={!numero || abrindo}
+          className="mt-5 flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          {abrindo ? (
+            <>
+              <Loader2 size={24} className="animate-spin" /> Abrindo
+            </>
+          ) : (
+            <>
+              Abrir mesa {numero && `${Number(numero)}`} <ArrowRight size={24} />
+            </>
+          )}
+        </button>
       </div>
-
-      {/* Teclado numérico gigante */}
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        {teclas.map((tecla) => (
-          <button
-            key={tecla}
-            onClick={() => digitar(tecla)}
-            className="flex h-16 items-center justify-center rounded-xl bg-rico-light/8 text-2xl
-              font-bold text-rico-light ring-1 ring-rico-light/10 transition
-              active:scale-95 active:bg-rico-light/15"
-            aria-label={tecla === 'apagar' ? 'Apagar' : tecla === 'limpar' ? 'Limpar' : tecla}
-          >
-            {tecla === 'apagar' ? (
-              <Delete size={24} />
-            ) : tecla === 'limpar' ? (
-              <span className="text-sm font-bold uppercase text-rico-light/60">Limpar</span>
-            ) : (
-              tecla
-            )}
-          </button>
-        ))}
-      </div>
-
-      <button
-        onClick={abrirMesa}
-        disabled={!numero || abrindo}
-        className="mt-6 flex h-16 w-full items-center justify-center gap-2 rounded-xl bg-rico-red
-          text-lg font-bold text-rico-light shadow-media transition active:scale-[0.98]
-          disabled:cursor-not-allowed disabled:opacity-35"
-      >
-        {abrindo ? (
-          <>
-            <Loader2 size={22} className="animate-spin" /> Abrindo…
-          </>
-        ) : (
-          <>
-            Abrir mesa {numero && `${Number(numero)}`} <ArrowRight size={22} />
-          </>
-        )}
-      </button>
     </main>
   );
 }
 
-/* ---------- Etapa 2: cardápio + comanda ---------- */
-
 function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
-  const { categorias, categoria, setCategoria, produtos } = cardapio;
-  const { linhas, total, totalItens, enviando } = comanda;
-  const visiveis = produtos.filter((p) => p.categoria === categoria);
+  const { categorias, categoria, setCategoria, produtos, busca, setBusca } = cardapio;
+  const { linhas, total, totalItens, enviando, comandaAberta, setComandaAberta } = comanda;
+  const listaRef = useRef(null);
+
+  const visiveis = produtos.filter((p) => {
+    const mesmaCategoria = p.categoria === categoria;
+    const termo = busca.trim().toLowerCase();
+    return mesmaCategoria && (!termo || p.nome.toLowerCase().includes(termo));
+  });
+
+  function aoMudarCategoria(nome) {
+    setCategoria(nome);
+    listaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   return (
     <>
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pb-36">
-        {/* Mesa ativa */}
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-rico-red px-4 py-3 shadow-media">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rico-light/60">
-              Atendendo
-            </p>
-            <p className="font-display text-2xl leading-tight">
-              Mesa {String(mesa.numero).padStart(2, '0')}
-            </p>
+      <main ref={listaRef} className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 pb-36 pt-4">
+        <section className="rounded-[1.35rem] bg-rico-red p-4 shadow-brasa">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.24em] text-rico-light/65">
+                Atendendo agora
+              </p>
+              <h1 className="font-display text-4xl leading-none">
+                Mesa {String(mesa.numero).padStart(2, '0')}
+              </h1>
+            </div>
+            <button
+              onClick={acoes.voltar}
+              className="flex min-h-12 items-center gap-1.5 rounded-2xl bg-rico-light/12 px-4 text-sm font-extrabold ring-1 ring-rico-light/15 active:scale-95"
+            >
+              <ChevronLeft size={18} /> Voltar
+            </button>
           </div>
-          <button
-            onClick={acoes.voltar}
-            className="flex items-center gap-1 rounded-xl bg-rico-light/10 px-3 py-2 text-sm font-bold transition active:scale-95"
-          >
-            <ChevronLeft size={16} /> Trocar
-          </button>
-        </div>
+        </section>
 
-        {/* Grid de categorias */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-rico-light/8 px-4 ring-1 ring-rico-light/10">
+          <Search size={20} className="text-rico-light/45" />
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar item"
+            className="min-w-0 flex-1 bg-transparent text-base font-bold text-rico-light outline-none placeholder:text-rico-light/35"
+          />
+          {busca && (
+            <button onClick={() => setBusca('')} className="rounded-xl p-2 text-rico-light/60 active:bg-rico-light/10" aria-label="Limpar busca">
+              <X size={18} />
+            </button>
+          )}
+        </label>
+
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
           {categorias.map((nome) => {
             const Icone = ICONES_CATEGORIA[nome] ?? UtensilsCrossed;
             const ativa = nome === categoria;
             return (
               <button
                 key={nome}
-                onClick={() => setCategoria(nome)}
-                className={`flex h-20 flex-col items-center justify-center gap-1.5 rounded-xl
-                  text-sm font-bold transition active:scale-95 ${
-                    ativa
-                      ? 'bg-brasa-gradiente text-white shadow-brasa'
-                      : 'bg-rico-light/8 text-rico-light/70 ring-1 ring-rico-light/10'
-                  }`}
+                onClick={() => aoMudarCategoria(nome)}
+                className={`flex min-h-16 min-w-[128px] items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold transition active:scale-95 ${
+                  ativa
+                    ? 'bg-brasa-gradiente text-white shadow-brasa'
+                    : 'bg-rico-light/8 text-rico-light/72 ring-1 ring-rico-light/10'
+                }`}
               >
-                <Icone size={24} strokeWidth={2} />
+                <Icone size={22} strokeWidth={2.25} />
                 {nome}
               </button>
             );
           })}
         </div>
 
-        {/* Itens da categoria */}
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-3">
           {visiveis.map((produto) => (
             <li key={produto.id}>
               <button
                 onClick={() => acoes.adicionarProduto(produto)}
-                className="flex w-full items-center justify-between rounded-xl bg-rico-light/5 px-4
-                  py-3.5 ring-1 ring-rico-light/10 transition active:scale-[0.98] active:bg-rico-light/10"
+                className="flex min-h-[78px] w-full items-center justify-between gap-4 rounded-2xl bg-rico-light/6 px-4 py-3 text-left ring-1 ring-rico-light/10 transition active:scale-[0.98] active:bg-rico-light/12"
               >
-                <div className="text-left">
-                  <p className="font-bold text-rico-light">{produto.nome}</p>
-                  <p className="text-sm text-rico-light/50">{moeda(produto.preco)}</p>
-                </div>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rico-red">
-                  <Plus size={20} strokeWidth={2.5} />
+                <span className="min-w-0">
+                  <span className="block text-base font-extrabold text-rico-light">{produto.nome}</span>
+                  <span className="mt-1 block text-sm font-bold text-rico-wood">{moeda(produto.preco)}</span>
+                </span>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
+                  <Plus size={24} strokeWidth={2.7} />
                 </span>
               </button>
             </li>
           ))}
+          {visiveis.length === 0 && (
+            <li className="rounded-2xl bg-rico-light/6 px-4 py-8 text-center text-sm font-bold text-rico-light/55 ring-1 ring-rico-light/10">
+              Nenhum item encontrado.
+            </li>
+          )}
         </ul>
-
-        {/* Comanda */}
-        {linhas.length > 0 && (
-          <section className="mt-6">
-            <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.25em] text-rico-light/50">
-              Comanda · {totalItens} {totalItens === 1 ? 'item' : 'itens'}
-            </h2>
-            <ul className="space-y-3">
-              {linhas.map((linha, i) => (
-                <li key={`${linha.produto.id}-${i}`} className="rounded-xl bg-rico-light/5 p-3 ring-1 ring-rico-light/10">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="min-w-0 flex-1 truncate font-bold">{linha.produto.nome}</p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => acoes.mudarQuantidade(i, -1)}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-rico-light/10 transition active:scale-90"
-                        aria-label="Diminuir"
-                      >
-                        {linha.quantidade === 1 ? <Trash2 size={16} /> : <Minus size={16} />}
-                      </button>
-                      <span className="w-6 text-center text-lg font-bold">{linha.quantidade}</span>
-                      <button
-                        onClick={() => acoes.mudarQuantidade(i, 1)}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-rico-red transition active:scale-90"
-                        aria-label="Aumentar"
-                      >
-                        <Plus size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <input
-                      type="text"
-                      value={linha.observacao}
-                      onChange={(e) => acoes.mudarObservacao(i, e.target.value)}
-                      placeholder="Obs: sem cebola, bem passado…"
-                      maxLength={120}
-                      className="min-w-0 flex-1 rounded-lg bg-carvao px-3 py-2 text-sm text-rico-light
-                        outline-none ring-1 ring-rico-light/15 placeholder:text-rico-light/30
-                        focus:ring-brasa"
-                    />
-                    <span className="shrink-0 text-sm font-bold text-rico-light/70">
-                      {moeda(linha.produto.preco * linha.quantidade)}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </main>
 
-      {/* Rodapé fixo: enviar pedido */}
-      <footer
-        className="fixed inset-x-0 bottom-0 border-t border-creme/10 bg-carvao/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur"
-      >
+      {linhas.length > 0 && (
+        <button
+          onClick={() => setComandaAberta(true)}
+          className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-rico-wood px-4 font-extrabold text-rico-dark shadow-flutuante active:scale-95"
+        >
+          <ShoppingCart size={21} />
+          {totalItens} {totalItens === 1 ? 'item' : 'itens'}
+        </button>
+      )}
+
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-creme/10 bg-carvao/96 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
         <div className="mx-auto max-w-md">
+          <div className="mb-2 flex items-center justify-between px-1 text-sm font-bold text-rico-light/65">
+            <span>Total da comanda</span>
+            <span className="text-rico-wood">{moeda(total)}</span>
+          </div>
           <button
             onClick={acoes.enviarPedido}
             disabled={linhas.length === 0 || enviando}
-            className="flex h-16 w-full items-center justify-center gap-2.5 rounded-xl bg-rico-red
-              text-lg font-bold text-rico-light shadow-media transition active:scale-[0.98]
-              disabled:cursor-not-allowed disabled:opacity-35"
+            className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {enviando ? (
               <>
-                <Loader2 size={22} className="animate-spin" /> Enviando pedido…
+                <Loader2 size={23} className="animate-spin" /> Enviando
               </>
             ) : (
               <>
-                <Send size={20} />
+                <Send size={22} />
                 Enviar pedido
-                {totalItens > 0 && <span className="text-rico-light/70">· {moeda(total)}</span>}
               </>
             )}
           </button>
         </div>
       </footer>
+
+      <ComandaSheet
+        aberta={comandaAberta}
+        fechar={() => setComandaAberta(false)}
+        linhas={linhas}
+        total={total}
+        totalItens={totalItens}
+        acoes={acoes}
+      />
     </>
+  );
+}
+
+function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
+  if (!aberta) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end bg-black/45" role="dialog" aria-modal="true">
+      <button className="absolute inset-0 h-full w-full cursor-default" onClick={fechar} aria-label="Fechar comanda" />
+      <section className="relative max-h-[82dvh] w-full rounded-t-[1.6rem] bg-rico-light text-carvao shadow-flutuante">
+        <header className="sticky top-0 z-10 rounded-t-[1.6rem] border-b border-rico-wood/25 bg-rico-light px-4 py-4">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-carvao-suave">
+                Comanda
+              </p>
+              <h2 className="font-display text-2xl text-rico-dark">
+                {totalItens} {totalItens === 1 ? 'item' : 'itens'} - {moeda(total)}
+              </h2>
+            </div>
+            <button
+              onClick={fechar}
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-carvao/8 text-carvao active:scale-95"
+              aria-label="Fechar"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </header>
+
+        <div className="mx-auto max-h-[64dvh] max-w-md overflow-y-auto px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <ul className="space-y-3">
+            {linhas.map((linha, i) => (
+              <li key={`${linha.produto.id}-${i}`} className="rounded-2xl border border-rico-wood/25 bg-white p-3 shadow-suave">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 flex-1 text-base font-extrabold text-carvao">{linha.produto.nome}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => acoes.mudarQuantidade(i, -1)}
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-carvao/8 text-carvao active:scale-95"
+                      aria-label="Diminuir"
+                    >
+                      {linha.quantidade === 1 ? <Trash2 size={20} /> : <Minus size={20} />}
+                    </button>
+                    <span className="w-8 text-center text-xl font-extrabold">{linha.quantidade}</span>
+                    <button
+                      onClick={() => acoes.mudarQuantidade(i, 1)}
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa active:scale-95"
+                      aria-label="Aumentar"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <label className="mt-3 block">
+                  <span className="sr-only">Observacao</span>
+                  <input
+                    type="text"
+                    value={linha.observacao}
+                    onChange={(e) => acoes.mudarObservacao(i, e.target.value)}
+                    placeholder="Observacao: sem cebola, bem passado..."
+                    maxLength={120}
+                    className="min-h-12 w-full rounded-2xl bg-creme px-4 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 placeholder:text-carvao/35 focus:ring-rico-red"
+                  />
+                </label>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-sm font-bold text-carvao-suave">Subtotal</span>
+                  <span className="text-base font-extrabold text-rico-red">
+                    {moeda(linha.produto.preco * linha.quantidade)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            onClick={fechar}
+            className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-carvao font-extrabold text-rico-light active:scale-[0.98]"
+          >
+            <CheckCircle2 size={21} /> Continuar lancando
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }

@@ -8,6 +8,7 @@ const ITENS_NAV = [
   { href: '#/', rotulo: 'Salao', Icone: LayoutGrid, gerente: false },
   { href: '#/delivery', rotulo: 'Delivery', Icone: Bike, gerente: false },
   { href: '#/cozinha', rotulo: 'Cozinha', Icone: ChefHat, gerente: false },
+  { href: '#/garcom', rotulo: 'Garcom', Icone: Smartphone, gerente: false },
   { href: '#/financeiro', rotulo: 'Financeiro', Icone: TrendingUp, gerente: true },
   { href: '#/equipe', rotulo: 'Equipe', Icone: Users, gerente: true },
   { href: '#/cardapio', rotulo: 'Cardapio', Icone: UtensilsCrossed, gerente: true },
@@ -62,12 +63,6 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
               </a>
             );
           })}
-          <a
-            href="#/garcom"
-            className="mt-4 flex items-center gap-3 rounded-xl border border-dashed border-rico-wood/30 px-4 py-3 text-sm font-bold text-rico-light/45 transition hover:border-rico-wood/60 hover:text-rico-light"
-          >
-            <Smartphone size={18} /> Modo Garcom
-          </a>
         </nav>
 
         <div className="border-t border-rico-wood/20 px-5 py-4">
@@ -112,7 +107,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
       </div>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-rico-wood/25 bg-rico-light/96 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 shadow-flutuante backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-flutuante backdrop-blur lg:hidden"
         aria-label="Navegacao principal"
       >
         {itens.map(({ href, rotulo, Icone }) => {
@@ -121,14 +116,14 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
             <a
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition ${
+              className={`flex min-h-[62px] min-w-[74px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-[10px] font-extrabold transition active:scale-95 ${
                 ativa ? 'text-rico-red' : 'text-carvao-suave'
               }`}
             >
-              <span className={`rounded-xl px-3 py-1 ${ativa ? 'bg-rico-red/10' : ''}`}>
-                <Icone size={20} strokeWidth={ativa ? 2.5 : 2} />
+              <span className={`rounded-2xl px-3 py-1.5 ${ativa ? 'bg-rico-red/10 shadow-suave' : ''}`}>
+                <Icone size={22} strokeWidth={ativa ? 2.7 : 2.15} />
               </span>
-              {rotulo}
+              <span className="leading-none">{rotulo}</span>
             </a>
           );
         })}
