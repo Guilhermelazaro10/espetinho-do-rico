@@ -9,6 +9,10 @@ router.get('/', controller.listar);
 router.get('/:id', controller.buscarPorId);
 router.get('/:id/conta', controller.obterConta);
 
+// Gestão de mesas: EXCLUSIVO do gerente
+router.post('/', somenteGerente, controller.criar);
+router.delete('/:id', somenteGerente, controller.remover);
+
 // Garçom "Fecha Conta" = pré-conta: muda status e imprime conferência.
 // NUNCA processa pagamento.
 router.post('/:id/pre-conta', controller.solicitarPreConta);

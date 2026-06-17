@@ -1,4 +1,5 @@
 import { obterSessao, limparSessao } from './sessao';
+import { baseUrl } from './servidor';
 
 /*
  * Cliente HTTP da API do PDV.
@@ -10,7 +11,7 @@ async function requisitar(rota, opcoes = {}) {
   const sessao = obterSessao();
   let res;
   try {
-    res = await fetch(`/api${rota}`, {
+    res = await fetch(`${baseUrl()}/api${rota}`, {
       ...opcoes,
       headers: {
         'Content-Type': 'application/json',
@@ -47,6 +48,8 @@ export const api = {
   },
   mesas: {
     listar: () => requisitar('/mesas'),
+    criar: (numero) => requisitar('/mesas', { method: 'POST', body: numero ? { numero } : {} }),
+    remover: (id) => requisitar(`/mesas/${id}`, { method: 'DELETE' }),
     conta: (id) => requisitar(`/mesas/${id}/conta`),
     preConta: (id) => requisitar(`/mesas/${id}/pre-conta`, { method: 'POST' }),
     pagar: (id, pagamento) =>
@@ -89,6 +92,15 @@ export const api = {
   },
   rede: {
     info: () => requisitar('/rede'),
+  },
+  caixa: {
+    atual: () => requisitar('/caixa/atual'),
+    abrir: (fundoAbertura) => requisitar('/caixa/abrir', { method: 'POST', body: { fundoAbertura } }),
+    movimento: (corpo) => requisitar('/caixa/movimento', { method: 'POST', body: corpo }),
+    fechar: (corpo) => requisitar('/caixa/fechar', { method: 'POST', body: corpo }),
+  },
+  perfil: {
+    trocarPin: (corpo) => requisitar('/perfil/trocar-pin', { method: 'POST', body: corpo }),
   },
 };
 

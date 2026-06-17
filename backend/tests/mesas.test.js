@@ -1,7 +1,10 @@
 const request = require('supertest');
 
 jest.mock('../src/lib/prisma', () => ({
-  mesa: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+  mesa: {
+    findMany: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn(),
+    create: jest.fn(), update: jest.fn(), delete: jest.fn(),
+  },
   produto: { count: jest.fn(), findMany: jest.fn() },
   pedido: { create: jest.fn(), count: jest.fn(), findMany: jest.fn(), updateMany: jest.fn() },
   pagamento: { create: jest.fn(), findMany: jest.fn(), updateMany: jest.fn() },
@@ -25,6 +28,65 @@ beforeEach(() => {
   jest.clearAllMocks();
   prisma.$transaction.mockImplementation((fn) => fn(prisma));
   prisma.auditoria.create.mockResolvedValue({});
+});
+
+describe('Gestão de mesas (gerente)', () => {
+  it('garçom não adiciona mesa: 403', async () => {
+    const res = await request(app).post('/api/mesas').set('Authorization', `Bearer ${garcom}`).send({});
+    expect(res.status).toBe(403);
+  });
+
+  it('adiciona mesa com o próximo número disponível', async () => {
+    prisma.mesa.findFirst.mockResolvedValue({ numero: 10 });
+    prisma.mesa.findUnique.mockResolvedValue(null);
+    prisma.mesa.create.mockResolvedValue({ id: 11, numero: 11, status: 'LIVRE' });
+
+    const res = await request(app).post('/api/mesas').set('Authorization', `Bearer ${gerente}`).send({});
+
+    expect(res.status).toBe(201);
+    expect(prisma.mesa.create).toHaveBeenCalledWith({ data: { numero: 11, status: 'LIVRE' } });
+  });
+
+  it('rejeita número de mesa duplicado: 409', async () => {
+    prisma.mesa.findUnique.mockResolvedValue({ id: 5, numero: 5 });
+
+    const res = await request(app)
+      .post('/api/mesas')
+      .set('Authorization', `Bearer ${gerente}`)
+      .send({ numero: 5 });
+
+    expect(res.status).toBe(409);
+  });
+
+  it('remove mesa livre e sem histórico', async () => {
+    prisma.mesa.findUnique.mockResolvedValue({ id: 11, numero: 11, status: 'LIVRE' });
+    prisma.pedido.count.mockResolvedValue(0);
+    prisma.mesa.delete.mockResolvedValue({});
+
+    const res = await request(app).delete('/api/mesas/11').set('Authorization', `Bearer ${gerente}`);
+
+    expect(res.status).toBe(204);
+    expect(prisma.mesa.delete).toHaveBeenCalledWith({ where: { id: 11 } });
+  });
+
+  it('não remove mesa ocupada: 409', async () => {
+    prisma.mesa.findUnique.mockResolvedValue({ id: 2, numero: 2, status: 'OCUPADA' });
+
+    const res = await request(app).delete('/api/mesas/2').set('Authorization', `Bearer ${gerente}`);
+
+    expect(res.status).toBe(409);
+    expect(prisma.mesa.delete).not.toHaveBeenCalled();
+  });
+
+  it('não remove mesa com histórico de pedidos: 409', async () => {
+    prisma.mesa.findUnique.mockResolvedValue({ id: 3, numero: 3, status: 'LIVRE' });
+    prisma.pedido.count.mockResolvedValue(5);
+
+    const res = await request(app).delete('/api/mesas/3').set('Authorization', `Bearer ${gerente}`);
+
+    expect(res.status).toBe(409);
+    expect(prisma.mesa.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/mesas', () => {

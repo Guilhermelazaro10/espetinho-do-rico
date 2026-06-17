@@ -79,6 +79,25 @@ describe('POST /api/pedidos — tipo MESA', () => {
     expect(printerService.dispararImpressao).toHaveBeenCalledTimes(1);
   });
 
+  it('rejeita quantidade acima do limite (anti-overflow): 400', async () => {
+    const res = await request(app)
+      .post('/api/pedidos')
+      .set('Authorization', `Bearer ${garcom}`)
+      .send({ mesaId: 1, itens: [{ produtoId: 1, quantidade: 1000000 }] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toContain('Quantidade máxima');
+  });
+
+  it('rejeita observação longa demais: 400', async () => {
+    const res = await request(app)
+      .post('/api/pedidos')
+      .set('Authorization', `Bearer ${garcom}`)
+      .send({ mesaId: 1, itens: [{ produtoId: 1, quantidade: 1, observacao: 'x'.repeat(500) }] });
+
+    expect(res.status).toBe(400);
+  });
+
   it('rejeita pedido sem itens: 400', async () => {
     const res = await request(app)
       .post('/api/pedidos')

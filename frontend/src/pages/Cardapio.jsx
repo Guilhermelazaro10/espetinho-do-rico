@@ -3,6 +3,7 @@ import { Edit3, Eye, EyeOff, Plus, RefreshCw, RotateCcw, Save, Search, Trash2, U
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
+import { confirmar } from '../lib/dialogos';
 
 const FORM_INICIAL = { id: null, nome: '', categoria: '', preco: '' };
 
@@ -74,7 +75,13 @@ export default function Cardapio({ sessao, aoSair }) {
   }
 
   async function desativar(produto) {
-    if (!window.confirm(`Inativar ${produto.nome}?`)) return;
+    const ok = await confirmar({
+      titulo: `Inativar ${produto.nome}?`,
+      mensagem: 'Ele some do cardapio, mas as vendas passadas continuam intactas.',
+      confirmarRotulo: 'Inativar',
+      perigo: true,
+    });
+    if (!ok) return;
     try {
       await api.produtos.desativar(produto.id);
       notificar.brasa('Produto inativado', 'Ele nao aparece mais para venda');

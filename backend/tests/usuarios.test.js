@@ -49,6 +49,30 @@ describe('RH — /api/usuarios (exclusivo do gerente)', () => {
     expect(res.body.pinHash).toBeUndefined();
   });
 
+  it('respeita o tamanho de PIN solicitado (6 dígitos)', async () => {
+    prisma.usuario.findMany.mockResolvedValue([]);
+    prisma.usuario.create.mockImplementation(({ data }) =>
+      Promise.resolve({ id: 6, ativo: true, ...data })
+    );
+
+    const res = await request(app)
+      .post('/api/usuarios')
+      .set('Authorization', `Bearer ${gerente}`)
+      .send({ nome: 'Ana', papel: 'GARCOM', tamanhoPin: 6 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.pin).toMatch(/^\d{6}$/);
+  });
+
+  it('rejeita tamanho de PIN fora de 4-6: 400', async () => {
+    const res = await request(app)
+      .post('/api/usuarios')
+      .set('Authorization', `Bearer ${gerente}`)
+      .send({ nome: 'Ana', papel: 'GARCOM', tamanhoPin: 9 });
+
+    expect(res.status).toBe(400);
+  });
+
   it('papel inválido: 400', async () => {
     const res = await request(app)
       .post('/api/usuarios')

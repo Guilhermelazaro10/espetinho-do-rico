@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Espetinho do Rico</string>
+    <string name="title_activity_main">Espetinho do Rico</string>
+    <string name="package_name">com.espetinhodorico.pdv</string>
+    <string name="custom_url_scheme">com.espetinhodorico.pdv</string>
+</resources>

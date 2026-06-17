@@ -1,0 +1,13 @@
+{
+  "appId": "com.espetinhodorico.pdv",
+  "appName": "Espetinho do Rico",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

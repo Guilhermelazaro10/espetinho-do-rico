@@ -29,8 +29,14 @@ function validarItens(itens) {
     if (!Number.isInteger(item.quantidade) || item.quantidade <= 0) {
       throw new AppError('Cada item precisa de quantidade inteira maior que zero');
     }
+    if (item.quantidade > 9999) {
+      throw new AppError('Quantidade máxima por item é 9999');
+    }
     if (item.observacao != null && typeof item.observacao !== 'string') {
       throw new AppError('Observação do item deve ser texto');
+    }
+    if (typeof item.observacao === 'string' && item.observacao.length > 200) {
+      throw new AppError('Observação muito longa (máx. 200 caracteres)');
     }
   }
 }
@@ -65,6 +71,9 @@ function validarCabecalho(dados) {
   if (endereco.length < 5) throw new AppError('Endereço de entrega é obrigatório para delivery');
   if (!Number.isInteger(taxaEntrega) || taxaEntrega < 0) {
     throw new AppError('Taxa de entrega deve ser um inteiro em centavos (zero ou mais)');
+  }
+  if (taxaEntrega > 1000000) {
+    throw new AppError('Taxa de entrega excede o limite');
   }
   return {
     tipo,

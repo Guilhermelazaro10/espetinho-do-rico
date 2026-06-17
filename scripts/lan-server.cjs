@@ -1,7 +1,7 @@
 const fs = require('fs');
 const http = require('http');
-const os = require('os');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const raiz = path.resolve(__dirname, '..');
 const frontendDist = path.join(raiz, 'frontend', 'dist');
@@ -23,19 +23,24 @@ process.env.FRONTEND_DIST = frontendDist;
 process.env.DATABASE_URL = `file:${banco.replace(/\\/g, '/')}`;
 process.env.ALLOW_LAN_ORIGINS = 'true';
 
-const app = require(path.join(raiz, 'backend', 'src', 'app.js'));
-
-function ipsPrivados() {
-  return Object.values(os.networkInterfaces())
-    .flat()
-    .filter((iface) => iface && iface.family === 'IPv4' && !iface.internal)
-    .map((iface) => iface.address)
-    .filter((ip) =>
-      /^10\./.test(ip) ||
-      /^192\.168\./.test(ip) ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
-    );
+// Segredo JWT por instalação (nunca o segredo de desenvolvimento do código)
+const { obterOuCriarSegredo } = require(path.join(raiz, 'backend', 'src', 'lib', 'segredo.js'));
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = obterOuCriarSegredo(path.join(raiz, 'backend', '.jwt-secret'));
 }
+
+// Garante o schema do banco em dia (idempotente)
+const cliPrisma = path.join(raiz, 'backend', 'node_modules', 'prisma', 'build', 'index.js');
+const schemaPrisma = path.join(raiz, 'backend', 'prisma', 'schema.prisma');
+if (fs.existsSync(cliPrisma)) {
+  spawnSync(process.execPath, [cliPrisma, 'migrate', 'deploy', '--schema', schemaPrisma], {
+    stdio: 'ignore',
+    timeout: 60000,
+  });
+}
+
+const app = require(path.join(raiz, 'backend', 'src', 'app.js'));
+const { ipsPrivados } = require(path.join(raiz, 'backend', 'src', 'lib', 'rede.js'));
 
 const server = http.createServer(app);
 

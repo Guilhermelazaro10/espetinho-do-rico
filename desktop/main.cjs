@@ -2,6 +2,7 @@ const { app, BrowserWindow, dialog, shell } = require('electron');
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 function logDesktop(...partes) {
   const linha = `[${new Date().toISOString()}] ${partes.map(String).join(' ')}\n`;
@@ -34,8 +35,37 @@ function garantirBanco() {
   return bancoDestino;
 }
 
+// Aplica migrações pendentes ao banco do usuário (resolve upgrade de versão
+// com schema novo sem perder os dados existentes). Idempotente.
+function migrarBanco() {
+  const prismaCli = rootPath('backend', 'node_modules', 'prisma', 'build', 'index.js');
+  const schema = rootPath('backend', 'prisma', 'schema.prisma');
+  if (!fs.existsSync(prismaCli) || !fs.existsSync(schema)) {
+    logDesktop('migrate_skip', 'prisma cli ou schema ausente');
+    return;
+  }
+  const resultado = spawnSync(
+    process.execPath,
+    [prismaCli, 'migrate', 'deploy', '--schema', schema],
+    { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, encoding: 'utf8', timeout: 60000 }
+  );
+  logDesktop(
+    'migrate',
+    `status=${resultado.status}`,
+    (resultado.stdout || '').replace(/\s+/g, ' ').slice(-300),
+    (resultado.stderr || '').replace(/\s+/g, ' ').slice(-300)
+  );
+}
+
 async function iniciarServidor() {
   garantirBanco();
+  migrarBanco();
+  if (!process.env.JWT_SECRET) {
+    const { obterOuCriarSegredo } = require(rootPath('backend', 'src', 'lib', 'segredo.js'));
+    process.env.JWT_SECRET = obterOuCriarSegredo(
+      path.join(app.getPath('userData'), 'pdv.secret')
+    );
+  }
   const port = Number(process.env.PORT || 3001);
   const url = `http://127.0.0.1:${port}`;
 

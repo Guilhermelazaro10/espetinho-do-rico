@@ -1,6 +1,6 @@
 {
   "name": "espetinho-do-rico",
-  "version": "1.0.7",
+  "version": "1.3.0",
   "private": true,
   "description": "Sistema PDV - Espetinho do Rico",
   "main": "desktop/main.cjs",

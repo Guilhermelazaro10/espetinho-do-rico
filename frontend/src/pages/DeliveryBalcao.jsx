@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CheckCircle2, CreditCard,
-  Ban, Clock, ReceiptText,
+  Banknote, QrCode, Ban, Clock, ReceiptText, Loader2, Printer,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { ehGerente, TIPOS_PEDIDO } from '../lib/constantes';
 import { notificar } from '../ui/toast';
+import { pedirTexto } from '../lib/dialogos';
+import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 
 const STATUS_ROTULO = {
   aberto: 'Aberto',
@@ -16,18 +18,16 @@ const STATUS_ROTULO = {
   cancelado: 'Cancelado',
 };
 
+const FORM_VAZIO = { clienteNome: '', clienteTelefone: '', clienteEndereco: '', taxaEntrega: '5,00' };
+
 export default function DeliveryBalcao({ sessao, aoSair }) {
   const [aba, setAba] = useState(TIPOS_PEDIDO.DELIVERY);
   const [produtos, setProdutos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [carrinho, setCarrinho] = useState([]);
-  const [form, setForm] = useState({
-    clienteNome: '',
-    clienteTelefone: '',
-    clienteEndereco: '',
-    taxaEntrega: '5,00',
-  });
+  const [form, setForm] = useState(FORM_VAZIO);
   const [carregando, setCarregando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const gerente = ehGerente(sessao);
 
   const recarregar = useCallback(async () => {
@@ -50,6 +50,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   useEffect(() => {
     recarregar();
   }, [recarregar]);
+  useAtualizacaoAoVivo(recarregar); // tempo real, igual ao Salão/Cozinha
 
   const produtosPorCategoria = useMemo(() => {
     const grupos = new Map();
@@ -71,35 +72,40 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
 
   function adicionar(produto) {
     setCarrinho((itens) => {
-      const indice = itens.findIndex((item) => item.produto.id === produto.id);
-      if (indice < 0) return [...itens, { produto, quantidade: 1 }];
+      const indice = itens.findIndex((item) => item.produto.id === produto.id && !item.observacao);
+      if (indice < 0) return [...itens, { produto, quantidade: 1, observacao: '' }];
       return itens.map((item, i) =>
         i === indice ? { ...item, quantidade: item.quantidade + 1 } : item
       );
     });
   }
 
-  function mudarQuantidade(produtoId, delta) {
+  function mudarQuantidade(indice, delta) {
     setCarrinho((itens) =>
       itens
-        .map((item) =>
-          item.produto.id === produtoId ? { ...item, quantidade: item.quantidade + delta } : item
-        )
+        .map((item, i) => (i === indice ? { ...item, quantidade: item.quantidade + delta } : item))
         .filter((item) => item.quantidade > 0)
     );
   }
 
+  function mudarObservacao(indice, observacao) {
+    setCarrinho((itens) => itens.map((item, i) => (i === indice ? { ...item, observacao } : item)));
+  }
+
   async function criarPedido() {
+    if (enviando) return; // trava anti-duplo-toque
     if (carrinho.length === 0) {
       notificar.erro('Comanda vazia', 'Adicione ao menos um item');
       return;
     }
+    setEnviando(true);
     const corpo = {
       tipo: aba,
       clienteNome: form.clienteNome,
       itens: carrinho.map((item) => ({
         produtoId: item.produto.id,
         quantidade: item.quantidade,
+        observacao: item.observacao?.trim() || undefined,
       })),
       ...(aba === TIPOS_PEDIDO.DELIVERY
         ? {
@@ -113,10 +119,12 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       await api.pedidos.criar(corpo);
       notificar.sucesso('Pedido enviado', `${aba === TIPOS_PEDIDO.DELIVERY ? 'Delivery' : 'Balcao'} ${moeda(total)}`);
       setCarrinho([]);
-      setForm({ clienteNome: '', clienteTelefone: '', clienteEndereco: '', taxaEntrega: '5,00' });
+      setForm(FORM_VAZIO);
       await recarregar();
     } catch (e) {
       notificar.erro('Pedido nao enviado', e.message);
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -140,11 +148,28 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     }
   }
 
+  async function reimprimir(pedido) {
+    try {
+      await api.pedidos.imprimir(pedido.id);
+      notificar.brasa('Comanda reimpressa', `#${pedido.id}`);
+    } catch (e) {
+      notificar.erro('Nao foi possivel reimprimir', e.message);
+    }
+  }
+
   async function cancelar(pedido) {
-    const motivo = window.prompt('Motivo do cancelamento');
+    const motivo = await pedirTexto({
+      titulo: `Cancelar pedido #${pedido.id}?`,
+      mensagem: 'Descreva o motivo (fica registrado na auditoria).',
+      placeholder: 'ex: cliente desistiu',
+      confirmarRotulo: 'Cancelar pedido',
+      obrigatorio: true,
+      perigo: true,
+    });
     if (!motivo) return;
     try {
       await api.pedidos.cancelar(pedido.id, motivo);
+      notificar.sucesso(`Pedido #${pedido.id} cancelado`, 'Registrado na auditoria');
       await recarregar();
     } catch (e) {
       notificar.erro('Cancelamento recusado', e.message);
@@ -219,8 +244,8 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
               </div>
 
               <ul className="mt-4 space-y-2">
-                {carrinho.map((item) => (
-                  <li key={item.produto.id} className="rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10">
+                {carrinho.map((item, indice) => (
+                  <li key={`${item.produto.id}-${indice}`} className="rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10">
                     <div className="flex items-center justify-between gap-2">
                       <p className="min-w-0 truncate text-sm font-bold">{item.produto.nome}</p>
                       <p className="text-sm font-bold text-rico-wood">
@@ -228,14 +253,21 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                       </p>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      <button onClick={() => mudarQuantidade(item.produto.id, -1)} className="rounded-md bg-rico-light/10 p-2" aria-label="Diminuir">
+                      <button onClick={() => mudarQuantidade(indice, -1)} className="rounded-md bg-rico-light/10 p-2" aria-label="Diminuir">
                         {item.quantidade === 1 ? <Trash2 size={15} /> : <Minus size={15} />}
                       </button>
                       <span className="w-8 text-center font-bold">{item.quantidade}</span>
-                      <button onClick={() => mudarQuantidade(item.produto.id, 1)} className="rounded-md bg-rico-red p-2" aria-label="Aumentar">
+                      <button onClick={() => mudarQuantidade(indice, 1)} className="rounded-md bg-rico-red p-2" aria-label="Aumentar">
                         <Plus size={15} />
                       </button>
                     </div>
+                    <input
+                      value={item.observacao}
+                      onChange={(e) => mudarObservacao(indice, e.target.value)}
+                      placeholder="Obs: sem cebola..."
+                      maxLength={120}
+                      className="mt-2 w-full rounded-md bg-rico-dark px-3 py-2 text-xs text-rico-light outline-none ring-1 ring-rico-light/15 placeholder:text-rico-light/30 focus:ring-rico-wood"
+                    />
                   </li>
                 ))}
               </ul>
@@ -258,9 +290,18 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
               </div>
               <button
                 onClick={criarPedido}
-                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0"
+                disabled={enviando}
+                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Send size={17} /> Enviar
+                {enviando ? (
+                  <>
+                    <Loader2 size={17} className="animate-spin" /> Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Send size={17} /> Enviar
+                  </>
+                )}
               </button>
             </aside>
           </div>
@@ -279,6 +320,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 onAvancar={avancar}
                 onPagar={pagar}
                 onCancelar={cancelar}
+                onReimprimir={reimprimir}
               />
             ))}
             {pedidosDaAba.length === 0 && (
@@ -319,7 +361,7 @@ function Input({ rotulo, valor, onChange }) {
   );
 }
 
-function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar }) {
+function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimprimir }) {
   const podeAvancar = ['aberto', 'em_preparo'].includes(pedido.status);
   return (
     <article className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
@@ -327,6 +369,9 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar }) {
         <div className="min-w-0">
           <p className="font-display text-xl text-carvao">#{pedido.id}</p>
           <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
+          {pedido.clienteTelefone && (
+            <p className="text-xs font-semibold text-carvao-suave">{pedido.clienteTelefone}</p>
+          )}
           {pedido.clienteEndereco && (
             <p className="mt-1 text-xs font-semibold text-carvao-suave">{pedido.clienteEndereco}</p>
           )}
@@ -338,12 +383,15 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar }) {
       <ul className="mt-3 space-y-1 text-sm text-carvao-claro">
         {pedido.itens?.map((item) => (
           <li key={item.id} className="flex justify-between gap-3">
-            <span className="truncate">{item.quantidade}x {item.produto?.nome}</span>
+            <span className="min-w-0 truncate">
+              {item.quantidade}x {item.produto?.nome}
+              {item.observacao && <em className="text-carvao-suave"> — {item.observacao}</em>}
+            </span>
             <strong>{moeda(item.precoUnitario * item.quantidade)}</strong>
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex items-center justify-between border-t border-carvao/10 pt-3">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-carvao/10 pt-3">
         <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
         <div className="flex flex-wrap justify-end gap-2">
           {podeAvancar && (
@@ -351,13 +399,24 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar }) {
               <CheckCircle2 size={14} className="inline" /> Avancar
             </button>
           )}
+          <button
+            onClick={() => onReimprimir(pedido)}
+            className="rounded-lg p-2 text-carvao-suave hover:bg-carvao/10 hover:text-carvao"
+            aria-label="Reimprimir comanda"
+            title="Reimprimir"
+          >
+            <Printer size={16} />
+          </button>
           {gerente && pedido.status === 'entregue' && (
             <>
-              <button onClick={() => onPagar(pedido, 'pix')} className="rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light">
-                <CreditCard size={14} className="inline" /> Pix
+              <button onClick={() => onPagar(pedido, 'pix')} className="flex items-center gap-1 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light" title="Pagar com Pix">
+                <QrCode size={14} /> Pix
               </button>
-              <button onClick={() => onPagar(pedido, 'dinheiro')} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35">
-                Dinheiro
+              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar em dinheiro">
+                <Banknote size={14} /> Dinheiro
+              </button>
+              <button onClick={() => onPagar(pedido, 'cartao')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar no cartão">
+                <CreditCard size={14} /> Cartao
               </button>
             </>
           )}

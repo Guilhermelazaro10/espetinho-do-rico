@@ -9,8 +9,12 @@ jest.mock('../src/lib/prisma', () => ({
 const prisma = require('../src/lib/prisma');
 const app = require('../src/app');
 const { gerarHashPin } = require('../src/lib/pin');
+const limiteLogin = require('../src/middlewares/limiteLogin');
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  limiteLogin._resetar(); // estado do rate-limit não vaza entre testes
+});
 
 describe('POST /api/auth/login', () => {
   it('autentica com PIN correto e devolve token + papel', async () => {
@@ -50,5 +54,20 @@ describe('POST /api/auth/login', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.erro).toContain('Sessão inválida');
+  });
+
+  it('bloqueia com 429 após muitas tentativas erradas (anti força-bruta)', async () => {
+    prisma.usuario.findMany.mockResolvedValue([
+      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: gerarHashPin('2222') },
+    ]);
+
+    // 5 tentativas erradas → na 6ª o IP está bloqueado
+    for (let i = 0; i < limiteLogin.MAX_FALHAS; i++) {
+      await request(app).post('/api/auth/login').send({ pin: '0000' });
+    }
+    const bloqueado = await request(app).post('/api/auth/login').send({ pin: '2222' });
+
+    expect(bloqueado.status).toBe(429);
+    expect(bloqueado.body.erro).toContain('Aguarde');
   });
 });

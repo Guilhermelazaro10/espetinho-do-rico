@@ -12,6 +12,12 @@ backend/.env
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
 
+# Segredo JWT por instalacao (gerado em runtime)
+backend/.jwt-secret
+
+# Config do agente de impressao (contem o token)
+agente-impressao/config.json
+
 # Cupons simulados (fallback da impressora termica) e backups do banco
 backend/cupons/
 backend/backups/

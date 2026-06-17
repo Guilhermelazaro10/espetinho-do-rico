@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Banknote, CalendarDays, CreditCard, Landmark, LockKeyhole, QrCode,
-  Receipt, RefreshCw, TrendingUp,
+  Receipt, RefreshCw, TrendingUp, Trophy,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda } from '../lib/api';
@@ -50,11 +50,6 @@ export default function Financeiro({ sessao, aoSair }) {
     return Math.max(1, ...serie.map((ponto) => ponto.valor));
   }, [semana]);
 
-  function fecharCaixa() {
-    if (!dia) return;
-    notificar.brasa('Caixa conferido', `${moeda(dia.recebido.total)} recebido hoje`);
-  }
-
   const acoes = (
     <div className="flex items-center gap-2">
       <button
@@ -65,12 +60,12 @@ export default function Financeiro({ sessao, aoSair }) {
       >
         <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
       </button>
-      <button
-        onClick={fecharCaixa}
+      <a
+        href="#/caixa"
         className="flex items-center gap-2 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-brasa transition hover:bg-vinho-profundo"
       >
-        <LockKeyhole size={14} /> Fechar Caixa
-      </button>
+        <LockKeyhole size={14} /> Caixa do turno
+      </a>
     </div>
   );
 
@@ -91,7 +86,13 @@ export default function Financeiro({ sessao, aoSair }) {
               </h2>
               <span className="text-xs font-bold text-carvao-suave">{semana?.de} ate {semana?.ate}</span>
             </div>
-            <div className="mt-6 flex h-64 items-end gap-3">
+            <div
+              className="mt-6 flex h-64 items-end gap-3"
+              role="img"
+              aria-label={`Faturamento por dia: ${(semana?.serieDiaria ?? [])
+                .map((p) => `${new Date(`${p.dia}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${moeda(p.valor)}`)
+                .join('; ')}`}
+            >
               {(semana?.serieDiaria ?? []).map((ponto) => (
                 <div key={ponto.dia} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                   <div className="flex h-52 w-full items-end rounded-lg bg-rico-wood/12 p-1">
@@ -140,6 +141,31 @@ export default function Financeiro({ sessao, aoSair }) {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-5 shadow-suave ring-1 ring-rico-wood/10">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-carvao-claro">
+                <Trophy size={16} className="text-rico-red" /> Mais vendidos (hoje)
+              </h2>
+              {(dia?.topProdutos ?? []).length === 0 ? (
+                <p className="mt-3 text-sm text-carvao-suave">Sem vendas registradas hoje.</p>
+              ) : (
+                <ol className="mt-3 space-y-2">
+                  {dia.topProdutos.map((produto, i) => (
+                    <li key={produto.nome} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rico-red/10 text-xs font-bold text-rico-red">
+                          {i + 1}
+                        </span>
+                        <span className="truncate font-semibold text-carvao">{produto.nome}</span>
+                      </span>
+                      <span className="shrink-0 font-bold text-carvao-claro">
+                        {produto.quantidade}x · {moeda(produto.valor)}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
           </aside>
         </section>

@@ -114,3 +114,53 @@ model Auditoria {
   @@index([criadoEm])
   @@map("auditoria")
 }
+
+// Turno de caixa (gaveta física). Um aberto por vez.
+model Caixa {
+  id            Int              @id @default(autoincrement())
+  status        String           @default("aberto") // aberto | fechado
+  fundoAbertura Int              @default(0) @map("fundo_abertura") // centavos
+  abertoPor     String           @map("aberto_por")
+  abertoEm      DateTime         @default(now()) @map("aberto_em")
+  fechadoPor    String?          @map("fechado_por")
+  fechadoEm     DateTime?        @map("fechado_em")
+  valorContado  Int?             @map("valor_contado") // contagem cega no fechamento
+  diferenca     Int? // contado - esperado (sobra +/- falta)
+  observacao    String?
+  movimentos    MovimentoCaixa[]
+
+  @@index([status])
+  @@map("caixas")
+}
+
+// Sangria (retirada) ou suprimento (reforço de troco) durante o turno
+model MovimentoCaixa {
+  id       Int      @id @default(autoincrement())
+  caixa    Caixa    @relation(fields: [caixaId], references: [id], onDelete: Cascade)
+  caixaId  Int      @map("caixa_id")
+  tipo     String // sangria | suprimento
+  valor    Int // centavos
+  motivo   String
+  por      String
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  @@map("movimentos_caixa")
+}
+
+// Fila de impressão (modo nuvem): o backend enfileira o cupom já formatado e
+// um agente na loja puxa, imprime na térmica de rede e confirma.
+model PrintJob {
+  id           Int      @id @default(autoincrement())
+  tipo         String // cupom | pre_conta | gaveta
+  refId        Int?     @map("ref_id") // pedido/mesa de referência
+  conteudo     String // linhas do cupom já formatadas (separadas por \n)
+  abrirGaveta  Boolean  @default(false) @map("abrir_gaveta")
+  status       String   @default("pendente") // pendente | impresso | erro
+  tentativas   Int      @default(0)
+  erro         String?
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  @@index([status])
+  @@map("print_jobs")
+}

@@ -219,6 +219,44 @@ async function registrarPagamento(mesaId, { forma, valor }, usuario) {
   return resultado;
 }
 
+// Adiciona uma mesa. Sem número informado, usa o próximo disponível.
+async function criar({ numero } = {}, usuario) {
+  let numeroFinal = numero;
+  if (numeroFinal == null) {
+    const ultima = await prisma.mesa.findFirst({ orderBy: { numero: 'desc' } });
+    numeroFinal = (ultima?.numero ?? 0) + 1;
+  }
+  if (!Number.isInteger(numeroFinal) || numeroFinal <= 0) {
+    throw new AppError('Número da mesa deve ser um inteiro positivo');
+  }
+  const existe = await prisma.mesa.findUnique({ where: { numero: numeroFinal } });
+  if (existe) throw new AppError(`Mesa ${numeroFinal} já existe`, 409);
+
+  const mesa = await prisma.mesa.create({
+    data: { numero: numeroFinal, status: STATUS_MESA.LIVRE },
+  });
+  auditoriaService.registrar(usuario, 'mesa_criada', `Mesa ${numeroFinal} adicionada`);
+  publicar('mesa_status', { mesaId: mesa.id });
+  return mesa;
+}
+
+// Remove uma mesa. Só se estiver LIVRE e sem nenhum pedido no histórico
+// (apagar mesa com vendas passadas violaria a integridade dos relatórios).
+async function remover(id, usuario) {
+  const mesa = await prisma.mesa.findUnique({ where: { id } });
+  if (!mesa) throw new AppError('Mesa não encontrada', 404);
+  if (mesa.status !== STATUS_MESA.LIVRE) {
+    throw new AppError('Só é possível remover uma mesa livre', 409);
+  }
+  const pedidos = await prisma.pedido.count({ where: { mesaId: id } });
+  if (pedidos > 0) {
+    throw new AppError('Mesa tem histórico de pedidos e não pode ser removida', 409);
+  }
+  await prisma.mesa.delete({ where: { id } });
+  auditoriaService.registrar(usuario, 'mesa_removida', `Mesa ${mesa.numero} removida`);
+  publicar('mesa_status', { mesaId: id });
+}
+
 module.exports = {
   listar,
   buscarPorId,
@@ -227,4 +265,6 @@ module.exports = {
   obterConta,
   solicitarPreConta,
   registrarPagamento,
+  criar,
+  remover,
 };

@@ -95,4 +95,26 @@ async function regerarPin(id, usuarioLogado) {
   return { id, nome: usuario.nome, pin };
 }
 
-module.exports = { listar, criar, desativar, regerarPin };
+// Troca do próprio PIN (qualquer usuário autenticado), validando o PIN atual
+async function trocarPin(usuarioLogado, pinAtual, pinNovo) {
+  if (!/^\d{4,6}$/.test(String(pinNovo ?? ''))) {
+    throw new AppError('Novo PIN deve ter de 4 a 6 dígitos');
+  }
+  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioLogado.id } });
+  if (!usuario || !usuario.ativo) throw new AppError('Usuário não encontrado', 404);
+  if (!verificarPin(String(pinAtual ?? ''), usuario.pinHash)) {
+    throw new AppError('PIN atual incorreto', 401);
+  }
+  // Login é só por PIN: precisa continuar único entre os ativos
+  const outros = await prisma.usuario.findMany({ where: { ativo: true, id: { not: usuario.id } } });
+  if (outros.some((u) => verificarPin(String(pinNovo), u.pinHash))) {
+    throw new AppError('Esse PIN já está em uso por outro funcionário');
+  }
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: { pinHash: gerarHashPin(String(pinNovo)) },
+  });
+  auditoriaService.registrar(usuarioLogado, 'troca_pin', `${usuario.nome} trocou o próprio PIN`);
+}
+
+module.exports = { listar, criar, desativar, regerarPin, trocarPin };

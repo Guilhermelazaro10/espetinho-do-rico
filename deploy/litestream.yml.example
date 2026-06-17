@@ -1,0 +1,15 @@
+# Litestream: replicação contínua do SQLite para object storage (backup/DR).
+# Restaura em minutos se a VPS morrer. Exemplo com Backblaze B2 (tier grátis ~10GB).
+# Copie para /etc/litestream.yml e ajuste as credenciais.
+
+dbs:
+  - path: /opt/espetinho/data/pdv.db
+    replicas:
+      - type: s3
+        bucket: SEU_BUCKET
+        path: pdv
+        # Backblaze B2 (ex.): https://s3.us-east-005.backblazeb2.com
+        # Cloudflare R2 (ex.): https://<accountid>.r2.cloudflarestorage.com
+        endpoint: https://s3.us-east-005.backblazeb2.com
+        access-key-id: SUA_ACCESS_KEY_ID
+        secret-access-key: SEU_SECRET_ACCESS_KEY

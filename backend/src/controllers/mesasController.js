@@ -34,4 +34,14 @@ module.exports = {
       await mesasService.registrarPagamento(parseId(req.params.id), { forma, valor }, req.usuario)
     );
   },
+
+  async criar(req, res) {
+    const { numero } = req.body ?? {};
+    res.status(201).json(await mesasService.criar({ numero }, req.usuario));
+  },
+
+  async remover(req, res) {
+    await mesasService.remover(parseId(req.params.id), req.usuario);
+    res.status(204).end();
+  },
 };

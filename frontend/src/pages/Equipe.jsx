@@ -7,6 +7,7 @@ import AppShell from '../components/AppShell';
 import { api } from '../lib/api';
 import { PAPEIS } from '../lib/constantes';
 import { notificar } from '../ui/toast';
+import { confirmar } from '../lib/dialogos';
 
 export default function Equipe({ sessao, aoSair }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -14,6 +15,7 @@ export default function Equipe({ sessao, aoSair }) {
   const [pinGerado, setPinGerado] = useState(null);
   const [rede, setRede] = useState(null);
   const [carregando, setCarregando] = useState(false);
+  const [trocaPin, setTrocaPin] = useState({ atual: '', novo: '' });
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
@@ -37,6 +39,21 @@ export default function Equipe({ sessao, aoSair }) {
 
   function alterar(campo, valor) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
+  }
+
+  async function trocarMeuPin(e) {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(trocaPin.novo)) {
+      notificar.erro('PIN invalido', 'O novo PIN deve ter de 4 a 6 digitos');
+      return;
+    }
+    try {
+      await api.perfil.trocarPin({ pinAtual: trocaPin.atual, pinNovo: trocaPin.novo });
+      setTrocaPin({ atual: '', novo: '' });
+      notificar.sucesso('PIN alterado', 'Use o novo PIN no proximo login');
+    } catch (erro) {
+      notificar.erro('Nao foi possivel trocar', erro.message);
+    }
   }
 
   async function cadastrar(e) {
@@ -67,7 +84,13 @@ export default function Equipe({ sessao, aoSair }) {
   }
 
   async function desligar(usuario) {
-    if (!window.confirm(`Desligar ${usuario.nome}?`)) return;
+    const ok = await confirmar({
+      titulo: `Desligar ${usuario.nome}?`,
+      mensagem: 'O PIN e revogado na hora. O historico do funcionario e preservado.',
+      confirmarRotulo: 'Desligar',
+      perigo: true,
+    });
+    if (!ok) return;
     try {
       await api.usuarios.desligar(usuario.id);
       notificar.sucesso('Funcionario desligado', usuario.nome);
@@ -216,6 +239,33 @@ export default function Equipe({ sessao, aoSair }) {
             </div>
             <button className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0">
               <Plus size={17} /> Cadastrar
+            </button>
+          </form>
+
+          <form onSubmit={trocarMeuPin} className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-suave ring-1 ring-rico-wood/10">
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-dark">
+              <KeyRound size={16} className="text-rico-red" /> Trocar meu PIN
+            </h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <input
+                value={trocaPin.atual}
+                onChange={(e) => setTrocaPin((p) => ({ ...p, atual: e.target.value.replace(/\D/g, '') }))}
+                placeholder="PIN atual"
+                inputMode="numeric"
+                maxLength={6}
+                className="rounded-lg bg-rico-light px-3 py-2 text-sm font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+              />
+              <input
+                value={trocaPin.novo}
+                onChange={(e) => setTrocaPin((p) => ({ ...p, novo: e.target.value.replace(/\D/g, '') }))}
+                placeholder="Novo PIN"
+                inputMode="numeric"
+                maxLength={6}
+                className="rounded-lg bg-rico-light px-3 py-2 text-sm font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+              />
+            </div>
+            <button className="mt-3 h-11 w-full rounded-lg bg-carvao text-sm font-bold text-rico-light transition hover:bg-carvao-claro">
+              Atualizar meu PIN
             </button>
           </form>
 

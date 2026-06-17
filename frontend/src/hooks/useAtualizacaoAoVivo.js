@@ -1,19 +1,26 @@
 import { useEffect } from 'react';
+import { ehNativo, baseUrl } from '../lib/servidor';
 
 /*
- * Tempo real com três camadas:
- *  1. SSE (/api/eventos): o backend sinaliza mudanças e o cliente refaz a busca
- *  2. Polling de segurança a cada 15s — só com a aba visível (poupa bateria)
- *  3. Recarga imediata quando a aba volta a ficar visível
+ * Tempo real:
+ *  - Web/PWA: SSE (/api/eventos) com polling de segurança a cada 15s.
+ *  - App nativo (APK): EventSource cross-origin é instável, então pulamos o
+ *    SSE e usamos polling mais frequente (8s). Em ambos, recarrega ao voltar
+ *    a aba/foco e só com a tela visível (poupa bateria).
  */
 export function useAtualizacaoAoVivo(recarregar) {
   useEffect(() => {
-    const fonte = new EventSource('/api/eventos');
-    fonte.onmessage = () => recarregar();
+    let fonte = null;
+    if (!ehNativo()) {
+      fonte = new EventSource(`${baseUrl()}/api/eventos`);
+      fonte.onmessage = () => recarregar();
+      fonte.onerror = () => {}; // EventSource reconecta sozinho
+    }
 
+    const intervalo = ehNativo() ? 8000 : 15000;
     const timer = setInterval(() => {
       if (!document.hidden) recarregar();
-    }, 15000);
+    }, intervalo);
 
     const aoMudarVisibilidade = () => {
       if (!document.hidden) recarregar();
@@ -21,7 +28,7 @@ export function useAtualizacaoAoVivo(recarregar) {
     document.addEventListener('visibilitychange', aoMudarVisibilidade);
 
     return () => {
-      fonte.close();
+      fonte?.close();
       clearInterval(timer);
       document.removeEventListener('visibilitychange', aoMudarVisibilidade);
     };

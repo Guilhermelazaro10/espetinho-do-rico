@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { LogIn, Loader2, ShieldCheck } from 'lucide-react';
+import { LogIn, Loader2, ShieldCheck, ServerCog } from 'lucide-react';
 import TecladoNumerico from '../components/TecladoNumerico';
 import { api } from '../lib/api';
 import { salvarSessao } from '../lib/sessao';
 import { notificar, ToasterGlobal } from '../ui/toast';
 
-export default function Login({ aoEntrar }) {
+export default function Login({ aoEntrar, aoTrocarServidor }) {
   const [pin, setPin] = useState('');
   const [entrando, setEntrando] = useState(false);
 
@@ -115,6 +115,15 @@ export default function Login({ aoEntrar }) {
         <p className="mt-4 text-center text-[11px] font-semibold text-rico-light/55">
           Dev: 1111 garcom | 9999 gerente
         </p>
+
+        {aoTrocarServidor && (
+          <button
+            onClick={aoTrocarServidor}
+            className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-rico-wood/35 px-3 py-1.5 text-[11px] font-bold text-rico-light/60 transition hover:bg-rico-light/10 hover:text-rico-light"
+          >
+            <ServerCog size={13} /> Trocar servidor
+          </button>
+        )}
       </main>
     </div>
   );

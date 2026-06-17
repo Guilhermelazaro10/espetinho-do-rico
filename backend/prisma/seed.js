@@ -21,7 +21,10 @@ const usuarios = [
 
 async function main() {
   // Seed idempotente: limpa na ordem inversa das dependências
+  await prisma.printJob.deleteMany();
   await prisma.auditoria.deleteMany();
+  await prisma.movimentoCaixa.deleteMany();
+  await prisma.caixa.deleteMany();
   await prisma.pagamento.deleteMany();
   await prisma.itemPedido.deleteMany();
   await prisma.pedido.deleteMany();
@@ -32,7 +35,7 @@ async function main() {
   // SQLite preserva a sequência do autoincrement após deleteMany;
   // zera para que os IDs voltem a começar do 1 a cada seed.
   await prisma.$executeRawUnsafe(
-    "DELETE FROM sqlite_sequence WHERE name IN ('produtos', 'mesas', 'pedidos', 'itens_pedido', 'pagamentos', 'usuarios', 'auditoria')"
+    "DELETE FROM sqlite_sequence WHERE name IN ('produtos', 'mesas', 'pedidos', 'itens_pedido', 'pagamentos', 'usuarios', 'auditoria', 'caixas', 'movimentos_caixa', 'print_jobs')"
   );
 
   await prisma.produto.createMany({ data: produtos });

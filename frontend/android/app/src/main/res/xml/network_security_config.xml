@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PDV de rede local: o backend roda em HTTP puro na LAN (sem TLS).
+  Permitimos cleartext para que o app fale com o desktop em qualquer IP
+  privado. Uso restrito à rede local do estabelecimento.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

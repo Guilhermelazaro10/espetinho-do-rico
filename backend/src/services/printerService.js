@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { ThermalPrinter, PrinterTypes } = require('node-thermal-printer');
 const logger = require('../lib/logger');
+const impressaoService = require('./impressaoService');
 
 /*
  * PrinterService — cupom de produção em impressora térmica 80mm.
@@ -19,6 +20,10 @@ const LARGURA = 48; // colunas úteis em bobina 80mm com Fonte A
 const TEMPO_LIMITE_MS = 2000;
 const PASTA_CUPONS = path.join(__dirname, '..', '..', 'cupons');
 const INTERFACE_IMPRESSORA = process.env.PRINTER_INTERFACE || 'printer:POS80';
+
+// 'local' (padrão): imprime direto na máquina (desktop Electron/LAN).
+// 'queue': enfileira o cupom para o agente da loja imprimir (modo nuvem/VPS).
+const MODO_IMPRESSAO = process.env.PRINT_MODE === 'queue' ? 'queue' : 'local';
 
 /* ---------- formatação de bobina ---------- */
 
@@ -241,13 +246,22 @@ async function imprimirPreConta(conta) {
   );
 }
 
+async function enfileirar(tipo, refId, linhas, abrirGaveta = false) {
+  await impressaoService.enfileirar({ tipo, refId, conteudo: linhas.join('\n'), abrirGaveta });
+}
+
 /**
  * Disparos fire-and-forget: agendados para o próximo tick, fora do caminho
- * da resposta HTTP. A operação nunca espera (nem cai por causa) da impressão.
+ * da resposta HTTP. Em 'local' imprime direto; em 'queue' enfileira para o
+ * agente da loja. A operação nunca espera (nem cai por causa) da impressão.
  */
 function dispararImpressao(pedido) {
   setImmediate(() => {
-    imprimirCupom(pedido).catch((erro) =>
+    const tarefa =
+      MODO_IMPRESSAO === 'queue'
+        ? enfileirar('cupom', pedido.id, montarLinhasCupom(pedido))
+        : imprimirCupom(pedido);
+    tarefa.catch((erro) =>
       logger.erro('erro inesperado na impressão', { pedidoId: pedido.id, erro: erro.message })
     );
   });
@@ -255,8 +269,12 @@ function dispararImpressao(pedido) {
 
 function dispararImpressaoPreConta(conta) {
   setImmediate(() => {
-    imprimirPreConta(conta).catch((erro) =>
-      logger.erro('erro inesperado na pré-conta', { mesa: conta.mesa.numero, erro: erro.message })
+    const tarefa =
+      MODO_IMPRESSAO === 'queue'
+        ? enfileirar('pre_conta', conta.mesa?.id ?? null, montarLinhasPreConta(conta))
+        : imprimirPreConta(conta);
+    tarefa.catch((erro) =>
+      logger.erro('erro inesperado na pré-conta', { mesa: conta.mesa?.numero, erro: erro.message })
     );
   });
 }

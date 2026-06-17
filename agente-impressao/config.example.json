@@ -1,0 +1,7 @@
+{
+  "pdvUrl": "https://pdv.seurestaurante.com.br",
+  "token": "COLE_AQUI_O_MESMO_PRINT_AGENT_TOKEN_DO_SERVIDOR",
+  "impressora": "tcp://192.168.0.50:9100",
+  "characterSet": "WPC1252",
+  "intervaloMs": 2000
+}

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const AppError = require('../errors/AppError');
 const { PAPEIS } = require('../constantes');
 
@@ -40,4 +41,24 @@ function exigirPapel(...papeis) {
 // Atalho semântico para as rotas exclusivas do gerente (pagamentos, RH, financeiro)
 const somenteGerente = exigirPapel();
 
-module.exports = { gerarToken, autenticar, exigirPapel, somenteGerente };
+// Comparação de tokens em tempo constante (evita timing attack no segredo)
+function tokensIguais(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+}
+
+// Autenticação do AGENTE de impressão (máquina, não usuário): token fixo
+// compartilhado via PRINT_AGENT_TOKEN no backend e no agente.
+function autenticarAgente(req, res, next) {
+  const esperado = process.env.PRINT_AGENT_TOKEN;
+  if (!esperado) throw new AppError('Fila de impressão não configurada no servidor', 503);
+  const cabecalho = req.headers.authorization;
+  const token = cabecalho?.startsWith('Bearer ') ? cabecalho.slice(7) : null;
+  if (!token || !tokensIguais(token, esperado)) {
+    throw new AppError('Agente de impressão não autorizado', 401);
+  }
+  next();
+}
+
+module.exports = { gerarToken, autenticar, exigirPapel, somenteGerente, autenticarAgente };

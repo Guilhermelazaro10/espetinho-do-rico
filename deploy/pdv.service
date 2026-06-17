@@ -1,0 +1,21 @@
+[Unit]
+Description=Espetinho do Rico - PDV (API + SPA)
+After=network.target
+
+[Service]
+Type=simple
+User=espetinho
+WorkingDirectory=/opt/espetinho/backend
+EnvironmentFile=/opt/espetinho/backend/.env.production
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=3
+
+# Endurecimento básico do processo
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+ReadWritePaths=/opt/espetinho/data /opt/espetinho/backend/cupons
+
+[Install]
+WantedBy=multi-user.target

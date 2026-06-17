@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
+import { confirmar } from '../lib/dialogos';
 import { ehGerente, STATUS_MESA } from '../lib/constantes';
 
 const FORMAS = [
@@ -103,6 +104,24 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
       await api.pedidos.imprimir(pedidoId);
       notificar.brasa('Cupom reenviado', `Comanda #${pedidoId} de volta para a impressora`);
     }, 'Não foi possível reimprimir');
+
+  async function removerMesa() {
+    const ok = await confirmar({
+      titulo: `Remover a mesa ${mesa.numero}?`,
+      mensagem: 'Só funciona se estiver livre e sem histórico de pedidos.',
+      confirmarRotulo: 'Remover',
+      perigo: true,
+    });
+    if (!ok) return;
+    try {
+      await api.mesas.remover(mesa.id);
+      notificar.sucesso('Mesa removida', `Mesa ${mesa.numero}`);
+      await aoAtualizar();
+      aoFechar();
+    } catch (e) {
+      notificar.erro('Não foi possível remover', e.message);
+    }
+  }
 
   async function confirmarCancelamento(pedidoId) {
     if (motivo.trim().length < 3) {
@@ -206,6 +225,14 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                   <Armchair size={44} className="text-emerald-500/40" />
                   <p className="mt-3 font-bold text-carvao-claro">Mesa livre</p>
                   <p className="mt-1 text-sm text-carvao-suave">Nenhum consumo registrado.</p>
+                  {gerente && mesa.status === STATUS_MESA.LIVRE && (
+                    <button
+                      onClick={removerMesa}
+                      className="mt-5 flex items-center gap-2 rounded-xl border-2 border-rico-red/30 px-4 py-2 text-sm font-bold text-rico-red transition hover:bg-rico-red/5"
+                    >
+                      <Trash2 size={15} /> Remover esta mesa
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-5">

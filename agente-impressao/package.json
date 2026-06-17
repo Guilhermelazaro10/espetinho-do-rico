@@ -1,0 +1,15 @@
+{
+  "name": "espetinho-agente-impressao",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente local: puxa cupons da fila do PDV na nuvem e imprime na térmica de rede (GET / ESC-POS).",
+  "main": "agente.cjs",
+  "scripts": {
+    "start": "node agente.cjs",
+    "teste": "node agente.cjs --teste",
+    "dry": "node agente.cjs --dry"
+  },
+  "dependencies": {
+    "node-thermal-printer": "^4.4.4"
+  }
+}

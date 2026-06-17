@@ -8,9 +8,15 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "apk:sync": "vite build && cap sync android",
+    "apk:open": "cap open android",
+    "apk:build": "vite build && cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
     "@tailwindcss/vite": "^4.3.0",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Plus } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import MesaCard from '../components/MesaCard';
 import SidebarConta from '../components/SidebarConta';
 import { api } from '../lib/api';
+import { notificar } from '../ui/toast';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
-import { STATUS_MESA, TIPOS_PEDIDO } from '../lib/constantes';
+import { STATUS_MESA, TIPOS_PEDIDO, ehGerente } from '../lib/constantes';
 
 /*
  * Salão — mapa de mesas (desktop e tablet do caixa).
@@ -55,17 +56,39 @@ export default function Salao({ sessao, aoSair }) {
     [mesas]
   );
 
+  const gerente = ehGerente(sessao);
+
+  async function adicionarMesa() {
+    try {
+      const mesa = await api.mesas.criar();
+      notificar.sucesso('Mesa adicionada', `Mesa ${String(mesa.numero).padStart(2, '0')}`);
+      await recarregar();
+    } catch (e) {
+      notificar.erro('Não foi possível adicionar a mesa', e.message);
+    }
+  }
+
   const legenda = (
-    <div className="hidden items-center gap-4 text-xs font-bold text-carvao-claro sm:flex">
-      <span className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livres · {resumo.livres}
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-rico-red" /> Ocupadas · {resumo.ocupadas}
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-rico-wood" /> Aguardando · {resumo.aguardando}
-      </span>
+    <div className="flex items-center gap-3">
+      <div className="hidden items-center gap-4 text-xs font-bold text-carvao-claro sm:flex">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livres · {resumo.livres}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-rico-red" /> Ocupadas · {resumo.ocupadas}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-rico-wood" /> Aguardando · {resumo.aguardando}
+        </span>
+      </div>
+      {gerente && (
+        <button
+          onClick={adicionarMesa}
+          className="flex items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0"
+        >
+          <Plus size={15} /> Mesa
+        </button>
+      )}
     </div>
   );
 

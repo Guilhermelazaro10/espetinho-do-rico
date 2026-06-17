@@ -1,0 +1,10 @@
+# Caddy: HTTPS automático (Let's Encrypt) + proxy reverso para o Node.
+# Troque o domínio. O A-record do domínio deve apontar para o IP da VPS.
+#
+# Se usar Cloudflare PROXIADO (nuvem laranja), deixe o SSL/TLS em "Full (strict)"
+# e mantenha este Caddyfile — o Caddy emite o certificado de origem.
+
+pdv.seurestaurante.com.br {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3001
+}

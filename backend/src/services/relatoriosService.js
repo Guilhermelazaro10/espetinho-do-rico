@@ -76,10 +76,34 @@ async function faturamento(periodo = 'dia') {
     serie.push({ dia: chave, valor: porDia.get(chave) ?? 0 });
   }
 
+  // Produtos mais vendidos no período (a partir dos pedidos pagos)
+  const pagosComItens = await prisma.pedido.findMany({
+    where: { status: 'pago', criadoEm: janela },
+    select: {
+      itens: {
+        select: { quantidade: true, precoUnitario: true, produto: { select: { nome: true } } },
+      },
+    },
+  });
+  const ranking = new Map();
+  for (const pedido of pagosComItens) {
+    for (const item of pedido.itens) {
+      const nome = item.produto?.nome ?? '—';
+      const atual = ranking.get(nome) ?? { nome, quantidade: 0, valor: 0 };
+      atual.quantidade += item.quantidade;
+      atual.valor += item.precoUnitario * item.quantidade;
+      ranking.set(nome, atual);
+    }
+  }
+  const topProdutos = [...ranking.values()]
+    .sort((a, b) => b.quantidade - a.quantidade)
+    .slice(0, 5);
+
   const recebidoTotal = porForma.reduce((s, f) => s + (f._sum.valor ?? 0), 0);
   const qtdPagos = pagos._count ?? 0;
 
   return {
+    topProdutos,
     periodo,
     rotulo,
     de: inicio.toISOString().slice(0, 10),

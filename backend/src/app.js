@@ -1,22 +1,32 @@
 const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
 const cors = require('cors');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const { ipsPrivados } = require('./lib/rede');
 const routes = require('./routes');
 const authRoutes = require('./routes/auth.routes');
 const eventosRoutes = require('./routes/eventos.routes');
+const impressaoRoutes = require('./routes/impressao.routes');
 const prisma = require('./lib/prisma');
 const { autenticar } = require('./middlewares/auth');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
+// Headers de segurança. CSP fica desligado (a SPA usa estilos inline + Google
+// Fonts; uma CSP estrita quebraria sem ajuste fino — Cloudflare cobre isso).
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(compression()); // gzip nas respostas (SPA + JSON) — economia de banda
+
 // CORS restrito às origens conhecidas (frontend dev e build de produção).
 // Requisições same-origin (sem header Origin) passam normalmente.
 const ORIGENS_PERMITIDAS = (
   process.env.ALLOWED_ORIGINS ||
-  'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:4173,http://127.0.0.1:4173'
+  // dev/preview do Vite + origens do app nativo Capacitor (APK Android)
+  'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:4173,http://127.0.0.1:4173,http://localhost,https://localhost,capacitor://localhost'
 )
   .split(',')
   .map((o) => o.trim());
@@ -28,18 +38,6 @@ const origemLocalDev = (origem) =>
 const origemRedeLocal = (origem) =>
   process.env.ALLOW_LAN_ORIGINS === 'true' &&
   /^http:\/\/(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+):\d+$/.test(origem);
-
-function ipsPrivados() {
-  return Object.values(os.networkInterfaces())
-    .flat()
-    .filter((iface) => iface && iface.family === 'IPv4' && !iface.internal)
-    .map((iface) => iface.address)
-    .filter((ip) =>
-      /^10\./.test(ip) ||
-      /^192\.168\./.test(ip) ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
-    );
-}
 
 app.use(
   cors({
@@ -58,16 +56,17 @@ app.use(
 );
 app.use(express.json({ limit: '100kb' }));
 
-// Health check: confirma API de pé e banco acessível (público)
+// Health check + assinatura de descoberta: confirma API de pé e identifica
+// inequivocamente o PDV na varredura de rede do app (público).
 app.get('/health', async (req, res) => {
   const [produtos, mesas] = await Promise.all([
     prisma.produto.count(),
     prisma.mesa.count(),
   ]);
-  res.json({ status: 'ok', produtos, mesas });
+  res.json({ status: 'ok', app: 'espetinho-pdv', nome: os.hostname(), produtos, mesas });
 });
 
-app.get('/api/rede', (req, res) => {
+app.get('/api/rede', autenticar, (req, res) => {
   const porta = req.socket.localPort || Number(process.env.PORT || 3001);
   const ips = ipsPrivados();
   const urlsGarcom = ips.map((ip) => `http://${ip}:${porta}/#/garcom`);
@@ -85,7 +84,10 @@ app.get('/api/rede', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/eventos', eventosRoutes);
 
-// Todo o restante da API exige autenticação
+// Fila de impressão: autenticada por token de AGENTE (máquina), não por usuário
+app.use('/api/impressao', impressaoRoutes);
+
+// Todo o restante da API exige autenticação de usuário
 app.use('/api', autenticar, routes);
 
 if (process.env.FRONTEND_DIST) {
