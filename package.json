@@ -1,6 +1,6 @@
 {
   "name": "espetinho-do-rico",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "private": true,
   "description": "Sistema PDV - Espetinho do Rico",
   "main": "desktop/main.cjs",
@@ -13,8 +13,9 @@
     "seed": "npm run seed -w backend",
     "lan": "npm run build:frontend && node scripts/lan-server.cjs",
     "desktop": "npm run build:frontend && electron .",
-    "desktop:pack": "npm run build:frontend && electron-builder --win --dir",
-    "desktop:dist": "npm run build:frontend && electron-builder --win nsis portable"
+    "desktop:prep": "npm install --prefix backend --omit=dev --no-audit --no-fund --no-package-lock",
+    "desktop:pack": "npm run build:frontend && npm run desktop:prep && electron-builder --win --dir",
+    "desktop:dist": "npm run build:frontend && npm run desktop:prep && electron-builder --win nsis portable"
   },
   "build": {
     "appId": "br.com.espetinhodorico.pdv",
