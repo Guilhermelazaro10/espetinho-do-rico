@@ -112,10 +112,6 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
           </button>
         </section>
 
-        <p className="mt-4 text-center text-[11px] font-semibold text-rico-light/55">
-          Dev: 1111 garcom | 9999 gerente
-        </p>
-
         {aoTrocarServidor && (
           <button
             onClick={aoTrocarServidor}
