@@ -14,7 +14,18 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_DIR="$(dirname "$SCRIPT_DIR")"
 DATA_DIR="$APP_DIR/data"
 ENV_FILE="$APP_DIR/backend/.env.production"
-echo "==> App: $APP_DIR | Domínio: $DOMAIN"
+
+# DOMAIN pode ser uma lista separada por espaço (ex.: "exemplo.com www.exemplo.com").
+# O primeiro é o principal; todos entram no Caddy e no ALLOWED_ORIGINS.
+read -ra DOMAINS <<< "$DOMAIN"
+PRIMARY_DOMAIN="${DOMAINS[0]}"
+CADDY_SITE=""
+ALLOWED_ORIGINS=""
+for d in "${DOMAINS[@]}"; do
+  CADDY_SITE="${CADDY_SITE:+$CADDY_SITE, }$d"
+  ALLOWED_ORIGINS="${ALLOWED_ORIGINS:+$ALLOWED_ORIGINS,}https://$d"
+done
+echo "==> App: $APP_DIR | Domínio(s): $DOMAIN"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
@@ -50,7 +61,7 @@ PORT=3001
 DATABASE_URL=file:$DATA_DIR/pdv.db
 JWT_SECRET=$(openssl rand -hex 48)
 PRINT_AGENT_TOKEN=$(openssl rand -hex 24)
-ALLOWED_ORIGINS=https://$DOMAIN
+ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 ALLOW_LAN_ORIGINS=false
 FRONTEND_DIST=$APP_DIR/frontend/dist
 PRINT_MODE=queue
@@ -100,7 +111,7 @@ systemctl restart pdv
 
 # Caddy
 cat > /etc/caddy/Caddyfile <<EOF
-$DOMAIN {
+$CADDY_SITE {
     encode zstd gzip
     reverse_proxy 127.0.0.1:3001
 }
@@ -115,7 +126,7 @@ yes | ufw enable >/dev/null 2>&1 || true
 
 echo ""
 echo "================================================================"
-echo " PRONTO!  Acesse:  https://$DOMAIN"
+echo " PRONTO!  Acesse:  https://$PRIMARY_DOMAIN"
 echo " Token do agente de impressão (cole no config.json do PC do caixa):"
 grep PRINT_AGENT_TOKEN "$ENV_FILE"
 echo " PINs de desenvolvimento: 1111 (garçom) / 9999 (gerente)"
