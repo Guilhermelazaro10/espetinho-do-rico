@@ -8,7 +8,7 @@ import { api, moeda } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { adicionarNaFila, listarFila, sincronizarFila } from '../lib/filaOffline';
 
-const ICONES_CATEGORIA = { Espetos: Beef, Bebidas: Beer };
+const ICONES_CATEGORIA = { Espetinhos: Beef, Bebidas: Beer, Guarnições: UtensilsCrossed };
 
 export default function Garcom({ aoSair }) {
   const [etapa, setEtapa] = useState('mesa');

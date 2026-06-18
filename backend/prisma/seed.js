@@ -4,13 +4,55 @@ const { PAPEIS, STATUS_MESA } = require('../src/constantes');
 
 const prisma = new PrismaClient();
 
-// Preços em CENTAVOS
+// Cardápio oficial do Espetinho do Rico — preços em CENTAVOS
 const produtos = [
-  { nome: 'Espeto de Carne', preco: 1200, categoria: 'Espetos' },
-  { nome: 'Espeto de Frango', preco: 1000, categoria: 'Espetos' },
-  { nome: 'Medalhão', preco: 1500, categoria: 'Espetos' },
-  { nome: 'Cerveja', preco: 800, categoria: 'Bebidas' },
+  // Bebidas
+  { nome: 'Cerveja Buch Skol', preco: 500, categoria: 'Bebidas' },
+  { nome: 'Bohemia Buch', preco: 500, categoria: 'Bebidas' },
+  { nome: 'Cerveja Spaten 600ml', preco: 1300, categoria: 'Bebidas' },
+  { nome: 'Heineken 600ml', preco: 1500, categoria: 'Bebidas' },
+  { nome: 'Stella 600ml', preco: 1500, categoria: 'Bebidas' },
+  { nome: 'Cerveja Skol 600ml', preco: 1000, categoria: 'Bebidas' },
+  { nome: 'Brahma 600ml', preco: 1000, categoria: 'Bebidas' },
+  { nome: 'Cajuína 1Lt', preco: 1000, categoria: 'Bebidas' },
+  { nome: 'Cajuína 600ml', preco: 800, categoria: 'Bebidas' },
+  { nome: 'Refrigerante 1Lt', preco: 1000, categoria: 'Bebidas' },
   { nome: 'Refrigerante Lata', preco: 600, categoria: 'Bebidas' },
+  { nome: 'Coca-Cola Lata', preco: 600, categoria: 'Bebidas' },
+  { nome: 'Suco', preco: 300, categoria: 'Bebidas' },
+  { nome: 'Água', preco: 250, categoria: 'Bebidas' },
+  { nome: 'Água com Gás', preco: 300, categoria: 'Bebidas' },
+  { nome: 'Cachaça Tanque', preco: 700, categoria: 'Bebidas' },
+  { nome: 'Cachaça Burrinho', preco: 1200, categoria: 'Bebidas' },
+  // Guarnições
+  { nome: 'Cuscuz G', preco: 1400, categoria: 'Guarnições' },
+  { nome: 'Meio Cuscuz P', preco: 700, categoria: 'Guarnições' },
+  { nome: 'Baião G', preco: 1000, categoria: 'Guarnições' },
+  { nome: 'Meio Baião P', preco: 600, categoria: 'Guarnições' },
+  { nome: 'Batata Doce Porção', preco: 200, categoria: 'Guarnições' },
+  { nome: 'Macarronada G', preco: 1500, categoria: 'Guarnições' },
+  { nome: 'Macarronada P', preco: 800, categoria: 'Guarnições' },
+  { nome: 'Misto - Baião/Cuscuz P', preco: 700, categoria: 'Guarnições' },
+  { nome: 'Misto - Baião/Cuscuz G', preco: 1200, categoria: 'Guarnições' },
+  { nome: 'Escondidinho Carne de Sol P', preco: 800, categoria: 'Guarnições' },
+  { nome: 'Escondidinho Carne de Sol G', preco: 1500, categoria: 'Guarnições' },
+  { nome: 'Arroz de Leite P', preco: 600, categoria: 'Guarnições' },
+  { nome: 'Arroz de Leite G', preco: 1100, categoria: 'Guarnições' },
+  { nome: 'Sopa P', preco: 500, categoria: 'Guarnições' },
+  { nome: 'Sopa G', preco: 1000, categoria: 'Guarnições' },
+  // Espetinhos
+  { nome: 'Calabresa', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Carne', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Carne Moída', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Porco', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Frango', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Ovo de Codorna c/ Bacon', preco: 1000, categoria: 'Espetinhos' },
+  { nome: 'Linguiça', preco: 400, categoria: 'Espetinhos' },
+  { nome: 'Coração de Frango', preco: 500, categoria: 'Espetinhos' },
+  { nome: 'Misto', preco: 700, categoria: 'Espetinhos' },
+  { nome: 'Queijo Assado', preco: 1000, categoria: 'Espetinhos' },
+  { nome: 'Maminha', preco: 1200, categoria: 'Espetinhos' },
+  { nome: 'Picanha Suína', preco: 1000, categoria: 'Espetinhos' },
 ];
 
 // PINs de desenvolvimento — trocar em produção
