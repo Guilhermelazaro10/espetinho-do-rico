@@ -279,6 +279,26 @@ function comLogo(linhas) {
   return [MARCADOR_LOGO, ...linhas];
 }
 
+function montarLinhasTeste() {
+  const linhas = [...cabecalhoLoja()];
+  linhas.push(centralizar('TESTE DE IMPRESSAO'));
+  linhas.push(divisoria('='));
+  linhas.push(justificar('Painel do gerente', formatarDataHora()));
+  linhas.push('');
+  linhas.push(centralizar('Se este cupom saiu com a logo e os'));
+  linhas.push(centralizar('acentos certos (ç, ã, é), esta tudo ok!'));
+  linhas.push(...rodapeLoja());
+  return linhas;
+}
+
+// Enfileira um cupom de teste (com logo) para o agente da loja imprimir.
+async function enfileirarTeste() {
+  return impressaoService.enfileirar({
+    tipo: 'teste',
+    conteudo: comLogo(montarLinhasTeste()).join('\n'),
+  });
+}
+
 /**
  * Disparos fire-and-forget: agendados para o próximo tick, fora do caminho
  * da resposta HTTP. Em 'local' imprime direto; em 'queue' enfileira para o
@@ -314,5 +334,7 @@ module.exports = {
   imprimirCupom,
   montarLinhasCupom,
   montarLinhasPreConta,
+  montarLinhasTeste,
+  enfileirarTeste,
   LARGURA,
 };

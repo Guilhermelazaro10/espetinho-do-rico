@@ -7,6 +7,7 @@ const relatoriosRoutes = require('./relatorios.routes');
 const usuariosRoutes = require('./usuarios.routes');
 const caixaRoutes = require('./caixa.routes');
 const perfilRoutes = require('./perfil.routes');
+const impressoraRoutes = require('./impressora.routes');
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/relatorios', relatoriosRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/caixa', caixaRoutes);
 router.use('/perfil', perfilRoutes);
+router.use('/impressora', impressoraRoutes);
 
 module.exports = router;

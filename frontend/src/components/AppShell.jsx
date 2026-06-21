@@ -1,5 +1,5 @@
 import {
-  LayoutGrid, Bike, ChefHat, TrendingUp, Wallet, Users, UtensilsCrossed, LogOut, Smartphone,
+  LayoutGrid, Bike, ChefHat, TrendingUp, Wallet, Users, UtensilsCrossed, LogOut, Smartphone, Printer,
 } from 'lucide-react';
 import { ToasterGlobal } from '../ui/toast';
 import { ehGerente } from '../lib/constantes';
@@ -13,6 +13,7 @@ const ITENS_NAV = [
   { href: '#/financeiro', rotulo: 'Financeiro', Icone: TrendingUp, gerente: true },
   { href: '#/equipe', rotulo: 'Equipe', Icone: Users, gerente: true },
   { href: '#/cardapio', rotulo: 'Cardapio', Icone: UtensilsCrossed, gerente: true },
+  { href: '#/impressora', rotulo: 'Impressao', Icone: Printer, gerente: true },
 ];
 
 function itensVisiveis(sessao) {

@@ -14,6 +14,7 @@ const CaixaTurno = lazy(() => import('./pages/CaixaTurno'));
 const Financeiro = lazy(() => import('./pages/Financeiro'));
 const Equipe = lazy(() => import('./pages/Equipe'));
 const Cardapio = lazy(() => import('./pages/Cardapio'));
+const Impressora = lazy(() => import('./pages/Impressora'));
 
 // Roteamento por hash, sem dependências:
 //   #/           → Salão (desktop)   #/garcom     → Garçom (mobile PWA/APK)
@@ -84,6 +85,7 @@ export default function App() {
   else if (rota.startsWith('#/financeiro')) Tela = Financeiro;
   else if (rota.startsWith('#/equipe')) Tela = Equipe;
   else if (rota.startsWith('#/cardapio')) Tela = Cardapio;
+  else if (rota.startsWith('#/impressora')) Tela = Impressora;
 
   return (
     <Suspense fallback={<Carregando />}>

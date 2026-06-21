@@ -102,6 +102,11 @@ export const api = {
   perfil: {
     trocarPin: (corpo) => requisitar('/perfil/trocar-pin', { method: 'POST', body: corpo }),
   },
+  impressora: {
+    resumo: () => requisitar('/impressora'),
+    teste: () => requisitar('/impressora/teste', { method: 'POST' }),
+    reimprimir: (id) => requisitar(`/impressora/${id}/reimprimir`, { method: 'POST' }),
+  },
 };
 
 // Formata CENTAVOS como moeda brasileira
