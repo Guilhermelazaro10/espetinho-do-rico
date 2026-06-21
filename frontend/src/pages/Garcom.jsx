@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Flame, Delete, ArrowRight, Beef, Beer, UtensilsCrossed, ChevronLeft,
   Plus, Minus, Trash2, Send, Loader2, Monitor, LogOut, CloudOff, RefreshCw,
-  ShoppingCart, X, Search, ArrowLeft, CheckCircle2,
+  ShoppingCart, X, Search, ArrowLeft, CheckCircle2, ChevronRight,
 } from 'lucide-react';
 import { api, moeda } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
@@ -328,7 +328,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
 
   return (
     <>
-      <main ref={listaRef} className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 pb-36 pt-4">
+      <main ref={listaRef} className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 pb-44 pt-4">
         <section className="rounded-[1.35rem] bg-rico-red p-4 shadow-brasa">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -410,22 +410,25 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
         </ul>
       </main>
 
-      {linhas.length > 0 && (
-        <button
-          onClick={() => setComandaAberta(true)}
-          className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-rico-wood px-4 font-extrabold text-rico-dark shadow-flutuante active:scale-95"
-        >
-          <ShoppingCart size={21} />
-          {totalItens} {totalItens === 1 ? 'item' : 'itens'}
-        </button>
-      )}
-
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-creme/10 bg-carvao/96 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
         <div className="mx-auto max-w-md">
-          <div className="mb-2 flex items-center justify-between px-1 text-sm font-bold text-rico-light/65">
-            <span>Total da comanda</span>
-            <span className="text-rico-wood">{moeda(total)}</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => linhas.length > 0 && setComandaAberta(true)}
+            disabled={linhas.length === 0}
+            className="mb-2 flex w-full items-center justify-between gap-2 rounded-2xl bg-rico-light/8 px-3.5 py-2.5 text-left ring-1 ring-rico-light/10 transition active:scale-[0.99] disabled:opacity-55"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
+              <ShoppingCart size={18} className="text-rico-wood" />
+              {totalItens > 0
+                ? `${totalItens} ${totalItens === 1 ? 'item' : 'itens'} — toque p/ revisar`
+                : 'Comanda vazia'}
+            </span>
+            <span className="flex shrink-0 items-center gap-1 text-base font-extrabold text-rico-wood">
+              {moeda(total)}
+              {linhas.length > 0 && <ChevronRight size={17} className="text-rico-light/40" />}
+            </span>
+          </button>
           <button
             onClick={acoes.enviarPedido}
             disabled={linhas.length === 0 || enviando}

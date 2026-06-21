@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   X, QrCode, Banknote, CreditCard, Receipt, HandPlatter, Armchair,
-  Loader2, Trash2, Printer, Undo2, BellRing, CircleDollarSign,
+  Loader2, Trash2, Printer, Undo2, BellRing, CircleDollarSign, Clock,
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
@@ -197,10 +197,14 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
             <header className="bg-rico-red px-6 py-5 text-rico-light">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-rico-light/70">
-                    {mesa.status === STATUS_MESA.AGUARDANDO_PAGAMENTO
-                      ? '⏳ Aguardando pagamento'
-                      : 'Conta da mesa'}
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-rico-light/70">
+                    {mesa.status === STATUS_MESA.AGUARDANDO_PAGAMENTO ? (
+                      <>
+                        <Clock size={12} className="shrink-0" /> Aguardando pagamento
+                      </>
+                    ) : (
+                      'Conta da mesa'
+                    )}
                   </p>
                   <h2 className="font-display text-4xl leading-tight">
                     Mesa {String(mesa.numero).padStart(2, '0')}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Flame, ChefHat, CheckCheck, Timer, ArrowLeft } from 'lucide-react';
+import { Flame, ChefHat, CheckCheck, Timer, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { api } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
@@ -138,8 +138,8 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
                       <span className="font-bold text-brasa-clara">{item.quantidade}×</span>{' '}
                       <span className="font-semibold">{item.produto.nome}</span>
                       {item.observacao && (
-                        <p className="ml-5 text-[13px] font-bold uppercase tracking-wide text-brasa-clara">
-                          ⚠ {item.observacao}
+                        <p className="ml-5 flex items-center gap-1 text-[13px] font-bold uppercase tracking-wide text-brasa-clara">
+                          <AlertTriangle size={13} className="shrink-0" /> {item.observacao}
                         </p>
                       )}
                     </li>
