@@ -63,6 +63,33 @@ function moeda(centavos) {
   return `R$ ${(Number(centavos) / 100).toFixed(2).replace('.', ',')}`;
 }
 
+/*
+ * Identidade da loja, impressa no topo e no rodapé de todo cupom. Tudo
+ * centralizado na bobina de 48 colunas. (A logo em imagem é renderizada
+ * pelo agente da loja no modo nuvem — ver agente-impressao.)
+ */
+const LOJA = {
+  nome: 'ESPETINHO DO RICO',
+  endereco: ['Rua Adolfo Francisco da Rocha, 608', 'Bairro Juazeiro - Jaguaruana/CE'],
+  telefone: '', // ex.: 'WhatsApp (88) 9 0000-0000' — só imprime se preenchido
+  rodape: ['Obrigado pela preferencia!', 'Volte sempre, o Rico te espera!'],
+};
+
+function cabecalhoLoja() {
+  const linhas = [divisoria('=')];
+  linhas.push(centralizar(LOJA.nome));
+  for (const linha of LOJA.endereco) linhas.push(centralizar(linha));
+  if (LOJA.telefone) linhas.push(centralizar(LOJA.telefone));
+  return linhas;
+}
+
+function rodapeLoja() {
+  const linhas = [''];
+  for (const linha of LOJA.rodape) linhas.push(centralizar(linha));
+  linhas.push(divisoria('='));
+  return linhas;
+}
+
 /**
  * Monta as linhas do cupom (mesma fonte de verdade para térmica e .txt).
  * Exportada para testes.
@@ -79,9 +106,8 @@ function montarLinhasCupom(pedido) {
   const tipo = pedido.tipo ?? 'MESA';
 
   const linhas = [];
-  linhas.push(divisoria('='));
-  linhas.push(centralizar('ESPETINHO DO RICO'));
-  linhas.push(centralizar('Espetaria - Cupom de Producao'));
+  linhas.push(...cabecalhoLoja());
+  linhas.push(centralizar('Cupom de Producao'));
   linhas.push(divisoria('='));
   linhas.push(justificar(`PEDIDO #${pedido.id}`, dataHora));
   linhas.push('');
@@ -123,9 +149,7 @@ function montarLinhasCupom(pedido) {
     linhas.push(justificar('Taxa de entrega', moeda(pedido.taxaEntrega)));
   }
   linhas.push(justificar('TOTAL DO PEDIDO', moeda(pedido.total)));
-  linhas.push('');
-  linhas.push(centralizar('Obrigado pela preferencia!'));
-  linhas.push(divisoria('='));
+  linhas.push(...rodapeLoja());
   return linhas;
 }
 
@@ -135,9 +159,8 @@ function montarLinhasCupom(pedido) {
  */
 function montarLinhasPreConta({ mesa, comandas, subtotal, taxa, totalDevido, pago, saldoDevedor }) {
   const linhas = [];
-  linhas.push(divisoria('='));
-  linhas.push(centralizar('ESPETINHO DO RICO'));
-  linhas.push(centralizar('*** PRE-CONTA / CONFERENCIA ***'));
+  linhas.push(...cabecalhoLoja());
+  linhas.push(centralizar('PRE-CONTA / CONFERENCIA'));
   linhas.push(centralizar('NAO E DOCUMENTO FISCAL'));
   linhas.push(divisoria('='));
   linhas.push(justificar(`MESA ${String(mesa.numero).padStart(2, '0')}`, formatarDataHora()));
@@ -165,7 +188,7 @@ function montarLinhasPreConta({ mesa, comandas, subtotal, taxa, totalDevido, pag
   }
   linhas.push('');
   linhas.push(centralizar('Pagamento somente no caixa'));
-  linhas.push(divisoria('='));
+  linhas.push(...rodapeLoja());
   return linhas;
 }
 
