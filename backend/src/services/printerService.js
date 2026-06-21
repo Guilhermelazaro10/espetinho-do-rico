@@ -17,6 +17,7 @@ const impressaoService = require('./impressaoService');
  */
 
 const LARGURA = 48; // colunas úteis em bobina 80mm com Fonte A
+const MARCADOR_LOGO = '[[LOGO]]'; // o agente troca por logo.png (precisa bater com agente.cjs)
 const TEMPO_LIMITE_MS = 2000;
 const PASTA_CUPONS = path.join(__dirname, '..', '..', 'cupons');
 const INTERFACE_IMPRESSORA = process.env.PRINTER_INTERFACE || 'printer:POS80';
@@ -273,6 +274,11 @@ async function enfileirar(tipo, refId, linhas, abrirGaveta = false) {
   await impressaoService.enfileirar({ tipo, refId, conteudo: linhas.join('\n'), abrirGaveta });
 }
 
+// No modo nuvem o agente desenha a logo no topo (troca o marcador pela imagem).
+function comLogo(linhas) {
+  return [MARCADOR_LOGO, ...linhas];
+}
+
 /**
  * Disparos fire-and-forget: agendados para o próximo tick, fora do caminho
  * da resposta HTTP. Em 'local' imprime direto; em 'queue' enfileira para o
@@ -282,7 +288,7 @@ function dispararImpressao(pedido) {
   setImmediate(() => {
     const tarefa =
       MODO_IMPRESSAO === 'queue'
-        ? enfileirar('cupom', pedido.id, montarLinhasCupom(pedido))
+        ? enfileirar('cupom', pedido.id, comLogo(montarLinhasCupom(pedido)))
         : imprimirCupom(pedido);
     tarefa.catch((erro) =>
       logger.erro('erro inesperado na impressão', { pedidoId: pedido.id, erro: erro.message })
@@ -294,7 +300,7 @@ function dispararImpressaoPreConta(conta) {
   setImmediate(() => {
     const tarefa =
       MODO_IMPRESSAO === 'queue'
-        ? enfileirar('pre_conta', conta.mesa?.id ?? null, montarLinhasPreConta(conta))
+        ? enfileirar('pre_conta', conta.mesa?.id ?? null, comLogo(montarLinhasPreConta(conta)))
         : imprimirPreConta(conta);
     tarefa.catch((erro) =>
       logger.erro('erro inesperado na pré-conta', { mesa: conta.mesa?.numero, erro: erro.message })
