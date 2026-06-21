@@ -43,8 +43,7 @@ desktop** ou **servidor de LAN** para uso offline.
 ├── backend/            API Express + Prisma (SQLite)
 │   ├── prisma/         schema, migrations e seed (cardápio real)
 │   ├── src/
-│   │   ├── routes/       rotas HTTP (1 arquivo por recurso)
-│   │   ├── controllers/  adaptação HTTP de alguns recursos
+│   │   ├── routes/       rotas HTTP (1 arquivo por recurso; finas, chamam o serviço)
 │   │   ├── services/     regra de negócio (fonte de verdade)
 │   │   ├── middlewares/  auth, erros, rate-limit de login
 │   │   ├── lib/          prisma, pin (scrypt), eventos (SSE), mutex, logger
