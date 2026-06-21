@@ -58,6 +58,7 @@ if [ ! -f "$ENV_FILE" ]; then
   cat > "$ENV_FILE" <<EOF
 NODE_ENV=production
 PORT=3001
+HOST=127.0.0.1
 DATABASE_URL=file:$DATA_DIR/pdv.db
 JWT_SECRET=$(openssl rand -hex 48)
 PRINT_AGENT_TOKEN=$(openssl rand -hex 24)
