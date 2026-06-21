@@ -10,6 +10,7 @@ const routes = require('./routes');
 const authRoutes = require('./routes/auth.routes');
 const eventosRoutes = require('./routes/eventos.routes');
 const impressaoRoutes = require('./routes/impressao.routes');
+const publicoRoutes = require('./routes/publico.routes');
 const prisma = require('./lib/prisma');
 const { autenticar } = require('./middlewares/auth');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
@@ -93,6 +94,9 @@ app.use('/api/eventos', eventosRoutes);
 
 // Fila de impressão: autenticada por token de AGENTE (máquina), não por usuário
 app.use('/api/impressao', impressaoRoutes);
+
+// Cardápio online + pedidos do cliente: público (sem login), com anti-spam
+app.use('/api/publico', publicoRoutes);
 
 // Todo o restante da API exige autenticação de usuário
 app.use('/api', autenticar, routes);
