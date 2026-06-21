@@ -15,6 +15,7 @@ const Financeiro = lazy(() => import('./pages/Financeiro'));
 const Equipe = lazy(() => import('./pages/Equipe'));
 const Cardapio = lazy(() => import('./pages/Cardapio'));
 const Impressora = lazy(() => import('./pages/Impressora'));
+const Pedir = lazy(() => import('./pages/Pedir'));
 
 // Roteamento por hash, sem dependências:
 //   #/           → Salão (desktop)   #/garcom     → Garçom (mobile PWA/APK)
@@ -50,6 +51,15 @@ export default function App() {
     window.addEventListener('pdv:sessao-expirada', deslogar);
     return () => window.removeEventListener('pdv:sessao-expirada', deslogar);
   }, []);
+
+  // Cardápio online do cliente: público, ANTES do login (não exige sessão).
+  if (rota.startsWith('#/pedir')) {
+    return (
+      <Suspense fallback={<Carregando />}>
+        <Pedir />
+      </Suspense>
+    );
+  }
 
   if (!conectado) {
     return <ConfigServidor aoConectar={() => setConectado(true)} />;

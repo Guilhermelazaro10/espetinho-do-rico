@@ -107,6 +107,10 @@ export const api = {
     teste: () => requisitar('/impressora/teste', { method: 'POST' }),
     reimprimir: (id) => requisitar(`/impressora/${id}/reimprimir`, { method: 'POST' }),
   },
+  publico: {
+    cardapio: () => requisitar('/publico/cardapio'),
+    pedir: (corpo) => requisitar('/publico/pedidos', { method: 'POST', body: corpo }),
+  },
 };
 
 // Formata CENTAVOS como moeda brasileira
