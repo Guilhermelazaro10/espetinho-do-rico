@@ -13,7 +13,16 @@ const BLOQUEIO_MAX_MS = 15 * 60 * 1000;
 const registros = new Map(); // ip -> { falhas, ultimaEm, bloqueadoAte }
 
 function chave(req) {
-  return req.ip || req.socket?.remoteAddress || 'desconhecido';
+  // Atrás do Cloudflare/Caddy, req.ip seria sempre o IP do proxy — o que
+  // colocaria todos os clientes no mesmo balde (um atacante travaria a
+  // equipe inteira). CF-Connecting-IP traz o IP real do cliente; em
+  // LAN/desktop (sem proxy) cai no req.ip normalmente.
+  return (
+    req.headers['cf-connecting-ip'] ||
+    req.ip ||
+    req.socket?.remoteAddress ||
+    'desconhecido'
+  );
 }
 
 function verificar(req) {

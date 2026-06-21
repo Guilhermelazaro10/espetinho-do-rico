@@ -11,11 +11,15 @@ router.get('/', (req, res) => {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no', // pede a proxies (Cloudflare/Caddy/nginx) p/ não bufferizar
   });
   res.flushHeaders();
   res.write('retry: 3000\n\n');
 
-  const ouvinte = (dados) => res.write(`data: ${JSON.stringify(dados)}\n\n`);
+  const ouvinte = (dados) => {
+    res.write(`data: ${JSON.stringify(dados)}\n\n`);
+    res.flush?.(); // empurra na hora caso algum middleware tente segurar
+  };
   barramento.on('mudanca', ouvinte);
 
   const batimento = setInterval(() => res.write(': ping\n\n'), 25000);

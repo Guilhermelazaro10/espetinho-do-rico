@@ -19,7 +19,14 @@ const app = express();
 // Headers de segurança. CSP fica desligado (a SPA usa estilos inline + Google
 // Fonts; uma CSP estrita quebraria sem ajuste fino — Cloudflare cobre isso).
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(compression()); // gzip nas respostas (SPA + JSON) — economia de banda
+// gzip nas respostas (SPA + JSON). NUNCA comprime o stream SSE: o buffer do
+// compressor seguraria os eventos e mataria o tempo real atrás de proxy.
+app.use(
+  compression({
+    filter: (req, res) =>
+      res.getHeader('Content-Type') !== 'text/event-stream' && compression.filter(req, res),
+  })
+);
 
 // CORS restrito às origens conhecidas (frontend dev e build de produção).
 // Requisições same-origin (sem header Origin) passam normalmente.
