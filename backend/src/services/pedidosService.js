@@ -142,6 +142,16 @@ async function criar(dados) {
   const totalItens = itens.reduce((soma, i) => soma + precoPorId.get(i.produtoId) * i.quantidade, 0);
   const total = totalItens + (cabecalho.taxaEntrega ?? 0);
 
+  // Extras do pedido online (cardápio web): origem + intenção de pagamento.
+  const extras = {};
+  if (dados.origem === 'online') extras.origem = 'online';
+  if (['pix', 'cartao', 'dinheiro'].includes(dados.pagamentoPretendido)) {
+    extras.pagamentoPretendido = dados.pagamentoPretendido;
+  }
+  if (extras.pagamentoPretendido === 'dinheiro' && Number.isInteger(dados.trocoPara) && dados.trocoPara > 0) {
+    extras.trocoPara = dados.trocoPara;
+  }
+
   const pedido = await prisma.$transaction(async (tx) => {
     if (cabecalho.mesaId) {
       await tx.mesa.update({
@@ -152,6 +162,7 @@ async function criar(dados) {
     return tx.pedido.create({
       data: {
         ...cabecalho,
+        ...extras,
         total,
         itens: {
           create: itens.map((i) => ({

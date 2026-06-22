@@ -7,7 +7,7 @@ const AppError = require('../errors/AppError');
 
 const router = Router();
 
-// Cardápio online (sem login): identidade da loja + itens ativos por categoria.
+// Cardápio online (sem login): identidade + horário + bairros + itens ativos.
 router.get('/cardapio', async (req, res) => {
   const produtos = await produtosService.listar({ incluirInativos: false });
 
@@ -22,15 +22,26 @@ router.get('/cardapio', async (req, res) => {
     porNome.get(p.categoria).itens.push({ id: p.id, nome: p.nome, preco: p.preco });
   }
 
+  const { aberto, texto } = loja.statusHorario();
   res.json({
-    loja: { nome: loja.nome, endereco: loja.endereco, whatsapp: loja.whatsapp },
+    loja: {
+      nome: loja.nome,
+      endereco: loja.endereco,
+      whatsapp: loja.whatsapp,
+      aberto,
+      horario: texto,
+      bairros: loja.bairros(),
+    },
     categorias,
   });
 });
 
-// Pedido online (sem login, anti-spam). Cria DELIVERY (entrega) ou BALCAO
-// (retirada) no PDV — aparece na aba Delivery e imprime na cozinha.
+// Pedido online (sem login, anti-spam). Cria DELIVERY/BALCAO no PDV.
 router.post('/pedidos', limitePedidoPublico, async (req, res) => {
+  if (!loja.statusHorario().aberto) {
+    throw new AppError('A loja está fechada no momento. Tente no horário de funcionamento.', 409);
+  }
+
   const corpo = req.body ?? {};
   if (corpo.tipo !== 'DELIVERY' && corpo.tipo !== 'BALCAO') {
     throw new AppError('Tipo deve ser DELIVERY (entrega) ou BALCAO (retirada)');
@@ -39,8 +50,26 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
     throw new AppError('Pedido com itens demais');
   }
 
-  // criar() valida itens/cabeçalho, congela preços no servidor e enfileira o cupom
-  const pedido = await pedidosService.criar({ ...corpo, mesaId: null });
+  // Taxa de entrega é SEMPRE resolvida no servidor pelo bairro (não confia no cliente).
+  let taxaEntrega = 0;
+  let clienteEndereco = corpo.clienteEndereco;
+  if (corpo.tipo === 'DELIVERY') {
+    const lista = loja.bairros();
+    if (lista.length && corpo.bairro) {
+      const b = lista.find((x) => x.nome === corpo.bairro);
+      if (!b) throw new AppError('Bairro de entrega inválido');
+      taxaEntrega = b.taxa;
+      clienteEndereco = `${corpo.clienteEndereco} — ${corpo.bairro}`;
+    }
+  }
+
+  const pedido = await pedidosService.criar({
+    ...corpo,
+    mesaId: null,
+    origem: 'online',
+    taxaEntrega,
+    clienteEndereco,
+  });
 
   res.status(201).json({
     id: pedido.id,

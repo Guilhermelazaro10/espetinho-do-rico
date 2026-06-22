@@ -367,7 +367,14 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimpri
     <article className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-display text-xl text-carvao">#{pedido.id}</p>
+          <p className="font-display text-xl text-carvao">
+            #{pedido.id}
+            {pedido.origem === 'online' && (
+              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">
+                Online
+              </span>
+            )}
+          </p>
           <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
           {pedido.clienteTelefone && (
             <p className="text-xs font-semibold text-carvao-suave">{pedido.clienteTelefone}</p>
@@ -391,6 +398,16 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimpri
           </li>
         ))}
       </ul>
+      {pedido.pagamentoPretendido && (
+        <p className="mt-2 text-xs font-bold text-carvao">
+          Pagamento:{' '}
+          {{ pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' }[pedido.pagamentoPretendido] ??
+            pedido.pagamentoPretendido}
+          {pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0
+            ? ` · troco p/ ${moeda(pedido.trocoPara)}`
+            : ''}
+        </p>
+      )}
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-carvao/10 pt-3">
         <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
         <div className="flex flex-wrap justify-end gap-2">

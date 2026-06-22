@@ -111,6 +111,7 @@ function montarLinhasCupom(pedido) {
   linhas.push(centralizar('Cupom de Producao'));
   linhas.push(divisoria('='));
   linhas.push(justificar(`PEDIDO #${pedido.id}`, dataHora));
+  if (pedido.origem === 'online') linhas.push(centralizar('***  PEDIDO ONLINE  ***'));
   linhas.push('');
 
   if (tipo === 'DELIVERY') {
@@ -150,6 +151,15 @@ function montarLinhasCupom(pedido) {
     linhas.push(justificar('Taxa de entrega', moeda(pedido.taxaEntrega)));
   }
   linhas.push(justificar('TOTAL DO PEDIDO', moeda(pedido.total)));
+  if (pedido.pagamentoPretendido) {
+    const rotuloPg =
+      { pix: 'Pix', cartao: 'Cartao', dinheiro: 'Dinheiro' }[pedido.pagamentoPretendido] ??
+      pedido.pagamentoPretendido;
+    linhas.push(justificar('Pagamento', rotuloPg));
+    if (pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0) {
+      linhas.push(justificar('Troco para', moeda(pedido.trocoPara)));
+    }
+  }
   linhas.push(...rodapeLoja());
   return linhas;
 }

@@ -52,8 +52,9 @@ export default function App() {
     return () => window.removeEventListener('pdv:sessao-expirada', deslogar);
   }, []);
 
-  // Cardápio online do cliente: público, ANTES do login (não exige sessão).
-  if (rota.startsWith('#/pedir')) {
+  // Cardápio online do cliente: público, ANTES do login. Aceita a URL limpa
+  // /cardapio ou o hash #/pedir.
+  if (rota.startsWith('#/pedir') || window.location.pathname.startsWith('/cardapio')) {
     return (
       <Suspense fallback={<Carregando />}>
         <Pedir />
