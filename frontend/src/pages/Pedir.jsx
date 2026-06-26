@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Plus, Minus, Trash2, ShoppingCart, ChevronRight, X, ArrowLeft, Search,
   Bike, ShoppingBag, Loader2, CheckCircle2, MessageCircle, AlertTriangle, RefreshCw,
-  Clock, QrCode, CreditCard, Banknote,
+  Clock, QrCode, CreditCard, Banknote, Ban,
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
 
@@ -19,6 +19,26 @@ const PAGAMENTOS = [
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
 ];
 
+const SITUACAO = {
+  pendente: { texto: 'Recebido — aguardando a loja confirmar', cor: 'amber' },
+  aberto: { texto: 'Confirmado! Seu pedido está em preparo', cor: 'sky' },
+  em_preparo: { texto: 'Seu pedido está em preparo', cor: 'sky' },
+  pago: { texto: 'Pedido concluído. Obrigado!', cor: 'emerald' },
+  cancelado: { texto: 'Pedido recusado/cancelado pela loja', cor: 'red' },
+};
+function situacaoDe(status, tipo) {
+  if (status === 'entregue') {
+    return { texto: tipo === 'DELIVERY' ? 'Saiu para entrega!' : 'Pronto para retirada!', cor: 'emerald' };
+  }
+  return SITUACAO[status] ?? { texto: 'Acompanhando seu pedido…', cor: 'amber' };
+}
+const VISUAL_SIT = {
+  amber: { bg: 'bg-amber-100', tx: 'text-amber-600', Icone: Clock },
+  sky: { bg: 'bg-sky-100', tx: 'text-sky-600', Icone: Loader2 },
+  emerald: { bg: 'bg-emerald-100', tx: 'text-emerald-600', Icone: CheckCircle2 },
+  red: { bg: 'bg-rico-red/10', tx: 'text-rico-red', Icone: Ban },
+};
+
 export default function Pedir() {
   const [loja, setLoja] = useState(null);
   const [categorias, setCategorias] = useState([]);
@@ -34,6 +54,7 @@ export default function Pedir() {
   const [erroCheckout, setErroCheckout] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [pedidoFeito, setPedidoFeito] = useState(null);
+  const [acomp, setAcomp] = useState(null);
 
   // Lembra os dados do cliente entre visitas
   useEffect(() => {
@@ -57,6 +78,23 @@ export default function Pedir() {
       .finally(() => setCarregando(false));
   }
   useEffect(carregar, []);
+
+  // Acompanhamento: enquanto estiver na tela de status, atualiza sozinho.
+  useEffect(() => {
+    if (etapa !== 'acompanhar' || !pedidoFeito) return undefined;
+    let vivo = true;
+    const buscar = () =>
+      api.publico
+        .statusPedido(pedidoFeito.id)
+        .then((s) => vivo && setAcomp(s))
+        .catch(() => {});
+    buscar();
+    const t = setInterval(buscar, 15000);
+    return () => {
+      vivo = false;
+      clearInterval(t);
+    };
+  }, [etapa, pedidoFeito]);
 
   const itens = useMemo(() => {
     const grupo = categorias.find((c) => c.nome === categoria);
@@ -103,6 +141,9 @@ export default function Pedir() {
   function validar() {
     if (form.nome.trim().length < 2) return 'Informe seu nome.';
     if (!form.pagamento) return 'Escolha a forma de pagamento.';
+    if (form.pagamento === 'dinheiro' && form.troco.trim() && paraCentavos(form.troco) < totalFinal) {
+      return 'O troco deve ser maior ou igual ao total do pedido.';
+    }
     if (tipo === 'DELIVERY') {
       if (form.telefone.replace(/\D/g, '').length < 8) return 'Informe um telefone com DDD.';
       if (form.endereco.trim().length < 5) return 'Informe o endereço de entrega.';
@@ -192,6 +233,28 @@ export default function Pedir() {
 
   const fechada = loja && loja.aberto === false;
 
+  /* ---------- acompanhamento do pedido ---------- */
+  if (etapa === 'acompanhar') {
+    const s = acomp ? situacaoDe(acomp.status, acomp.tipo) : null;
+    const vis = VISUAL_SIT[s?.cor] ?? VISUAL_SIT.amber;
+    const Icone = vis.Icone;
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-rico-light px-6 text-center">
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-carvao-suave">Pedido #{pedidoFeito.id}</p>
+        <span className={`flex h-20 w-20 items-center justify-center rounded-full ${vis.bg} ${vis.tx}`}>
+          <Icone size={42} className={s?.cor === 'sky' ? 'animate-spin' : ''} />
+        </span>
+        <h1 className="font-display text-2xl text-rico-dark">{s ? s.texto : 'Carregando…'}</h1>
+        <p className="max-w-xs text-sm font-semibold text-carvao-suave">
+          Esta tela atualiza sozinha — pode deixar aberta.
+        </p>
+        <button onClick={() => setEtapa('sucesso')} className="mt-2 text-sm font-bold text-rico-red underline">
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
   /* ---------- tela de sucesso ---------- */
   if (etapa === 'sucesso') {
     const wpp = linkWhatsApp();
@@ -215,13 +278,19 @@ export default function Pedir() {
           <p className="max-w-xs text-sm font-semibold text-carvao-suave">Já recebemos seu pedido. Em breve a loja entra em contato.</p>
         )}
         <button
+          onClick={() => setEtapa('acompanhar')}
+          className="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-base font-extrabold text-rico-dark ring-1 ring-rico-wood/30 transition active:scale-[0.98]"
+        >
+          <Clock size={18} /> Acompanhar meu pedido
+        </button>
+        <button
           onClick={() => {
             setCarrinho([]);
             setForm((f) => ({ ...f, troco: '' }));
             setPedidoFeito(null);
             setEtapa('cardapio');
           }}
-          className="mt-2 text-sm font-bold text-rico-red underline"
+          className="text-sm font-bold text-rico-red underline"
         >
           Fazer outro pedido
         </button>

@@ -62,6 +62,7 @@ export const api = {
   pedidos: {
     listarAbertos: (tipo) =>
       requisitar(`/pedidos?abertos=true${tipo ? `&tipo=${tipo}` : ''}`),
+    listarPendentes: () => requisitar('/pedidos?status=pendente'),
     criar: (corpo) => requisitar('/pedidos', { method: 'POST', body: corpo }),
     atualizarStatus: (id, status) =>
       requisitar(`/pedidos/${id}/status`, { method: 'PATCH', body: { status } }),
@@ -69,6 +70,9 @@ export const api = {
       requisitar(`/pedidos/${id}/pagamento`, { method: 'PATCH', body: { formaPagamento } }),
     cancelar: (id, motivo) =>
       requisitar(`/pedidos/${id}/cancelar`, { method: 'POST', body: { motivo } }),
+    aceitar: (id) => requisitar(`/pedidos/${id}/aceitar`, { method: 'POST' }),
+    recusar: (id, motivo) =>
+      requisitar(`/pedidos/${id}/recusar`, { method: 'POST', body: { motivo } }),
     removerItem: (pedidoId, itemId) =>
       requisitar(`/pedidos/${pedidoId}/itens/${itemId}`, { method: 'DELETE' }),
     imprimir: (id) => requisitar(`/pedidos/${id}/imprimir`, { method: 'POST' }),
@@ -110,6 +114,7 @@ export const api = {
   publico: {
     cardapio: () => requisitar('/publico/cardapio'),
     pedir: (corpo) => requisitar('/publico/pedidos', { method: 'POST', body: corpo }),
+    statusPedido: (id) => requisitar(`/publico/pedidos/${id}/status`),
   },
 };
 

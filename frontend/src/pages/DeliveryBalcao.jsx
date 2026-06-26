@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CheckCircle2, CreditCard,
-  Banknote, QrCode, Ban, Clock, ReceiptText, Loader2, Printer,
+  Banknote, QrCode, Ban, Clock, ReceiptText, Loader2, Printer, BellRing,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { ehGerente, TIPOS_PEDIDO } from '../lib/constantes';
 import { notificar } from '../ui/toast';
-import { pedirTexto } from '../lib/dialogos';
+import { pedirTexto, confirmar } from '../lib/dialogos';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 
 const STATUS_ROTULO = {
@@ -24,6 +24,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const [aba, setAba] = useState(TIPOS_PEDIDO.DELIVERY);
   const [produtos, setProdutos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
+  const [pendentes, setPendentes] = useState([]);
   const [carrinho, setCarrinho] = useState([]);
   const [form, setForm] = useState(FORM_VAZIO);
   const [carregando, setCarregando] = useState(false);
@@ -33,13 +34,15 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const recarregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const [catalogo, delivery, balcao] = await Promise.all([
+      const [catalogo, delivery, balcao, online] = await Promise.all([
         api.produtos.listar(),
         api.pedidos.listarAbertos(TIPOS_PEDIDO.DELIVERY),
         api.pedidos.listarAbertos(TIPOS_PEDIDO.BALCAO),
+        api.pedidos.listarPendentes(),
       ]);
       setProdutos(catalogo);
       setPedidos([...delivery, ...balcao]);
+      setPendentes(online);
     } catch (e) {
       notificar.erro('Delivery indisponivel', e.message);
     } finally {
@@ -176,6 +179,33 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     }
   }
 
+  async function aceitarPedido(pedido) {
+    try {
+      await api.pedidos.aceitar(pedido.id);
+      notificar.sucesso('Pedido aceito', `#${pedido.id} foi pra cozinha`);
+      await recarregar();
+    } catch (e) {
+      notificar.erro('Nao foi possivel aceitar', e.message);
+    }
+  }
+
+  async function recusarPedido(pedido) {
+    const ok = await confirmar({
+      titulo: `Recusar pedido #${pedido.id}?`,
+      mensagem: 'O pedido nao vai pra cozinha e o cliente vera como recusado.',
+      confirmarRotulo: 'Recusar',
+      perigo: true,
+    });
+    if (!ok) return;
+    try {
+      await api.pedidos.recusar(pedido.id);
+      notificar.sucesso(`Pedido #${pedido.id} recusado`);
+      await recarregar();
+    } catch (e) {
+      notificar.erro('Nao foi possivel recusar', e.message);
+    }
+  }
+
   const pedidosDaAba = pedidos.filter((pedido) => pedido.tipo === aba);
 
   const acoes = (
@@ -191,6 +221,19 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     <AppShell titulo="Delivery e Balcao" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-5">
+          {pendentes.length > 0 && (
+            <section className="rounded-xl border-2 border-emerald-300 bg-emerald-50/80 p-4 shadow-media">
+              <h2 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-emerald-700">
+                <BellRing size={16} /> Novos pedidos online ({pendentes.length})
+              </h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {pendentes.map((p) => (
+                  <PendenteCard key={p.id} pedido={p} onAceitar={aceitarPedido} onRecusar={recusarPedido} />
+                ))}
+              </div>
+            </section>
+          )}
+
           <div className="inline-flex rounded-xl bg-white p-1 shadow-suave ring-1 ring-rico-wood/30">
             <Aba ativa={aba === TIPOS_PEDIDO.DELIVERY} onClick={() => setAba(TIPOS_PEDIDO.DELIVERY)} Icone={Bike}>
               Delivery
@@ -358,6 +401,61 @@ function Input({ rotulo, valor, onChange }) {
         className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
       />
     </label>
+  );
+}
+
+function PendenteCard({ pedido, onAceitar, onRecusar }) {
+  const rotuloPg =
+    { pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' }[pedido.pagamentoPretendido] ??
+    pedido.pagamentoPretendido;
+  return (
+    <article className="rounded-xl border border-emerald-200 bg-white p-3 shadow-suave">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-display text-lg text-carvao">
+            #{pedido.id} · {pedido.tipo === TIPOS_PEDIDO.DELIVERY ? 'Entrega' : 'Retirada'}
+          </p>
+          <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
+          {pedido.clienteTelefone && (
+            <p className="text-xs font-semibold text-carvao-suave">{pedido.clienteTelefone}</p>
+          )}
+          {pedido.clienteEndereco && (
+            <p className="mt-0.5 text-xs font-semibold text-carvao-suave">{pedido.clienteEndereco}</p>
+          )}
+        </div>
+        <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
+      </div>
+      <ul className="mt-2 space-y-0.5 text-sm text-carvao-claro">
+        {pedido.itens?.map((it) => (
+          <li key={it.id}>
+            {it.quantidade}x {it.produto?.nome}
+            {it.observacao && <em className="text-carvao-suave"> — {it.observacao}</em>}
+          </li>
+        ))}
+      </ul>
+      {pedido.pagamentoPretendido && (
+        <p className="mt-1 text-xs font-bold text-carvao">
+          Pagamento: {rotuloPg}
+          {pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0
+            ? ` · troco p/ ${moeda(pedido.trocoPara)}`
+            : ''}
+        </p>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => onAceitar(pedido)}
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
+        >
+          <CheckCircle2 size={16} /> Aceitar
+        </button>
+        <button
+          onClick={() => onRecusar(pedido)}
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-rico-red ring-1 ring-rico-red/40 transition active:scale-[0.98]"
+        >
+          <Ban size={16} /> Recusar
+        </button>
+      </div>
+    </article>
   );
 }
 

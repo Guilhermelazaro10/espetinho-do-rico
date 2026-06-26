@@ -11,7 +11,6 @@ const authRoutes = require('./routes/auth.routes');
 const eventosRoutes = require('./routes/eventos.routes');
 const impressaoRoutes = require('./routes/impressao.routes');
 const publicoRoutes = require('./routes/publico.routes');
-const prisma = require('./lib/prisma');
 const { autenticar } = require('./middlewares/auth');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 
@@ -65,13 +64,10 @@ app.use(
 app.use(express.json({ limit: '100kb' }));
 
 // Health check + assinatura de descoberta: confirma API de pé e identifica
-// inequivocamente o PDV na varredura de rede do app (público).
-app.get('/health', async (req, res) => {
-  const [produtos, mesas] = await Promise.all([
-    prisma.produto.count(),
-    prisma.mesa.count(),
-  ]);
-  res.json({ status: 'ok', app: 'espetinho-pdv', nome: os.hostname(), produtos, mesas });
+// o PDV na varredura de rede do app (público). Sem contagens do banco — eram
+// dado de negócio exposto e uma query sem autenticação a cada hit.
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', app: 'espetinho-pdv', nome: os.hostname() });
 });
 
 app.get('/api/rede', autenticar, (req, res) => {

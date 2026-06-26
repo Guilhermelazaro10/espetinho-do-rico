@@ -21,6 +21,7 @@ const TIPOS_PEDIDO = Object.freeze({
 });
 
 const STATUS_PEDIDO = Object.freeze({
+  PENDENTE: 'pendente', // pedido online aguardando o "Aceitar" da loja (não imprime ainda)
   ABERTO: 'aberto',
   EM_PREPARO: 'em_preparo',
   ENTREGUE: 'entregue',

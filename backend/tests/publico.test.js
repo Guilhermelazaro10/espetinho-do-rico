@@ -1,7 +1,7 @@
 const request = require('supertest');
 
 jest.mock('../src/services/produtosService', () => ({ listar: jest.fn() }));
-jest.mock('../src/services/pedidosService', () => ({ criar: jest.fn() }));
+jest.mock('../src/services/pedidosService', () => ({ criar: jest.fn(), statusPublico: jest.fn() }));
 
 const produtosService = require('../src/services/produtosService');
 const pedidosService = require('../src/services/pedidosService');
@@ -57,6 +57,14 @@ describe('Cardápio online — rotas públicas', () => {
     expect(pedidosService.criar).toHaveBeenCalledWith(
       expect.objectContaining({ tipo: 'DELIVERY', mesaId: null })
     );
+  });
+
+  it('GET /pedidos/:id/status devolve só o status (acompanhamento público)', async () => {
+    pedidosService.statusPublico.mockResolvedValue({ status: 'pendente', tipo: 'DELIVERY', total: 2500 });
+    const res = await request(app).get('/api/publico/pedidos/7/status');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: 'pendente', tipo: 'DELIVERY', total: 2500 });
+    expect(pedidosService.statusPublico).toHaveBeenCalledWith(7);
   });
 
   it('bloqueia após exceder o limite de pedidos por IP (anti-spam)', async () => {

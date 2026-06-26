@@ -4,6 +4,7 @@ const pedidosService = require('../services/pedidosService');
 const loja = require('../loja');
 const { limitePedidoPublico } = require('../middlewares/limitePublico');
 const AppError = require('../errors/AppError');
+const parseId = require('../utils/parseId');
 
 const router = Router();
 
@@ -90,6 +91,11 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
       observacao: i.observacao,
     })),
   });
+});
+
+// Acompanhamento público do pedido (só o status, sem dados pessoais).
+router.get('/pedidos/:id/status', async (req, res) => {
+  res.json(await pedidosService.statusPublico(parseId(req.params.id)));
 });
 
 module.exports = router;

@@ -151,6 +151,11 @@ async function criar(dados) {
   if (extras.pagamentoPretendido === 'dinheiro' && Number.isInteger(dados.trocoPara) && dados.trocoPara > 0) {
     extras.trocoPara = dados.trocoPara;
   }
+  // Troco menor que a conta não faz sentido — ignora (defensivo; o front também valida).
+  if (extras.trocoPara && extras.trocoPara < total) delete extras.trocoPara;
+  // Pedido online entra como PENDENTE: só vai pra cozinha quando a loja "Aceitar".
+  const ehOnline = extras.origem === 'online';
+  if (ehOnline) extras.status = STATUS_PEDIDO.PENDENTE;
 
   const pedido = await prisma.$transaction(async (tx) => {
     if (cabecalho.mesaId) {
@@ -177,11 +182,58 @@ async function criar(dados) {
     });
   });
 
-  // Cupom de produção: fire-and-forget, nunca atrasa nem derruba a resposta
-  printerService.dispararImpressao(pedido);
-  publicar('pedido_criado', { mesaId: cabecalho.mesaId, tipo: cabecalho.tipo });
+  // Online aguarda aceitação (só imprime no "Aceitar"); o resto imprime já.
+  if (!ehOnline) printerService.dispararImpressao(pedido);
+  publicar('pedido_criado', { mesaId: cabecalho.mesaId, tipo: cabecalho.tipo, online: ehOnline });
 
   return pedido;
+}
+
+// Loja confirma um pedido online (PENDENTE -> ABERTO) e ENTÃO imprime na cozinha.
+async function aceitar(id, usuario) {
+  const pedido = await buscarPorId(id);
+  if (pedido.status !== STATUS_PEDIDO.PENDENTE) {
+    throw new AppError('Este pedido não está aguardando confirmação', 409);
+  }
+  const { count } = await prisma.pedido.updateMany({
+    where: { id, status: STATUS_PEDIDO.PENDENTE },
+    data: { status: STATUS_PEDIDO.ABERTO },
+  });
+  if (count === 0) throw new AppError('Pedido já foi tratado por outro operador', 409);
+
+  const atualizado = await buscarPorId(id);
+  printerService.dispararImpressao(atualizado); // agora sim vai pra cozinha
+  auditoriaService.registrar(usuario, 'pedido_online_aceito', `Pedido online #${id} aceito`);
+  publicar('pedido_status', { pedidoId: id });
+  return atualizado;
+}
+
+// Loja recusa um pedido online (PENDENTE -> CANCELADO), sem imprimir.
+async function recusar(id, motivo, usuario) {
+  const pedido = await buscarPorId(id);
+  if (pedido.status !== STATUS_PEDIDO.PENDENTE) {
+    throw new AppError('Este pedido não está aguardando confirmação', 409);
+  }
+  const texto = typeof motivo === 'string' && motivo.trim() ? motivo.trim() : 'Recusado pela loja';
+  const { count } = await prisma.pedido.updateMany({
+    where: { id, status: STATUS_PEDIDO.PENDENTE },
+    data: { status: STATUS_PEDIDO.CANCELADO, motivoCancelamento: texto },
+  });
+  if (count === 0) throw new AppError('Pedido já foi tratado por outro operador', 409);
+
+  auditoriaService.registrar(usuario, 'pedido_online_recusado', `Pedido online #${id} recusado — ${texto}`);
+  publicar('cancelamento', { pedidoId: id });
+  return { ok: true };
+}
+
+// Acompanhamento público do pedido (só status, sem dados pessoais).
+async function statusPublico(id) {
+  const pedido = await prisma.pedido.findUnique({
+    where: { id },
+    select: { status: true, tipo: true, total: true, origem: true },
+  });
+  if (!pedido || pedido.origem !== 'online') throw new AppError('Pedido não encontrado', 404);
+  return { status: pedido.status, tipo: pedido.tipo, total: pedido.total };
 }
 
 // Fluxo de produção (cozinha/garçom): aberto → em_preparo → entregue.
@@ -351,4 +403,7 @@ module.exports = {
   cancelar,
   removerItem,
   reimprimir,
+  aceitar,
+  recusar,
+  statusPublico,
 };

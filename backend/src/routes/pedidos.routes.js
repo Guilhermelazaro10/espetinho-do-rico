@@ -40,6 +40,15 @@ router.post('/:id/imprimir', async (req, res) => {
   res.json(await pedidosService.reimprimir(parseId(req.params.id))); // comanda de entrega/retirada
 });
 
+// Pedidos online: aceitar (vai pra cozinha + imprime) ou recusar
+router.post('/:id/aceitar', async (req, res) => {
+  res.json(await pedidosService.aceitar(parseId(req.params.id), req.usuario));
+});
+
+router.post('/:id/recusar', async (req, res) => {
+  res.json(await pedidosService.recusar(parseId(req.params.id), req.body?.motivo, req.usuario));
+});
+
 // Dinheiro e correções: EXCLUSIVO do gerente
 router.patch('/:id/pagamento', somenteGerente, async (req, res) => {
   res.json(
