@@ -49,6 +49,12 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
   if (Array.isArray(corpo.itens) && corpo.itens.length > 40) {
     throw new AppError('Pedido com itens demais');
   }
+  const qtdTotal = Array.isArray(corpo.itens)
+    ? corpo.itens.reduce((s, i) => s + (Number(i.quantidade) || 0), 0)
+    : 0;
+  if (qtdTotal > 100) {
+    throw new AppError('Pedido grande demais para o cardápio online');
+  }
 
   // Taxa de entrega é SEMPRE resolvida no servidor pelo bairro (não confia no cliente).
   let taxaEntrega = 0;

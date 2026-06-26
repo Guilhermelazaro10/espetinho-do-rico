@@ -11,6 +11,18 @@ const BLOQUEIO_BASE_MS = 30 * 1000; // 30s no 1º bloqueio, dobrando
 const BLOQUEIO_MAX_MS = 15 * 60 * 1000;
 
 const registros = new Map(); // ip -> { falhas, ultimaEm, bloqueadoAte }
+let ultimaLimpeza = 0;
+
+// Remove IPs inativos além da janela (impede o Map crescer pra sempre).
+function limpar(agora) {
+  if (agora - ultimaLimpeza < JANELA_MS) return;
+  ultimaLimpeza = agora;
+  for (const [ip, reg] of registros) {
+    if (agora - reg.ultimaEm > JANELA_MS && (!reg.bloqueadoAte || agora >= reg.bloqueadoAte)) {
+      registros.delete(ip);
+    }
+  }
+}
 
 function chave(req) {
   // Atrás do Cloudflare/Caddy, req.ip seria sempre o IP do proxy — o que
@@ -26,9 +38,10 @@ function chave(req) {
 }
 
 function verificar(req) {
+  const agora = Date.now();
+  limpar(agora);
   const reg = registros.get(chave(req));
   if (!reg) return;
-  const agora = Date.now();
   if (agora - reg.ultimaEm > JANELA_MS) {
     registros.delete(chave(req));
     return;
