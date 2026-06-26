@@ -4,6 +4,8 @@
 //   LOJA_WHATSAPP    -> só dígitos com DDI: 5588900000000
 //   LOJA_ABERTURA    -> "HH:MM" (ex.: 17:00). Sem isso, sempre aberto.
 //   LOJA_FECHAMENTO  -> "HH:MM" (ex.: 23:30). Pode virar a meia-noite (02:00).
+//   LOJA_DIAS        -> dias que abre, 0=Dom..6=Sáb. Ex.: "2,3,4,5,6" (Ter–Sáb).
+//                       Vazio = todos os dias.
 //   LOJA_BAIRROS     -> JSON: [{"nome":"Centro","taxa":300}]  (taxa em centavos)
 
 const nome = 'Espetinho do Rico';
@@ -12,6 +14,7 @@ const whatsapp = (process.env.LOJA_WHATSAPP || '').replace(/\D/g, '');
 
 const ABERTURA = (process.env.LOJA_ABERTURA || '').trim();
 const FECHAMENTO = (process.env.LOJA_FECHAMENTO || '').trim();
+const NOMES_DIA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 function bairros() {
   try {
@@ -24,27 +27,48 @@ function bairros() {
   }
 }
 
+function parseDias() {
+  return (process.env.LOJA_DIAS || '')
+    .split(',')
+    .map((d) => Number(d.trim()))
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+}
+
+function labelDias(dias) {
+  if (!dias.length) return '';
+  const ord = [...dias].sort((a, b) => a - b);
+  const contiguo = ord.every((d, i) => i === 0 || d === ord[i - 1] + 1);
+  return contiguo && ord.length > 1
+    ? `${NOMES_DIA[ord[0]]} a ${NOMES_DIA[ord[ord.length - 1]]}`
+    : ord.map((d) => NOMES_DIA[d]).join(', ');
+}
+
 function hhmmParaMin(s) {
   const [h, m] = String(s).split(':').map(Number);
   return h * 60 + (m || 0);
 }
 
-// Minutos do dia (0..1439) AGORA no fuso de São Paulo (servidor roda em UTC).
-function minutosAgoraSP() {
-  const fmt = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false,
-  });
-  const [h, m] = fmt.format(new Date()).split(':').map(Number);
-  return h * 60 + m;
+// Dia da semana (0=Dom) e minutos do dia AGORA em São Paulo (servidor roda em UTC).
+function agoraSP() {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date());
+  const v = (t) => partes.find((p) => p.type === t)?.value;
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return { dia: map[v('weekday')], minutos: (Number(v('hour')) % 24) * 60 + Number(v('minute')) };
 }
 
 function statusHorario() {
   if (!ABERTURA || !FECHAMENTO) return { aberto: true, texto: '' };
-  const agora = minutosAgoraSP();
+  const dias = parseDias();
+  const { dia, minutos } = agoraSP();
   const ini = hhmmParaMin(ABERTURA);
   const fim = hhmmParaMin(FECHAMENTO);
-  const aberto = fim > ini ? agora >= ini && agora < fim : agora >= ini || agora < fim;
-  return { aberto, texto: `${ABERTURA} às ${FECHAMENTO}` };
+  const naHora = fim > ini ? minutos >= ini && minutos < fim : minutos >= ini || minutos < fim;
+  const noDia = dias.length === 0 || dias.includes(dia);
+  const label = labelDias(dias);
+  const texto = `${label ? label + ', ' : ''}${ABERTURA} às ${FECHAMENTO}`;
+  return { aberto: noDia && naHora, texto };
 }
 
 module.exports = { nome, endereco, whatsapp, bairros, statusHorario };

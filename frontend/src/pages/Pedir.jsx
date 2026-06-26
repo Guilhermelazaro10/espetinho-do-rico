@@ -330,7 +330,7 @@ export default function Pedir() {
         </div>
         {fechada && (
           <div className="flex items-center justify-center gap-2 bg-rico-red px-4 py-2 text-sm font-extrabold text-rico-light">
-            <Clock size={16} /> Fechado agora{loja.horario ? ` · abre ${loja.horario}` : ''}
+            <Clock size={16} /> Fechado agora{loja.horario ? ` · ${loja.horario}` : ''}
           </div>
         )}
       </header>
