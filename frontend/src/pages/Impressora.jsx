@@ -165,54 +165,37 @@ export default function Impressora({ sessao, aoSair }) {
               {carregando ? 'Carregando…' : 'Nenhum cupom impresso ainda.'}
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] text-left">
-                <thead className="bg-rico-wood/12 text-xs font-bold uppercase tracking-wider text-rico-dark">
-                  <tr>
-                    <th className="px-5 py-3">#</th>
-                    <th className="px-5 py-3">Tipo</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3">Hora</th>
-                    <th className="px-5 py-3 text-right">Ação</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-rico-wood/18">
-                  {recentes.map((job) => {
-                    const s = STATUS[job.status] ?? STATUS.pendente;
-                    return (
-                      <tr key={job.id} className="odd:bg-white/60 even:bg-rico-light">
-                        <td className="px-5 py-3 font-bold text-carvao">#{job.id}</td>
-                        <td className="px-5 py-3 text-sm font-semibold text-carvao-claro">
-                          {ROTULO_TIPO[job.tipo] ?? job.tipo}
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${s.classe}`}>
-                            <s.Icone size={13} className={s.girar ? 'animate-spin' : ''} />
-                            {s.rotulo}
-                          </span>
-                          {job.status === 'erro' && job.erro && (
-                            <span className="ml-2 text-xs font-semibold text-rico-red/80">{job.erro}</span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3 text-sm font-semibold text-carvao-suave">{horaCurta(job.criadoEm)}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex justify-end">
-                            {(job.status === 'impresso' || job.status === 'erro') && (
-                              <button
-                                onClick={() => reimprimir(job.id)}
-                                className="flex items-center gap-1.5 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
-                              >
-                                <RotateCcw size={13} /> Reimprimir
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ul className="divide-y divide-rico-wood/18">
+              {recentes.map((job) => {
+                const s = STATUS[job.status] ?? STATUS.pendente;
+                return (
+                  <li key={job.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="font-bold text-carvao">#{job.id}</span>
+                      <span className="text-sm font-semibold text-carvao-claro">{ROTULO_TIPO[job.tipo] ?? job.tipo}</span>
+                      <span className="text-xs font-semibold text-carvao-suave">{horaCurta(job.criadoEm)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${s.classe}`}>
+                        <s.Icone size={13} className={s.girar ? 'animate-spin' : ''} />
+                        {s.rotulo}
+                      </span>
+                      {(job.status === 'impresso' || job.status === 'erro') && (
+                        <button
+                          onClick={() => reimprimir(job.id)}
+                          className="flex items-center gap-1.5 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
+                        >
+                          <RotateCcw size={13} /> Reimprimir
+                        </button>
+                      )}
+                    </div>
+                    {job.status === 'erro' && job.erro && (
+                      <p className="w-full text-xs font-semibold text-rico-red/80">{job.erro}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
       </div>
