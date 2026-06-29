@@ -153,6 +153,10 @@ async function criar(dados) {
   }
   // Troco menor que a conta não faz sentido — ignora (defensivo; o front também valida).
   if (extras.trocoPara && extras.trocoPara < total) delete extras.trocoPara;
+  // Agendamento (pedido feito com a loja fechada, pra quando ela abrir).
+  if (typeof dados.agendadoPara === 'string' && dados.agendadoPara.trim()) {
+    extras.agendadoPara = dados.agendadoPara.trim().slice(0, 60);
+  }
   // Pedido online entra como PENDENTE: só vai pra cozinha quando a loja "Aceitar".
   const ehOnline = extras.origem === 'online';
   if (ehOnline) extras.status = STATUS_PEDIDO.PENDENTE;

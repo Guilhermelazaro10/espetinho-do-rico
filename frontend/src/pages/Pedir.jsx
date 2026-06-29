@@ -177,6 +177,7 @@ export default function Pedir() {
       clienteTelefone: form.telefone.trim() || undefined,
       pagamentoPretendido: form.pagamento,
       trocoPara,
+      agendado: loja?.aberto === false, // loja fechada -> pedido agendado p/ próxima abertura
       ...(tipo === 'DELIVERY' ? { clienteEndereco: form.endereco.trim(), bairro: form.bairro || undefined } : {}),
       itens: carrinho.map((l) => ({
         produtoId: l.produto.id,
@@ -339,6 +340,14 @@ export default function Pedir() {
         </header>
 
         <main className="mx-auto w-full max-w-md px-4 py-5">
+          {fechada && loja?.proximaAbertura && (
+            <div className="mb-4 flex items-start gap-2 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">
+              <Clock size={18} className="mt-0.5 shrink-0 text-amber-600" />
+              <p className="text-sm font-semibold text-amber-800">
+                Loja fechada agora. Seu pedido será <strong>agendado para {loja.proximaAbertura}</strong>.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             {[
               { id: 'DELIVERY', rotulo: 'Entrega', Icone: Bike },
@@ -416,7 +425,7 @@ export default function Pedir() {
                 <p className="font-display text-2xl text-rico-dark">{moeda(totalFinal)}</p>
               </div>
               <button onClick={finalizar} disabled={enviando || carrinho.length === 0} className="flex min-h-[58px] flex-1 items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40">
-                {enviando ? <><Loader2 size={22} className="animate-spin" /> Enviando</> : 'Confirmar pedido'}
+                {enviando ? <><Loader2 size={22} className="animate-spin" /> Enviando</> : (fechada ? 'Agendar pedido' : 'Confirmar pedido')}
               </button>
             </div>
           </div>
@@ -452,8 +461,15 @@ export default function Pedir() {
     <div className="min-h-dvh bg-rico-light text-carvao">
       <TopoLoja loja={loja} />
       {fechada && (
-        <div className="flex items-center justify-center gap-2 bg-rico-red px-4 py-2 text-sm font-extrabold text-rico-light">
-          <Clock size={16} /> Fechado agora{loja.horario ? ` · ${loja.horario}` : ''}
+        <div className="bg-rico-red px-4 py-2 text-center text-rico-light">
+          <span className="flex items-center justify-center gap-2 text-sm font-extrabold">
+            <Clock size={16} /> Fechado agora{loja.horario ? ` · ${loja.horario}` : ''}
+          </span>
+          {loja.proximaAbertura && (
+            <span className="mt-0.5 block text-xs font-semibold text-rico-light/85">
+              Você pode agendar para {loja.proximaAbertura}
+            </span>
+          )}
         </div>
       )}
 
@@ -511,8 +527,8 @@ export default function Pedir() {
                 {moeda(subtotal)} <ChevronRight size={17} className="text-carvao/35" />
               </span>
             </button>
-            <button onClick={() => setEtapa('checkout')} disabled={fechada} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40">
-              {fechada ? 'Loja fechada no momento' : 'Avançar para a entrega'}
+            <button onClick={() => setEtapa('checkout')} disabled={fechada && !loja?.proximaAbertura} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40">
+              {fechada ? (loja?.proximaAbertura ? 'Agendar pedido' : 'Loja fechada no momento') : 'Avançar para a entrega'}
             </button>
           </div>
         </footer>

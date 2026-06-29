@@ -31,6 +31,7 @@ router.get('/cardapio', async (req, res) => {
       whatsapp: loja.whatsapp,
       aberto,
       horario: texto,
+      proximaAbertura: loja.proximaAbertura()?.texto ?? null,
       bairros: loja.bairros(),
     },
     categorias,
@@ -39,11 +40,16 @@ router.get('/cardapio', async (req, res) => {
 
 // Pedido online (sem login, anti-spam). Cria DELIVERY/BALCAO no PDV.
 router.post('/pedidos', limitePedidoPublico, async (req, res) => {
-  if (!loja.statusHorario().aberto) {
-    throw new AppError('A loja está fechada no momento. Tente no horário de funcionamento.', 409);
-  }
-
   const corpo = req.body ?? {};
+  let agendadoPara;
+  if (!loja.statusHorario().aberto) {
+    const prox = loja.proximaAbertura();
+    if (corpo.agendado && prox) {
+      agendadoPara = prox.texto; // pedido agendado para a próxima abertura
+    } else {
+      throw new AppError('A loja está fechada no momento. Tente no horário de funcionamento.', 409);
+    }
+  }
   if (corpo.tipo !== 'DELIVERY' && corpo.tipo !== 'BALCAO') {
     throw new AppError('Tipo deve ser DELIVERY (entrega) ou BALCAO (retirada)');
   }
@@ -76,6 +82,7 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
     origem: 'online',
     taxaEntrega,
     clienteEndereco,
+    agendadoPara,
   });
 
   res.status(201).json({

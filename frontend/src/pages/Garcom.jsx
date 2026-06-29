@@ -321,6 +321,12 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
     return mesmaCategoria && (!termo || p.nome.toLowerCase().includes(termo));
   });
 
+  const qtdPorProduto = useMemo(() => {
+    const m = {};
+    for (const l of linhas) m[l.produto.id] = (m[l.produto.id] || 0) + l.quantidade;
+    return m;
+  }, [linhas]);
+
   function aoMudarCategoria(nome) {
     setCategoria(nome);
     listaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -386,22 +392,30 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
         </div>
 
         <ul className="mt-4 space-y-3">
-          {visiveis.map((produto) => (
+          {visiveis.map((produto) => {
+            const qtd = qtdPorProduto[produto.id] || 0;
+            return (
             <li key={produto.id}>
               <button
                 onClick={() => acoes.adicionarProduto(produto)}
-                className="flex min-h-[78px] w-full items-center justify-between gap-4 rounded-2xl bg-rico-light/6 px-4 py-3 text-left ring-1 ring-rico-light/10 transition active:scale-[0.98] active:bg-rico-light/12"
+                className={`flex min-h-[78px] w-full items-center justify-between gap-4 rounded-2xl px-4 py-3 text-left ring-1 transition active:scale-[0.98] ${qtd > 0 ? 'bg-rico-light/12 ring-rico-red/40' : 'bg-rico-light/6 ring-rico-light/10 active:bg-rico-light/12'}`}
               >
                 <span className="min-w-0">
                   <span className="block text-base font-extrabold text-rico-light">{produto.nome}</span>
                   <span className="mt-1 block text-sm font-bold text-rico-wood">{moeda(produto.preco)}</span>
                 </span>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
+                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
                   <Plus size={24} strokeWidth={2.7} />
+                  {qtd > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rico-wood px-1 text-xs font-extrabold text-rico-dark ring-2 ring-carvao">
+                      {qtd}
+                    </span>
+                  )}
                 </span>
               </button>
             </li>
-          ))}
+            );
+          })}
           {visiveis.length === 0 && (
             <li className="rounded-2xl bg-rico-light/6 px-4 py-8 text-center text-sm font-bold text-rico-light/55 ring-1 ring-rico-light/10">
               Nenhum item encontrado.

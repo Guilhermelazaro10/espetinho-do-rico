@@ -112,6 +112,7 @@ function montarLinhasCupom(pedido) {
   linhas.push(divisoria('='));
   linhas.push(justificar(`PEDIDO #${pedido.id}`, dataHora));
   if (pedido.origem === 'online') linhas.push(centralizar('***  PEDIDO ONLINE  ***'));
+  if (pedido.agendadoPara) linhas.push(centralizar(`AGENDADO: ${pedido.agendadoPara}`));
   linhas.push('');
 
   if (tipo === 'DELIVERY') {

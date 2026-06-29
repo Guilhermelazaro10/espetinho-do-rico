@@ -69,6 +69,12 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const totalItens = carrinho.reduce((soma, item) => soma + item.produto.preco * item.quantidade, 0);
   const total = totalItens + taxa;
 
+  const qtdPorProduto = useMemo(() => {
+    const m = {};
+    for (const item of carrinho) m[item.produto.id] = (m[item.produto.id] || 0) + item.quantidade;
+    return m;
+  }, [carrinho]);
+
   function alterarForm(campo, valor) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
   }
@@ -251,21 +257,29 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                     {categoria}
                   </h2>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {lista.map((produto) => (
-                      <button
-                        key={produto.id}
-                        onClick={() => adicionar(produto)}
-                        className="flex min-h-24 items-center justify-between rounded-xl border border-rico-wood/25 bg-white/82 px-4 py-3 text-left shadow-suave transition hover:-translate-y-0.5 hover:border-rico-red/35 hover:shadow-media"
-                      >
-                        <span>
-                          <span className="block font-bold text-carvao">{produto.nome}</span>
-                          <span className="text-sm font-semibold text-rico-red">{moeda(produto.preco)}</span>
-                        </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-rico-red text-rico-light">
-                          <Plus size={18} />
-                        </span>
-                      </button>
-                    ))}
+                    {lista.map((produto) => {
+                      const qtd = qtdPorProduto[produto.id] || 0;
+                      return (
+                        <button
+                          key={produto.id}
+                          onClick={() => adicionar(produto)}
+                          className={`flex min-h-24 items-center justify-between rounded-xl border bg-white/82 px-4 py-3 text-left shadow-suave transition hover:-translate-y-0.5 hover:shadow-media ${qtd > 0 ? 'border-rico-red/40' : 'border-rico-wood/25 hover:border-rico-red/35'}`}
+                        >
+                          <span>
+                            <span className="block font-bold text-carvao">{produto.nome}</span>
+                            <span className="text-sm font-semibold text-rico-red">{moeda(produto.preco)}</span>
+                          </span>
+                          <span className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-rico-red text-rico-light">
+                            <Plus size={18} />
+                            {qtd > 0 && (
+                              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-carvao px-1 text-xs font-extrabold text-rico-light ring-2 ring-white">
+                                {qtd}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -425,6 +439,11 @@ function PendenteCard({ pedido, onAceitar, onRecusar }) {
         </div>
         <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
       </div>
+      {pedido.agendadoPara && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-extrabold text-amber-700">
+          <Clock size={12} /> Agendado: {pedido.agendadoPara}
+        </p>
+      )}
       <ul className="mt-2 space-y-0.5 text-sm text-carvao-claro">
         {pedido.itens?.map((it) => (
           <li key={it.id}>
@@ -479,6 +498,11 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimpri
           )}
           {pedido.clienteEndereco && (
             <p className="mt-1 text-xs font-semibold text-carvao-suave">{pedido.clienteEndereco}</p>
+          )}
+          {pedido.agendadoPara && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
+              <Clock size={12} /> Agendado: {pedido.agendadoPara}
+            </p>
           )}
         </div>
         <span className="flex items-center gap-1 rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">

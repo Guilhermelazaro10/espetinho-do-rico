@@ -71,4 +71,25 @@ function statusHorario() {
   return { aberto: noDia && naHora, texto };
 }
 
-module.exports = { nome, endereco, whatsapp, bairros, statusHorario };
+const NOMES_DIA_LONGO = [
+  'domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado',
+];
+
+// Próxima vez que a loja abre (pra oferecer agendamento quando fechada).
+function proximaAbertura() {
+  if (!ABERTURA || !FECHAMENTO) return null;
+  const dias = parseDias();
+  if (!dias.length) return null;
+  const { dia, minutos } = agoraSP();
+  const ini = hhmmParaMin(ABERTURA);
+  for (let off = 0; off <= 7; off++) {
+    const d = (dia + off) % 7;
+    if (!dias.includes(d)) continue;
+    if (off === 0 && minutos < ini) return { texto: `hoje às ${ABERTURA}` };
+    if (off === 1) return { texto: `amanhã às ${ABERTURA}` };
+    if (off > 1) return { texto: `${NOMES_DIA_LONGO[d]} às ${ABERTURA}` };
+  }
+  return null;
+}
+
+module.exports = { nome, endereco, whatsapp, bairros, statusHorario, proximaAbertura };
