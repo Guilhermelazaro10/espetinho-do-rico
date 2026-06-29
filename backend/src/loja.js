@@ -71,23 +71,35 @@ function statusHorario() {
   return { aberto: noDia && naHora, texto };
 }
 
-const NOMES_DIA_LONGO = [
-  'domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado',
-];
+const NOMES_CURTO = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+// Data atual (ano/mês/dia) no fuso de São Paulo.
+function dataSP() {
+  const p = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const v = (t) => Number(p.find((x) => x.type === t)?.value);
+  return { ano: v('year'), mes: v('month'), diaMes: v('day') };
+}
 
 // Próxima vez que a loja abre (pra oferecer agendamento quando fechada).
+// Texto com data, ex.: "hoje às 17:00" ou "ter, 01/07 às 17:00".
 function proximaAbertura() {
   if (!ABERTURA || !FECHAMENTO) return null;
   const dias = parseDias();
   if (!dias.length) return null;
   const { dia, minutos } = agoraSP();
   const ini = hhmmParaMin(ABERTURA);
+  const { ano, mes, diaMes } = dataSP();
   for (let off = 0; off <= 7; off++) {
     const d = (dia + off) % 7;
     if (!dias.includes(d)) continue;
-    if (off === 0 && minutos < ini) return { texto: `hoje às ${ABERTURA}` };
-    if (off === 1) return { texto: `amanhã às ${ABERTURA}` };
-    if (off > 1) return { texto: `${NOMES_DIA_LONGO[d]} às ${ABERTURA}` };
+    if (off === 0 && minutos >= ini) continue; // hoje já passou da abertura
+    if (off === 0) return { texto: `hoje às ${ABERTURA}` };
+    const alvo = new Date(Date.UTC(ano, mes - 1, diaMes + off));
+    const dd = String(alvo.getUTCDate()).padStart(2, '0');
+    const mm = String(alvo.getUTCMonth() + 1).padStart(2, '0');
+    return { texto: `${NOMES_CURTO[d]}, ${dd}/${mm} às ${ABERTURA}` };
   }
   return null;
 }
