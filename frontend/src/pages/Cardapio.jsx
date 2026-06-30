@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Edit3, Eye, EyeOff, Plus, RefreshCw, RotateCcw, Save, Search, Trash2, UtensilsCrossed } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Plus, RefreshCw, RotateCcw, Save, Search, UtensilsCrossed } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
@@ -76,25 +76,24 @@ export default function Cardapio({ sessao, aoSair }) {
 
   async function desativar(produto) {
     const ok = await confirmar({
-      titulo: `Inativar ${produto.nome}?`,
-      mensagem: 'Ele some do cardapio, mas as vendas passadas continuam intactas.',
-      confirmarRotulo: 'Inativar',
-      perigo: true,
+      titulo: `Marcar ${produto.nome} como esgotado?`,
+      mensagem: 'Some na hora do cardapio online e da tela dos garcons. E so reativar quando voltar a ter.',
+      confirmarRotulo: 'Esgotou',
     });
     if (!ok) return;
     try {
       await api.produtos.desativar(produto.id);
-      notificar.brasa('Produto inativado', 'Ele nao aparece mais para venda');
+      notificar.brasa('Marcado como esgotado', 'Sumiu do cardapio online e dos garcons');
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel inativar', e.message);
+      notificar.erro('Nao foi possivel esgotar', e.message);
     }
   }
 
   async function reativar(produto) {
     try {
       await api.produtos.reativar(produto.id);
-      notificar.sucesso('Produto reativado', produto.nome);
+      notificar.sucesso('Disponivel de novo', produto.nome);
       await recarregar();
     } catch (e) {
       notificar.erro('Nao foi possivel reativar', e.message);
@@ -191,10 +190,10 @@ export default function Cardapio({ sessao, aoSair }) {
                   <p className="truncate text-lg font-bold text-carvao">{produto.nome}</p>
                   <p className="text-sm font-semibold text-carvao-suave">{produto.categoria}</p>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                  produto.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-carvao/10 text-carvao-suave'
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                  produto.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                 }`}>
-                  {produto.ativo ? 'Ativo' : 'Inativo'}
+                  {produto.ativo ? 'Disponivel' : 'Esgotado'}
                 </span>
               </div>
               <p className="mt-4 font-display text-3xl text-rico-red">{moeda(produto.preco)}</p>
@@ -208,20 +207,18 @@ export default function Cardapio({ sessao, aoSair }) {
                 {produto.ativo ? (
                   <button
                     onClick={() => desativar(produto)}
-                    className="rounded-lg p-2 text-rico-red hover:bg-rico-red/10"
-                    aria-label="Inativar"
-                    title="Inativar"
+                    className="flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
+                    title="Marcar como esgotado (some do cardapio e dos garcons)"
                   >
-                    <Trash2 size={16} />
+                    <EyeOff size={14} /> Esgotou
                   </button>
                 ) : (
                   <button
                     onClick={() => reativar(produto)}
-                    className="rounded-lg p-2 text-emerald-700 hover:bg-emerald-100"
-                    aria-label="Reativar"
-                    title="Reativar"
+                    className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-emerald-700"
+                    title="Voltar a vender"
                   >
-                    <RotateCcw size={16} />
+                    <RotateCcw size={14} /> Disponibilizar
                   </button>
                 )}
               </div>

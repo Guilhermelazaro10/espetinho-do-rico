@@ -7,6 +7,7 @@ import {
 import { api, moeda } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { adicionarNaFila, listarFila, sincronizarFila } from '../lib/filaOffline';
+import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 
 const ICONES_CATEGORIA = { Espetinhos: Beef, Bebidas: Beer, Guarnições: UtensilsCrossed };
 
@@ -38,6 +39,13 @@ export default function Garcom({ aoSair }) {
   useEffect(() => {
     carregarCardapio();
   }, [carregarCardapio]);
+
+  // Tempo real: produto que o gerente esgota/reativa some/volta na hora,
+  // sem toast (o recarregar manual já dá o feedback de erro).
+  const atualizarCardapioSilencioso = useCallback(() => {
+    api.produtos.listar().then(setProdutos).catch(() => {});
+  }, []);
+  useAtualizacaoAoVivo(atualizarCardapioSilencioso);
 
   const sincronizar = useCallback(async () => {
     if (listarFila().length === 0) return;
