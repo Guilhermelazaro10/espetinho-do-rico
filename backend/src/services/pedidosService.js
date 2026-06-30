@@ -230,6 +230,23 @@ async function recusar(id, motivo, usuario) {
   return { ok: true };
 }
 
+// Autopreenchimento no balcão: acha nome/endereço do último pedido desse telefone.
+async function clientePorTelefone(telefone) {
+  const tel = String(telefone || '').replace(/\D/g, '');
+  if (tel.length < 8) return null;
+  const recentes = await prisma.pedido.findMany({
+    where: { clienteTelefone: { not: null } },
+    orderBy: { criadoEm: 'desc' },
+    take: 300,
+    select: { clienteNome: true, clienteEndereco: true, clienteTelefone: true },
+  });
+  const achado = recentes.find((p) => {
+    const d = String(p.clienteTelefone).replace(/\D/g, '');
+    return d.length >= 8 && (d.endsWith(tel) || tel.endsWith(d));
+  });
+  return achado ? { clienteNome: achado.clienteNome, clienteEndereco: achado.clienteEndereco } : null;
+}
+
 // Acompanhamento público do pedido (só status, sem dados pessoais).
 async function statusPublico(id) {
   const pedido = await prisma.pedido.findUnique({
@@ -410,4 +427,5 @@ module.exports = {
   aceitar,
   recusar,
   statusPublico,
+  clientePorTelefone,
 };

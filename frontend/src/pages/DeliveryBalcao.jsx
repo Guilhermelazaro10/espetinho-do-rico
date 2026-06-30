@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CheckCircle2, CreditCard,
   Banknote, QrCode, Ban, Clock, ReceiptText, Loader2, Printer, BellRing,
+  Search, MapPin, Phone,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
@@ -18,7 +19,27 @@ const STATUS_ROTULO = {
   cancelado: 'Cancelado',
 };
 
-const FORM_VAZIO = { clienteNome: '', clienteTelefone: '', clienteEndereco: '', taxaEntrega: '5,00' };
+const FORM_VAZIO = {
+  clienteNome: '', clienteTelefone: '', clienteEndereco: '', bairro: '',
+  taxaEntrega: '5,00', pagamento: '', troco: '',
+};
+
+const PAGAMENTOS = [
+  { id: 'pix', rotulo: 'Pix', Icone: QrCode },
+  { id: 'cartao', rotulo: 'Cartão', Icone: CreditCard },
+  { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
+];
+
+// Telefone -> link de WhatsApp (DDI 55) / endereço -> Google Maps.
+const linkWhats = (tel) => `https://wa.me/55${String(tel || '').replace(/\D/g, '')}`;
+const linkMapa = (end) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(end || '')}`;
+
+function desdeMin(criadoEm, agora) {
+  const min = Math.max(0, Math.round((agora - new Date(criadoEm).getTime()) / 60000));
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  return `há ${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
+}
 
 export default function DeliveryBalcao({ sessao, aoSair }) {
   const [aba, setAba] = useState(TIPOS_PEDIDO.DELIVERY);
@@ -29,20 +50,27 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const [form, setForm] = useState(FORM_VAZIO);
   const [carregando, setCarregando] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [catAtiva, setCatAtiva] = useState(null);
+  const [bairros, setBairros] = useState([]);
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
+  const [agora, setAgora] = useState(() => Date.now());
   const gerente = ehGerente(sessao);
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const [catalogo, delivery, balcao, online] = await Promise.all([
+      const [catalogo, delivery, balcao, online, publico] = await Promise.all([
         api.produtos.listar(),
         api.pedidos.listarAbertos(TIPOS_PEDIDO.DELIVERY),
         api.pedidos.listarAbertos(TIPOS_PEDIDO.BALCAO),
         api.pedidos.listarPendentes(),
+        api.publico.cardapio().catch(() => null),
       ]);
       setProdutos(catalogo);
       setPedidos([...delivery, ...balcao]);
       setPendentes(online);
+      setBairros(publico?.loja?.bairros ?? []);
     } catch (e) {
       notificar.erro('Delivery indisponivel', e.message);
     } finally {
@@ -55,15 +83,22 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   }, [recarregar]);
   useAtualizacaoAoVivo(recarregar); // tempo real, igual ao Salão/Cozinha
 
-  const produtosPorCategoria = useMemo(() => {
-    const grupos = new Map();
-    for (const produto of produtos) {
-      const lista = grupos.get(produto.categoria) ?? [];
-      lista.push(produto);
-      grupos.set(produto.categoria, lista);
-    }
-    return [...grupos.entries()];
-  }, [produtos]);
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 30000); // atualiza "há X min"
+    return () => clearInterval(t);
+  }, []);
+
+  const categorias = useMemo(() => [...new Set(produtos.map((p) => p.categoria))], [produtos]);
+  useEffect(() => {
+    if (!catAtiva && categorias.length) setCatAtiva(categorias[0]);
+  }, [categorias, catAtiva]);
+
+  const produtosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return produtos.filter((p) =>
+      termo ? p.nome.toLowerCase().includes(termo) : p.categoria === catAtiva
+    );
+  }, [produtos, busca, catAtiva]);
 
   const taxa = aba === TIPOS_PEDIDO.DELIVERY ? paraCentavos(form.taxaEntrega) : 0;
   const totalItens = carrinho.reduce((soma, item) => soma + item.produto.preco * item.quantidade, 0);
@@ -77,6 +112,35 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
 
   function alterarForm(campo, valor) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
+  }
+
+  function selecionarBairro(nome) {
+    const b = bairros.find((x) => x.nome === nome);
+    setForm((atual) => ({
+      ...atual,
+      bairro: nome,
+      taxaEntrega: b ? (b.taxa / 100).toFixed(2).replace('.', ',') : atual.taxaEntrega,
+    }));
+  }
+
+  async function buscarClientePorTel() {
+    if (form.clienteTelefone.replace(/\D/g, '').length < 8) return;
+    setBuscandoCliente(true);
+    try {
+      const c = await api.pedidos.buscarCliente(form.clienteTelefone);
+      if (c) {
+        setForm((atual) => ({
+          ...atual,
+          clienteNome: atual.clienteNome || c.clienteNome || '',
+          clienteEndereco: atual.clienteEndereco || c.clienteEndereco || '',
+        }));
+        notificar.sucesso('Cliente encontrado', c.clienteNome ?? '');
+      }
+    } catch {
+      /* silencioso */
+    } finally {
+      setBuscandoCliente(false);
+    }
   }
 
   function adicionar(produto) {
@@ -111,6 +175,9 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     const corpo = {
       tipo: aba,
       clienteNome: form.clienteNome,
+      pagamentoPretendido: form.pagamento || undefined,
+      trocoPara:
+        form.pagamento === 'dinheiro' && form.troco.trim() ? paraCentavos(form.troco) : undefined,
       itens: carrinho.map((item) => ({
         produtoId: item.produto.id,
         quantidade: item.quantidade,
@@ -213,6 +280,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   }
 
   const pedidosDaAba = pedidos.filter((pedido) => pedido.tipo === aba);
+  const totalAberto = pedidos.reduce((s, p) => s + p.total, 0);
 
   const acoes = (
     <button
@@ -225,6 +293,20 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
 
   return (
     <AppShell titulo="Delivery e Balcao" acoes={acoes} sessao={sessao} aoSair={aoSair}>
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Em andamento</p>
+          <p className="font-display text-2xl text-rico-dark">{pedidos.length}</p>
+        </div>
+        <div className={`rounded-xl px-4 py-3 shadow-suave ring-1 ${pendentes.length ? 'bg-emerald-50 ring-emerald-200' : 'bg-white/80 ring-rico-wood/20'}`}>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Novos online</p>
+          <p className="font-display text-2xl text-rico-dark">{pendentes.length}</p>
+        </div>
+        <div className="col-span-2 rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20 sm:col-span-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Em aberto</p>
+          <p className="font-display text-2xl text-rico-dark">{moeda(totalAberto)}</p>
+        </div>
+      </div>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-5">
           {pendentes.length > 0 && (
@@ -250,39 +332,62 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
           </div>
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="space-y-4">
-              {produtosPorCategoria.map(([categoria, lista]) => (
-                <div key={categoria}>
-                  <h2 className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-carvao-suave">
-                    {categoria}
-                  </h2>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {lista.map((produto) => {
-                      const qtd = qtdPorProduto[produto.id] || 0;
-                      return (
-                        <button
-                          key={produto.id}
-                          onClick={() => adicionar(produto)}
-                          className={`flex min-h-24 items-center justify-between rounded-xl border bg-white/82 px-4 py-3 text-left shadow-suave transition hover:-translate-y-0.5 hover:shadow-media ${qtd > 0 ? 'border-rico-red/40' : 'border-rico-wood/25 hover:border-rico-red/35'}`}
-                        >
-                          <span>
-                            <span className="block font-bold text-carvao">{produto.nome}</span>
-                            <span className="text-sm font-semibold text-rico-red">{moeda(produto.preco)}</span>
-                          </span>
-                          <span className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-rico-red text-rico-light">
-                            <Plus size={18} />
-                            {qtd > 0 && (
-                              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-carvao px-1 text-xs font-extrabold text-rico-light ring-2 ring-white">
-                                {qtd}
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+            <section className="space-y-3">
+              <label className="flex items-center gap-2 rounded-xl bg-white px-4 ring-1 ring-rico-wood/25">
+                <Search size={18} className="text-carvao-suave" />
+                <input
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar item..."
+                  className="min-w-0 flex-1 bg-transparent py-2.5 text-sm font-semibold text-carvao outline-none placeholder:text-carvao/40"
+                />
+              </label>
+              {!busca && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {categorias.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCatAtiva(c)}
+                      className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition ${
+                        c === catAtiva ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-white text-carvao-suave ring-1 ring-rico-wood/25'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {produtosFiltrados.map((produto) => {
+                  const qtd = qtdPorProduto[produto.id] || 0;
+                  return (
+                    <button
+                      key={produto.id}
+                      onClick={() => adicionar(produto)}
+                      className={`flex min-h-20 items-center justify-between rounded-xl border bg-white/82 px-4 py-3 text-left shadow-suave transition hover:-translate-y-0.5 hover:shadow-media ${qtd > 0 ? 'border-rico-red/40' : 'border-rico-wood/25 hover:border-rico-red/35'}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold text-carvao">{produto.nome}</span>
+                        <span className="text-sm font-semibold text-rico-red">{moeda(produto.preco)}</span>
+                      </span>
+                      <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rico-red text-rico-light">
+                        <Plus size={18} />
+                        {qtd > 0 && (
+                          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-carvao px-1 text-xs font-extrabold text-rico-light ring-2 ring-white">
+                            {qtd}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+                {produtosFiltrados.length === 0 && (
+                  <p className="col-span-full rounded-xl bg-white/70 px-4 py-6 text-center text-sm font-semibold text-carvao-suave ring-1 ring-rico-wood/25">
+                    Nenhum item encontrado.
+                  </p>
+                )}
+              </div>
             </section>
 
             <aside className="rounded-xl bg-rico-dark p-4 text-rico-light shadow-media">
@@ -290,14 +395,60 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 <ReceiptText size={16} /> Novo pedido
               </h2>
               <div className="mt-4 space-y-3">
+                {aba === TIPOS_PEDIDO.DELIVERY && (
+                  <Input
+                    rotulo="Telefone"
+                    valor={form.clienteTelefone}
+                    onChange={(v) => alterarForm('clienteTelefone', v)}
+                    onBlur={buscarClientePorTel}
+                    dica={buscandoCliente ? 'buscando cliente...' : 'sai do campo p/ buscar pelo histórico'}
+                  />
+                )}
                 <Input rotulo="Cliente" valor={form.clienteNome} onChange={(v) => alterarForm('clienteNome', v)} />
                 {aba === TIPOS_PEDIDO.DELIVERY && (
                   <>
-                    <Input rotulo="Telefone" valor={form.clienteTelefone} onChange={(v) => alterarForm('clienteTelefone', v)} />
                     <Input rotulo="Endereco" valor={form.clienteEndereco} onChange={(v) => alterarForm('clienteEndereco', v)} />
+                    {bairros.length > 0 && (
+                      <label className="block">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Bairro</span>
+                        <select
+                          value={form.bairro}
+                          onChange={(e) => selecionarBairro(e.target.value)}
+                          className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+                        >
+                          <option value="">Selecione o bairro</option>
+                          {bairros.map((b) => (
+                            <option key={b.nome} value={b.nome}>{b.nome} — {moeda(b.taxa)}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <Input rotulo="Taxa" valor={form.taxaEntrega} onChange={(v) => alterarForm('taxaEntrega', v)} />
                   </>
                 )}
+
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Pagamento</span>
+                  <div className="mt-1 grid grid-cols-3 gap-1.5">
+                    {PAGAMENTOS.map(({ id, rotulo, Icone }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => alterarForm('pagamento', form.pagamento === id ? '' : id)}
+                        className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 text-xs font-bold transition ${
+                          form.pagamento === id ? 'border-rico-wood bg-rico-wood/15 text-rico-wood' : 'border-rico-light/15 text-rico-light/60'
+                        }`}
+                      >
+                        <Icone size={16} /> {rotulo}
+                      </button>
+                    ))}
+                  </div>
+                  {form.pagamento === 'dinheiro' && (
+                    <div className="mt-2">
+                      <Input rotulo="Troco para" valor={form.troco} onChange={(v) => alterarForm('troco', v)} />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <ul className="mt-4 space-y-2">
@@ -374,6 +525,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 key={pedido.id}
                 pedido={pedido}
                 gerente={gerente}
+                agora={agora}
                 onAvancar={avancar}
                 onPagar={pagar}
                 onCancelar={cancelar}
@@ -405,15 +557,17 @@ function Aba({ ativa, onClick, Icone, children }) {
   );
 }
 
-function Input({ rotulo, valor, onChange }) {
+function Input({ rotulo, valor, onChange, onBlur, dica }) {
   return (
     <label className="block">
       <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">{rotulo}</span>
       <input
         value={valor}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
       />
+      {dica && <span className="mt-0.5 block text-[10px] font-semibold text-rico-light/40">{dica}</span>}
     </label>
   );
 }
@@ -431,10 +585,14 @@ function PendenteCard({ pedido, onAceitar, onRecusar }) {
           </p>
           <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
           {pedido.clienteTelefone && (
-            <p className="text-xs font-semibold text-carvao-suave">{pedido.clienteTelefone}</p>
+            <a href={linkWhats(pedido.clienteTelefone)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 underline-offset-2 hover:underline">
+              <Phone size={11} /> {pedido.clienteTelefone}
+            </a>
           )}
           {pedido.clienteEndereco && (
-            <p className="mt-0.5 text-xs font-semibold text-carvao-suave">{pedido.clienteEndereco}</p>
+            <a href={linkMapa(pedido.clienteEndereco)} target="_blank" rel="noopener noreferrer" className="mt-0.5 flex items-start gap-1 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline">
+              <MapPin size={11} className="mt-0.5 shrink-0" /> {pedido.clienteEndereco}
+            </a>
           )}
         </div>
         <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
@@ -478,7 +636,7 @@ function PendenteCard({ pedido, onAceitar, onRecusar }) {
   );
 }
 
-function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimprimir }) {
+function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCancelar, onReimprimir }) {
   const podeAvancar = ['aberto', 'em_preparo'].includes(pedido.status);
   return (
     <article className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
@@ -494,10 +652,14 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimpri
           </p>
           <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
           {pedido.clienteTelefone && (
-            <p className="text-xs font-semibold text-carvao-suave">{pedido.clienteTelefone}</p>
+            <a href={linkWhats(pedido.clienteTelefone)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 underline-offset-2 hover:underline">
+              <Phone size={11} /> {pedido.clienteTelefone}
+            </a>
           )}
           {pedido.clienteEndereco && (
-            <p className="mt-1 text-xs font-semibold text-carvao-suave">{pedido.clienteEndereco}</p>
+            <a href={linkMapa(pedido.clienteEndereco)} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-start gap-1 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline">
+              <MapPin size={11} className="mt-0.5 shrink-0" /> {pedido.clienteEndereco}
+            </a>
           )}
           {pedido.agendadoPara && (
             <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
@@ -505,9 +667,14 @@ function PedidoCard({ pedido, gerente, onAvancar, onPagar, onCancelar, onReimpri
             </p>
           )}
         </div>
-        <span className="flex items-center gap-1 rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">
-          <Clock size={12} /> {STATUS_ROTULO[pedido.status] ?? pedido.status}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className="rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">
+            {STATUS_ROTULO[pedido.status] ?? pedido.status}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] font-semibold text-carvao-suave">
+            <Clock size={11} /> {desdeMin(pedido.criadoEm, agora)}
+          </span>
+        </div>
       </div>
       <ul className="mt-3 space-y-1 text-sm text-carvao-claro">
         {pedido.itens?.map((item) => (

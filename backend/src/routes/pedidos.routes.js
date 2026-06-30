@@ -13,6 +13,11 @@ router.get('/', async (req, res) => {
   );
 });
 
+// Autopreenchimento no balcão pelo telefone (antes de /:id pra não conflitar)
+router.get('/cliente', async (req, res) => {
+  res.json(await pedidosService.clientePorTelefone(req.query.telefone));
+});
+
 router.get('/:id', async (req, res) => {
   res.json(await pedidosService.buscarPorId(parseId(req.params.id)));
 });

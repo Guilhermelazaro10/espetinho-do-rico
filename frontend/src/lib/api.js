@@ -63,6 +63,7 @@ export const api = {
     listarAbertos: (tipo) =>
       requisitar(`/pedidos?abertos=true${tipo ? `&tipo=${tipo}` : ''}`),
     listarPendentes: () => requisitar('/pedidos?status=pendente'),
+    buscarCliente: (telefone) => requisitar(`/pedidos/cliente?telefone=${encodeURIComponent(telefone)}`),
     criar: (corpo) => requisitar('/pedidos', { method: 'POST', body: corpo }),
     atualizarStatus: (id, status) =>
       requisitar(`/pedidos/${id}/status`, { method: 'PATCH', body: { status } }),
