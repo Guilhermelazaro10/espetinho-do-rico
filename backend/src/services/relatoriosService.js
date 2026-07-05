@@ -5,8 +5,19 @@ const { STATUS_PEDIDO_EM_ABERTO } = require('../constantes');
 // Fonte de verdade da gaveta: tabela `pagamentos` (valores líquidos,
 // troco já descontado, parciais incluídos).
 
+const FUSO_LOJA = 'America/Fortaleza';
+
+// "YYYY-MM-DD" no fuso da loja — o servidor roda em UTC; sem isso o "dia"
+// financeiro viraria às 21:00 do Ceará e o fim da noite cairia no dia seguinte.
+function diaLoja(data = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: FUSO_LOJA, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(data);
+}
+
+// Meia-noite da loja como instante exato (Fortaleza é UTC-3 fixo, sem horário de verão)
 function inicioDoDia(data = new Date()) {
-  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  return new Date(`${diaLoja(data)}T00:00:00-03:00`);
 }
 
 function intervaloDoPeriodo(periodo) {
@@ -23,9 +34,11 @@ function intervaloDoPeriodo(periodo) {
     };
   }
   if (periodo === 'mes') {
+    const [ano, mes] = diaLoja().split('-').map(Number);
+    const primeiroDia = (a, m) => new Date(`${a}-${String(m).padStart(2, '0')}-01T00:00:00-03:00`);
     return {
-      inicio: new Date(hoje.getFullYear(), hoje.getMonth(), 1),
-      fim: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1),
+      inicio: primeiroDia(ano, mes),
+      fim: mes === 12 ? primeiroDia(ano + 1, 1) : primeiroDia(ano, mes + 1),
       rotulo: 'Mês atual',
     };
   }
@@ -67,7 +80,7 @@ async function faturamento(periodo = 'dia') {
   // Série diária (faturamento por dia dentro da janela)
   const porDia = new Map();
   for (const p of pagamentos) {
-    const chave = inicioDoDia(new Date(p.criadoEm)).toISOString().slice(0, 10);
+    const chave = diaLoja(new Date(p.criadoEm));
     porDia.set(chave, (porDia.get(chave) ?? 0) + p.valor);
   }
   const serie = [];
