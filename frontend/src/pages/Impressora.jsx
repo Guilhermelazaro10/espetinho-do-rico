@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api } from '../lib/api';
+import { horaLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 
 const ROTULO_TIPO = { cupom: 'Cupom', pre_conta: 'Pré-conta', gaveta: 'Gaveta', teste: 'Teste' };
@@ -17,8 +18,7 @@ const STATUS = {
 };
 
 function horaCurta(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return horaLoja(iso);
 }
 
 function desdeContato(ts) {

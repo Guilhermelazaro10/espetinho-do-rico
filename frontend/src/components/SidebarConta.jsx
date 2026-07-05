@@ -4,6 +4,7 @@ import {
   Loader2, Trash2, Printer, Undo2, BellRing, CircleDollarSign, Clock,
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
+import { horaLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 import { ehGerente, STATUS_MESA } from '../lib/constantes';
@@ -247,10 +248,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                           <Receipt size={13} /> Comanda #{pedido.id}
                           <span className="font-normal normal-case">
                             ·{' '}
-                            {new Date(pedido.criadoEm).toLocaleTimeString('pt-BR', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {horaLoja(pedido.criadoEm)}
                           </span>
                         </h3>
                         {gerente && (

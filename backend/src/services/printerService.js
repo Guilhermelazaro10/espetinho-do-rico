@@ -97,6 +97,7 @@ function rodapeLoja() {
  */
 function formatarDataHora(data) {
   return new Date(data ?? Date.now()).toLocaleString('pt-BR', {
+    timeZone: 'America/Fortaleza', // servidor roda em UTC; cupom mostra hora da loja
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });

@@ -5,6 +5,7 @@ import {
   Clock, QrCode, CreditCard, Banknote, Ban, MapPin, ClipboardList, User,
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
+import { dataLoja } from '../lib/datas';
 
 /*
  * Cardápio online (público, sem login). Cliente monta o pedido e finaliza:
@@ -629,7 +630,7 @@ function MeusPedidos({ lista, onIrAoCardapio }) {
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-extrabold text-carvao">Pedido #{p.id}</p>
                   <span className="text-xs font-semibold text-carvao-suave">
-                    {new Date(p.criadoEm).toLocaleDateString('pt-BR')}
+                    {dataLoja(p.criadoEm)}
                   </span>
                 </div>
                 <p className="text-sm font-semibold text-carvao-suave">

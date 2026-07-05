@@ -5,6 +5,11 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda } from '../lib/api';
+
+// "YYYY-MM-DD" -> "DD/MM" (data já é do fuso da loja; formata sem Date pra não deslocar o dia).
+function diaMes(dia) {
+  return `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
+}
 import { notificar } from '../ui/toast';
 
 const PERIODOS = [
@@ -90,7 +95,7 @@ export default function Financeiro({ sessao, aoSair }) {
               className="mt-6 flex h-64 items-end gap-3"
               role="img"
               aria-label={`Faturamento por dia: ${(semana?.serieDiaria ?? [])
-                .map((p) => `${new Date(`${p.dia}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${moeda(p.valor)}`)
+                .map((p) => `${diaMes(p.dia)} ${moeda(p.valor)}`)
                 .join('; ')}`}
             >
               {(semana?.serieDiaria ?? []).map((ponto) => (
@@ -103,7 +108,7 @@ export default function Financeiro({ sessao, aoSair }) {
                     />
                   </div>
                   <span className="text-[11px] font-bold text-carvao-suave">
-                    {new Date(`${ponto.dia}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                    {diaMes(ponto.dia)}
                   </span>
                 </div>
               ))}

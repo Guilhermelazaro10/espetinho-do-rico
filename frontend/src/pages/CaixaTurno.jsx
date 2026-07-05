@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
+import { dataHoraLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 
 const FORMAS = [
@@ -133,7 +134,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                   <Unlock size={14} /> Caixa aberto
                 </p>
                 <span className="text-xs font-semibold text-rico-light/50">
-                  desde {new Date(caixa.abertoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  desde {dataHoraLoja(caixa.abertoEm, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <p className="mt-1 text-xs font-semibold text-rico-light/45">por {caixa.abertoPor}</p>
