@@ -132,6 +132,7 @@ function montarLinhasCupom(pedido) {
     const numeroMesa = String(pedido.mesa?.numero ?? pedido.mesaId).padStart(2, '0');
     linhas.push(centralizar(`***  MESA ${numeroMesa}  ***`));
   }
+  if (pedido.criadoPor) linhas.push(centralizar(`Garcom: ${pedido.criadoPor}`));
   linhas.push('');
   linhas.push(divisoria());
   linhas.push(justificar('ITEM', 'QTD'));
@@ -311,6 +312,46 @@ async function enfileirarTeste() {
   });
 }
 
+// Cupom-resumo do fechamento de caixa (contagem cega + diferença).
+function montarLinhasFechamento(caixa, resumo) {
+  const ROTULO_FORMA = { dinheiro: 'Dinheiro', cartao: 'Cartao', pix: 'Pix' };
+  const linhas = [...cabecalhoLoja()];
+  linhas.push(centralizar('FECHAMENTO DE CAIXA'));
+  linhas.push(divisoria('='));
+  linhas.push(justificar(`CAIXA #${caixa.id}`, formatarDataHora(caixa.fechadoEm)));
+  linhas.push(`Aberto:  ${caixa.abertoPor}`.slice(0, LARGURA));
+  linhas.push(`         ${formatarDataHora(caixa.abertoEm)}`);
+  if (caixa.fechadoPor) linhas.push(`Fechado: ${caixa.fechadoPor}`.slice(0, LARGURA));
+  linhas.push('');
+  linhas.push(divisoria());
+  linhas.push(centralizar('RECEBIDO NO TURNO'));
+  linhas.push(divisoria());
+  for (const [forma, dados] of Object.entries(resumo.porForma ?? {})) {
+    linhas.push(justificar(`${ROTULO_FORMA[forma] ?? forma} (${dados.lancamentos}x)`, moeda(dados.valor)));
+  }
+  linhas.push(justificar('TOTAL RECEBIDO', moeda(resumo.recebidoTotal)));
+  linhas.push('');
+  linhas.push(divisoria());
+  linhas.push(centralizar('GAVETA (DINHEIRO)'));
+  linhas.push(divisoria());
+  linhas.push(justificar('Fundo de troco', moeda(caixa.fundoAbertura)));
+  linhas.push(justificar('+ Dinheiro recebido', moeda(resumo.recebidoDinheiro)));
+  if (resumo.suprimentos > 0) linhas.push(justificar('+ Suprimentos', moeda(resumo.suprimentos)));
+  if (resumo.sangrias > 0) linhas.push(justificar('- Sangrias', moeda(resumo.sangrias)));
+  linhas.push(justificar('= Esperado', moeda(resumo.esperadoDinheiro)));
+  linhas.push(justificar('Contado', moeda(resumo.valorContado)));
+  const rotuloDif =
+    resumo.diferenca === 0 ? 'DIFERENCA (ok)' : resumo.diferenca > 0 ? 'DIFERENCA (sobra)' : 'DIFERENCA (falta)';
+  linhas.push(justificar(rotuloDif, moeda(resumo.diferenca)));
+  if (caixa.observacao) {
+    linhas.push('');
+    for (const l of quebrarTexto(`Obs: ${caixa.observacao}`, LARGURA)) linhas.push(l);
+  }
+  linhas.push(divisoria('='));
+  linhas.push(...rodapeLoja());
+  return linhas;
+}
+
 /**
  * Disparos fire-and-forget: agendados para o próximo tick, fora do caminho
  * da resposta HTTP. Em 'local' imprime direto; em 'queue' enfileira para o
@@ -324,6 +365,19 @@ function dispararImpressao(pedido) {
         : imprimirCupom(pedido);
     tarefa.catch((erro) =>
       logger.erro('erro inesperado na impressão', { pedidoId: pedido.id, erro: erro.message })
+    );
+  });
+}
+
+function dispararImpressaoFechamento(caixa, resumo) {
+  setImmediate(() => {
+    const linhas = montarLinhasFechamento(caixa, resumo);
+    const tarefa =
+      MODO_IMPRESSAO === 'queue'
+        ? enfileirar('fechamento', caixa.id, comLogo(linhas))
+        : emitir(linhas, `fechamento-caixa-${caixa.id}.txt`, { caixaId: caixa.id });
+    tarefa.catch((erro) =>
+      logger.erro('erro inesperado no fechamento', { caixaId: caixa.id, erro: erro.message })
     );
   });
 }
@@ -343,9 +397,11 @@ function dispararImpressaoPreConta(conta) {
 module.exports = {
   dispararImpressao,
   dispararImpressaoPreConta,
+  dispararImpressaoFechamento,
   imprimirCupom,
   montarLinhasCupom,
   montarLinhasPreConta,
+  montarLinhasFechamento,
   montarLinhasTeste,
   enfileirarTeste,
   LARGURA,

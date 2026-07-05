@@ -219,6 +219,133 @@ async function registrarPagamento(mesaId, { forma, valor }, usuario) {
   return resultado;
 }
 
+/**
+ * TRANSFERIR MESA (gerente): move toda a conta aberta (comandas + pagamentos
+ * parciais) para outra mesa — cliente trocou de lugar ou juntou mesas.
+ */
+async function transferirMesa(origemId, destinoId, usuario) {
+  if (origemId === destinoId) throw new AppError('Escolha uma mesa diferente da atual');
+  const [origem, destino] = await Promise.all([
+    prisma.mesa.findUnique({ where: { id: origemId } }),
+    prisma.mesa.findUnique({ where: { id: destinoId } }),
+  ]);
+  if (!origem) throw new AppError('Mesa de origem não encontrada', 404);
+  if (!destino) throw new AppError('Mesa de destino não encontrada', 404);
+  if (destino.status === STATUS_MESA.AGUARDANDO_PAGAMENTO) {
+    throw new AppError('Mesa de destino está fechando a conta — escolha outra', 409);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const { count } = await tx.pedido.updateMany({
+      where: { mesaId: origemId, status: { in: STATUS_PEDIDO_EM_ABERTO } },
+      data: { mesaId: destinoId },
+    });
+    if (count === 0) throw new AppError('Mesa de origem sem consumo aberto', 409);
+
+    // Parciais acompanham a conta (o saldo continua batendo no destino)
+    await tx.pagamento.updateMany({
+      where: { mesaId: origemId, liquidado: false },
+      data: { mesaId: destinoId },
+    });
+    await tx.mesa.update({
+      where: { id: destinoId },
+      data: { status: STATUS_MESA.OCUPADA, taxaAtiva: destino.taxaAtiva || origem.taxaAtiva },
+    });
+    await tx.mesa.update({
+      where: { id: origemId },
+      data: { status: STATUS_MESA.LIVRE, taxaAtiva: false },
+    });
+  });
+
+  auditoriaService.registrar(
+    usuario,
+    'mesa_transferida',
+    `Conta da mesa ${origem.numero} transferida para a mesa ${destino.numero}`
+  );
+  publicar('mesa_status', { mesaId: origemId });
+  publicar('mesa_status', { mesaId: destinoId });
+  return { origem: origem.numero, destino: destino.numero };
+}
+
+/**
+ * TRANSFERIR ITEM (gerente): move um item de uma comanda para outra mesa.
+ * Totais dos pedidos são recalculados; item único move o pedido inteiro.
+ */
+async function transferirItem(itemId, mesaDestinoId, usuario) {
+  const item = await prisma.itemPedido.findUnique({
+    where: { id: itemId },
+    include: { pedido: true, produto: { select: { nome: true } } },
+  });
+  if (!item) throw new AppError('Item não encontrado', 404);
+  const pedido = item.pedido;
+  if (pedido.tipo !== 'MESA' || !STATUS_PEDIDO_EM_ABERTO.includes(pedido.status)) {
+    throw new AppError('Só é possível transferir itens de comandas abertas de mesa', 409);
+  }
+  if (pedido.mesaId === mesaDestinoId) throw new AppError('Escolha uma mesa diferente da atual');
+
+  const [origem, destino, parciais] = await Promise.all([
+    prisma.mesa.findUnique({ where: { id: pedido.mesaId } }),
+    prisma.mesa.findUnique({ where: { id: mesaDestinoId } }),
+    prisma.pagamento.count({ where: { mesaId: pedido.mesaId, liquidado: false } }),
+  ]);
+  if (!destino) throw new AppError('Mesa de destino não encontrada', 404);
+  if (destino.status === STATUS_MESA.AGUARDANDO_PAGAMENTO) {
+    throw new AppError('Mesa de destino está fechando a conta — escolha outra', 409);
+  }
+  // Com parcial lançado o saldo da origem ficaria menor que o já pago
+  if (parciais > 0) {
+    throw new AppError('Mesa tem pagamento parcial — quite a conta ou transfira a mesa inteira', 409);
+  }
+
+  const valorItem = item.precoUnitario * item.quantidade;
+  const restantes = await prisma.itemPedido.count({
+    where: { pedidoId: pedido.id, id: { not: itemId } },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    if (restantes === 0) {
+      // Único item: move a comanda inteira
+      await tx.pedido.update({ where: { id: pedido.id }, data: { mesaId: mesaDestinoId } });
+    } else {
+      await tx.pedido.update({
+        where: { id: pedido.id },
+        data: { total: pedido.total - valorItem },
+      });
+      const novo = await tx.pedido.create({
+        data: {
+          tipo: 'MESA',
+          mesaId: mesaDestinoId,
+          total: valorItem,
+          status: pedido.status,
+          criadoPor: pedido.criadoPor,
+        },
+      });
+      await tx.itemPedido.update({ where: { id: itemId }, data: { pedidoId: novo.id } });
+    }
+
+    await tx.mesa.update({ where: { id: mesaDestinoId }, data: { status: STATUS_MESA.OCUPADA } });
+    const aindaAberta = await tx.pedido.count({
+      where: { mesaId: pedido.mesaId, status: { in: STATUS_PEDIDO_EM_ABERTO } },
+    });
+    if (aindaAberta === 0) {
+      await tx.mesa.update({
+        where: { id: pedido.mesaId },
+        data: { status: STATUS_MESA.LIVRE, taxaAtiva: false },
+      });
+    }
+  });
+
+  auditoriaService.registrar(
+    usuario,
+    'item_transferido',
+    `${item.quantidade}x ${item.produto?.nome ?? 'item'} (R$ ${(valorItem / 100).toFixed(2)}) ` +
+      `da mesa ${origem?.numero} para a mesa ${destino.numero}`
+  );
+  publicar('mesa_status', { mesaId: pedido.mesaId });
+  publicar('mesa_status', { mesaId: mesaDestinoId });
+  return { origem: origem?.numero, destino: destino.numero };
+}
+
 // Adiciona uma mesa. Sem número informado, usa o próximo disponível.
 async function criar({ numero } = {}, usuario) {
   let numeroFinal = numero;
@@ -265,6 +392,8 @@ module.exports = {
   obterConta,
   solicitarPreConta,
   registrarPagamento,
+  transferirMesa,
+  transferirItem,
   criar,
   remover,
 };

@@ -141,7 +141,8 @@ export default function Equipe({ sessao, aoSair }) {
 
   return (
     <AppShell titulo="Equipe" acoes={acoes} sessao={sessao} aoSair={aoSair}>
-      <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      {/* grid-cols-1 = minmax(0,1fr): sem isso o min-w da tabela estica a página no celular */}
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         <section className="space-y-4">
           <div className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-media ring-1 ring-rico-wood/10">
             <div className="flex items-start gap-3">

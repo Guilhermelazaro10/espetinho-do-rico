@@ -125,7 +125,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
           ultimoFechamento={ultimoFechamento}
         />
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
           {/* Resumo do turno */}
           <section className="space-y-4">
             <div className="rounded-xl bg-carvao p-6 text-rico-light shadow-media">

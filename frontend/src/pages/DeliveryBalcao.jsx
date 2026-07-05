@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CheckCircle2, CreditCard,
-  Banknote, QrCode, Ban, Clock, ReceiptText, Loader2, Printer, BellRing,
-  Search, MapPin, Phone,
+  Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CreditCard,
+  Banknote, QrCode, ReceiptText, Loader2, BellRing, Search,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import { PendenteCard, PedidoCard } from '../components/CardsDelivery';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { ehGerente, TIPOS_PEDIDO } from '../lib/constantes';
 import { notificar } from '../ui/toast';
 import { pedirTexto, confirmar } from '../lib/dialogos';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
-
-const STATUS_ROTULO = {
-  aberto: 'Aberto',
-  em_preparo: 'Em preparo',
-  entregue: 'Entregue',
-  pago: 'Pago',
-  cancelado: 'Cancelado',
-};
 
 const FORM_VAZIO = {
   clienteNome: '', clienteTelefone: '', clienteEndereco: '', bairro: '',
@@ -29,17 +21,6 @@ const PAGAMENTOS = [
   { id: 'cartao', rotulo: 'Cartão', Icone: CreditCard },
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
 ];
-
-// Telefone -> link de WhatsApp (DDI 55) / endereço -> Google Maps.
-const linkWhats = (tel) => `https://wa.me/55${String(tel || '').replace(/\D/g, '')}`;
-const linkMapa = (end) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(end || '')}`;
-
-function desdeMin(criadoEm, agora) {
-  const min = Math.max(0, Math.round((agora - new Date(criadoEm).getTime()) / 60000));
-  if (min < 1) return 'agora';
-  if (min < 60) return `há ${min} min`;
-  return `há ${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
-}
 
 export default function DeliveryBalcao({ sessao, aoSair }) {
   const [aba, setAba] = useState(TIPOS_PEDIDO.DELIVERY);
@@ -307,7 +288,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
           <p className="font-display text-2xl text-rico-dark">{moeda(totalAberto)}</p>
         </div>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-5">
           {pendentes.length > 0 && (
             <section className="rounded-xl border-2 border-emerald-300 bg-emerald-50/80 p-4 shadow-media">
@@ -569,170 +550,5 @@ function Input({ rotulo, valor, onChange, onBlur, dica }) {
       />
       {dica && <span className="mt-0.5 block text-[10px] font-semibold text-rico-light/40">{dica}</span>}
     </label>
-  );
-}
-
-function PendenteCard({ pedido, onAceitar, onRecusar }) {
-  const rotuloPg =
-    { pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' }[pedido.pagamentoPretendido] ??
-    pedido.pagamentoPretendido;
-  return (
-    <article className="rounded-xl border border-emerald-200 bg-white p-3 shadow-suave">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-display text-lg text-carvao">
-            #{pedido.id} · {pedido.tipo === TIPOS_PEDIDO.DELIVERY ? 'Entrega' : 'Retirada'}
-          </p>
-          <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
-          {pedido.clienteTelefone && (
-            <a href={linkWhats(pedido.clienteTelefone)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 underline-offset-2 hover:underline">
-              <Phone size={11} /> {pedido.clienteTelefone}
-            </a>
-          )}
-          {pedido.clienteEndereco && (
-            <a href={linkMapa(pedido.clienteEndereco)} target="_blank" rel="noopener noreferrer" className="mt-0.5 flex items-start gap-1 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline">
-              <MapPin size={11} className="mt-0.5 shrink-0" /> {pedido.clienteEndereco}
-            </a>
-          )}
-        </div>
-        <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
-      </div>
-      {pedido.agendadoPara && (
-        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-extrabold text-amber-700">
-          <Clock size={12} /> Agendado: {pedido.agendadoPara}
-        </p>
-      )}
-      <ul className="mt-2 space-y-0.5 text-sm text-carvao-claro">
-        {pedido.itens?.map((it) => (
-          <li key={it.id}>
-            {it.quantidade}x {it.produto?.nome}
-            {it.observacao && <em className="text-carvao-suave"> — {it.observacao}</em>}
-          </li>
-        ))}
-      </ul>
-      {pedido.pagamentoPretendido && (
-        <p className="mt-1 text-xs font-bold text-carvao">
-          Pagamento: {rotuloPg}
-          {pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0
-            ? ` · troco p/ ${moeda(pedido.trocoPara)}`
-            : ''}
-        </p>
-      )}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={() => onAceitar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
-        >
-          <CheckCircle2 size={16} /> Aceitar
-        </button>
-        <button
-          onClick={() => onRecusar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-rico-red ring-1 ring-rico-red/40 transition active:scale-[0.98]"
-        >
-          <Ban size={16} /> Recusar
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCancelar, onReimprimir }) {
-  const podeAvancar = ['aberto', 'em_preparo'].includes(pedido.status);
-  return (
-    <article className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-xl text-carvao">
-            #{pedido.id}
-            {pedido.origem === 'online' && (
-              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">
-                Online
-              </span>
-            )}
-          </p>
-          <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
-          {pedido.clienteTelefone && (
-            <a href={linkWhats(pedido.clienteTelefone)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 underline-offset-2 hover:underline">
-              <Phone size={11} /> {pedido.clienteTelefone}
-            </a>
-          )}
-          {pedido.clienteEndereco && (
-            <a href={linkMapa(pedido.clienteEndereco)} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-start gap-1 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline">
-              <MapPin size={11} className="mt-0.5 shrink-0" /> {pedido.clienteEndereco}
-            </a>
-          )}
-          {pedido.agendadoPara && (
-            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
-              <Clock size={12} /> Agendado: {pedido.agendadoPara}
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">
-            {STATUS_ROTULO[pedido.status] ?? pedido.status}
-          </span>
-          <span className="flex items-center gap-1 text-[11px] font-semibold text-carvao-suave">
-            <Clock size={11} /> {desdeMin(pedido.criadoEm, agora)}
-          </span>
-        </div>
-      </div>
-      <ul className="mt-3 space-y-1 text-sm text-carvao-claro">
-        {pedido.itens?.map((item) => (
-          <li key={item.id} className="flex justify-between gap-3">
-            <span className="min-w-0 truncate">
-              {item.quantidade}x {item.produto?.nome}
-              {item.observacao && <em className="text-carvao-suave"> — {item.observacao}</em>}
-            </span>
-            <strong>{moeda(item.precoUnitario * item.quantidade)}</strong>
-          </li>
-        ))}
-      </ul>
-      {pedido.pagamentoPretendido && (
-        <p className="mt-2 text-xs font-bold text-carvao">
-          Pagamento:{' '}
-          {{ pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' }[pedido.pagamentoPretendido] ??
-            pedido.pagamentoPretendido}
-          {pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0
-            ? ` · troco p/ ${moeda(pedido.trocoPara)}`
-            : ''}
-        </p>
-      )}
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-carvao/10 pt-3">
-        <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
-        <div className="flex flex-wrap justify-end gap-2">
-          {podeAvancar && (
-            <button onClick={() => onAvancar(pedido)} className="rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light">
-              <CheckCircle2 size={14} className="inline" /> Avancar
-            </button>
-          )}
-          <button
-            onClick={() => onReimprimir(pedido)}
-            className="rounded-lg p-2 text-carvao-suave hover:bg-carvao/10 hover:text-carvao"
-            aria-label="Reimprimir comanda"
-            title="Reimprimir"
-          >
-            <Printer size={16} />
-          </button>
-          {gerente && pedido.status === 'entregue' && (
-            <>
-              <button onClick={() => onPagar(pedido, 'pix')} className="flex items-center gap-1 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light" title="Pagar com Pix">
-                <QrCode size={14} /> Pix
-              </button>
-              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar em dinheiro">
-                <Banknote size={14} /> Dinheiro
-              </button>
-              <button onClick={() => onPagar(pedido, 'cartao')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar no cartão">
-                <CreditCard size={14} /> Cartao
-              </button>
-            </>
-          )}
-          {gerente && (
-            <button onClick={() => onCancelar(pedido)} className="rounded-lg p-2 text-rico-red hover:bg-rico-red/10" aria-label="Cancelar">
-              <Ban size={16} />
-            </button>
-          )}
-        </div>
-      </div>
-    </article>
   );
 }

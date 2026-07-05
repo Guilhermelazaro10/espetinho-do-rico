@@ -53,7 +53,7 @@ async function faturamento(periodo = 'dia') {
   const { inicio, fim, rotulo } = intervaloDoPeriodo(periodo);
   const janela = { gte: inicio, lt: fim };
 
-  const [porForma, pagamentos, pagos, cancelados, abertosAgora] = await Promise.all([
+  const [porForma, pagamentos, pagos, cancelados, abertosAgora, porGarcomBruto] = await Promise.all([
     prisma.pagamento.groupBy({
       by: ['forma'],
       where: { criadoEm: janela },
@@ -75,7 +75,23 @@ async function faturamento(periodo = 'dia') {
       _count: true,
     }),
     prisma.pedido.count({ where: { status: { in: STATUS_PEDIDO_EM_ABERTO } } }),
+    // Vendas por quem lançou o pedido (garçom/gerente/Online) — pedidos pagos
+    prisma.pedido.groupBy({
+      by: ['criadoPor'],
+      where: { status: 'pago', criadoEm: janela },
+      _sum: { total: true, taxaServico: true },
+      _count: true,
+    }),
   ]);
+
+  const porGarcom = porGarcomBruto
+    .map((g) => ({
+      nome: g.criadoPor ?? 'Sem registro',
+      pedidos: g._count,
+      total: g._sum.total ?? 0,
+      taxaServico: g._sum.taxaServico ?? 0,
+    }))
+    .sort((a, b) => b.total - a.total);
 
   // Série diária (faturamento por dia dentro da janela)
   const porDia = new Map();
@@ -117,6 +133,7 @@ async function faturamento(periodo = 'dia') {
 
   return {
     topProdutos,
+    porGarcom,
     periodo,
     rotulo,
     de: inicio.toISOString().slice(0, 10),

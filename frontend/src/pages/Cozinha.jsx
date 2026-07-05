@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Flame, ChefHat, CheckCheck, Timer, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { api } from '../lib/api';
+import { minutosDesde } from '../lib/datas';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 
@@ -87,10 +88,6 @@ export default function Cozinha() {
       </main>
     </div>
   );
-}
-
-function minutosDesde(data) {
-  return Math.max(0, Math.round((Date.now() - new Date(data).getTime()) / 60000));
 }
 
 // Título do ticket por canal: mesa, delivery ou balcão (delivery/balcão não têm mesa)

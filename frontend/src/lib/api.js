@@ -58,6 +58,10 @@ export const api = {
       requisitar(`/mesas/${id}/taxa`, { method: 'PATCH', body: { ativa } }),
     atualizarStatus: (id, status) =>
       requisitar(`/mesas/${id}/status`, { method: 'PATCH', body: { status } }),
+    transferir: (id, destinoId) =>
+      requisitar(`/mesas/${id}/transferir`, { method: 'POST', body: { destinoId } }),
+    transferirItem: (itemId, destinoId) =>
+      requisitar(`/mesas/itens/${itemId}/transferir`, { method: 'POST', body: { destinoId } }),
   },
   pedidos: {
     listarAbertos: (tipo) =>
@@ -94,6 +98,7 @@ export const api = {
   },
   relatorios: {
     faturamento: (periodo = 'dia') => requisitar(`/relatorios/faturamento?periodo=${periodo}`),
+    auditoria: (limite = 50) => requisitar(`/relatorios/auditoria?limite=${limite}`),
   },
   rede: {
     info: () => requisitar('/rede'),

@@ -110,7 +110,7 @@ async function buscarPorId(id) {
   return pedido;
 }
 
-async function criar(dados) {
+async function criar(dados, usuario) {
   const cabecalho = validarCabecalho(dados ?? {});
   validarItens(dados.itens);
   const { itens } = dados;
@@ -160,6 +160,9 @@ async function criar(dados) {
   // Pedido online entra como PENDENTE: só vai pra cozinha quando a loja "Aceitar".
   const ehOnline = extras.origem === 'online';
   if (ehOnline) extras.status = STATUS_PEDIDO.PENDENTE;
+
+  // Quem lançou: snapshot do nome (comanda mostra o garçom); online = 'Online'.
+  extras.criadoPor = ehOnline ? 'Online' : usuario?.nome ?? null;
 
   const pedido = await prisma.$transaction(async (tx) => {
     if (cabecalho.mesaId) {

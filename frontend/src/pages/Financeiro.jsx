@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Banknote, CalendarDays, CreditCard, Landmark, LockKeyhole, QrCode,
-  Receipt, RefreshCw, TrendingUp, Trophy,
+  Receipt, RefreshCw, ScrollText, TrendingUp, Trophy, Users,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda } from '../lib/api';
+import { dataHoraLoja } from '../lib/datas';
+import { notificar } from '../ui/toast';
 
 // "YYYY-MM-DD" -> "DD/MM" (data já é do fuso da loja; formata sem Date pra não deslocar o dia).
 function diaMes(dia) {
   return `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 }
-import { notificar } from '../ui/toast';
 
 const PERIODOS = [
   { id: 'dia', rotulo: 'Hoje' },
@@ -26,15 +27,20 @@ const FORMAS = [
 
 export default function Financeiro({ sessao, aoSair }) {
   const [dados, setDados] = useState({});
+  const [auditoria, setAuditoria] = useState([]);
   const [carregando, setCarregando] = useState(false);
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const entradas = await Promise.all(
-        PERIODOS.map(async (periodo) => [periodo.id, await api.relatorios.faturamento(periodo.id)])
-      );
+      const [entradas, trilha] = await Promise.all([
+        Promise.all(
+          PERIODOS.map(async (periodo) => [periodo.id, await api.relatorios.faturamento(periodo.id)])
+        ),
+        api.relatorios.auditoria(40).catch(() => []),
+      ]);
       setDados(Object.fromEntries(entradas));
+      setAuditoria(Array.isArray(trilha) ? trilha : []);
     } catch (e) {
       notificar.erro('Financeiro indisponivel', e.message);
     } finally {
@@ -83,7 +89,7 @@ export default function Financeiro({ sessao, aoSair }) {
           <ResumoCard titulo="Mes atual" valor={mes?.recebido.total} Icone={Landmark} detalhe={mes?.rotulo} />
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-5 shadow-media ring-1 ring-rico-wood/10">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-bold uppercase tracking-wider text-carvao-claro">
@@ -173,6 +179,61 @@ export default function Financeiro({ sessao, aoSair }) {
               )}
             </div>
           </aside>
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-2">
+          {/* Vendas por quem lançou (garçom/gerente/online) */}
+          <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-5 shadow-suave ring-1 ring-rico-wood/10">
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-carvao-claro">
+              <Users size={16} className="text-rico-red" /> Vendas por atendente (hoje)
+            </h2>
+            {(dia?.porGarcom ?? []).length === 0 ? (
+              <p className="mt-3 text-sm text-carvao-suave">Sem vendas registradas hoje.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {dia.porGarcom.map((g) => (
+                  <li key={g.nome} className="flex items-center justify-between gap-3 rounded-lg bg-rico-wood/8 px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate font-bold text-carvao">{g.nome}</span>
+                    <span className="shrink-0 font-semibold text-carvao-claro">
+                      {g.pedidos} pedido(s) · {moeda(g.total)}
+                      {g.taxaServico > 0 && (
+                        <span className="ml-1 text-xs text-carvao-suave">
+                          (+{moeda(g.taxaServico)} taxa)
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Trilha de auditoria: quem fez o quê */}
+          <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-5 shadow-suave ring-1 ring-rico-wood/10">
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-carvao-claro">
+              <ScrollText size={16} className="text-rico-red" /> Auditoria
+            </h2>
+            {auditoria.length === 0 ? (
+              <p className="mt-3 text-sm text-carvao-suave">Nenhuma ação registrada ainda.</p>
+            ) : (
+              <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                {auditoria.map((r) => (
+                  <li key={r.id} className="rounded-lg border border-rico-wood/20 bg-white px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-carvao/8 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-carvao-claro">
+                        {String(r.acao).replaceAll('_', ' ')}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold text-carvao-suave">
+                        {dataHoraLoja(r.criadoEm, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[13px] font-semibold text-carvao">{r.detalhe}</p>
+                    <p className="text-[11px] font-semibold text-carvao-suave">{r.usuario}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
     </AppShell>

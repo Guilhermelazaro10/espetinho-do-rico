@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   X, QrCode, Banknote, CreditCard, Receipt, HandPlatter, Armchair,
   Loader2, Trash2, Printer, Undo2, BellRing, CircleDollarSign, Clock,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { horaLoja } from '../lib/datas';
@@ -29,6 +30,10 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
   const [cancelandoId, setCancelandoId] = useState(null);
   const [motivo, setMotivo] = useState('');
   const [itemArmado, setItemArmado] = useState(null);
+  // Transferência: 'mesa' (conta inteira) ou o id de um item; null = fechado
+  const [transferindo, setTransferindo] = useState(null);
+  const [destinos, setDestinos] = useState([]);
+  const [destinoId, setDestinoId] = useState('');
   const painelRef = useRef(null);
 
   const aberta = Boolean(mesa);
@@ -50,6 +55,8 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
     setCancelandoId(null);
     setMotivo('');
     setItemArmado(null);
+    setTransferindo(null);
+    setDestinoId('');
     carregarConta();
   }, [mesa?.id, carregarConta]);
 
@@ -135,6 +142,50 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
       setMotivo('');
       notificar.sucesso(`Comanda #${pedidoId} cancelada`, 'Registrado na auditoria');
     }, 'Não foi possível cancelar');
+  }
+
+  // Abre o seletor de destino (conta inteira ou um item específico)
+  async function abrirTransferencia(alvo) {
+    try {
+      const todas = await api.mesas.listar();
+      const disponiveis = todas.filter(
+        (m) => m.id !== mesa.id && m.status !== STATUS_MESA.AGUARDANDO_PAGAMENTO
+      );
+      if (disponiveis.length === 0) {
+        notificar.erro('Sem mesa disponível', 'Nenhuma outra mesa livre para receber');
+        return;
+      }
+      setDestinos(disponiveis);
+      setDestinoId('');
+      setTransferindo(alvo);
+    } catch (e) {
+      notificar.erro('Não foi possível listar as mesas', e.message);
+    }
+  }
+
+  async function confirmarTransferencia() {
+    const destino = destinos.find((m) => m.id === Number(destinoId));
+    if (!destino) return;
+    try {
+      if (transferindo === 'mesa') {
+        await api.mesas.transferir(mesa.id, destino.id);
+        notificar.sucesso(
+          `Mesa ${mesa.numero} transferida`,
+          `Conta agora está na mesa ${destino.numero}`
+        );
+        setTransferindo(null);
+        await aoAtualizar();
+        aoFechar();
+      } else {
+        await api.mesas.transferirItem(transferindo, destino.id);
+        notificar.sucesso('Item transferido', `Movido para a mesa ${destino.numero}`);
+        setTransferindo(null);
+        await Promise.all([carregarConta(), aoAtualizar()]);
+      }
+    } catch (e) {
+      notificar.erro('Transferência não realizada', e.message);
+      await Promise.all([carregarConta(), aoAtualizar()]);
+    }
   }
 
   async function lancarPagamento() {
@@ -249,6 +300,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                           <span className="font-normal normal-case">
                             ·{' '}
                             {horaLoja(pedido.criadoEm)}
+                            {pedido.criadoPor && ` · ${pedido.criadoPor}`}
                           </span>
                         </h3>
                         {gerente && (
@@ -325,6 +377,16 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                             </span>
                             {gerente && (
                               <button
+                                onClick={() => abrirTransferencia(item.id)}
+                                className="shrink-0 rounded-md p-1 text-carvao/30 transition hover:bg-sky-100 hover:text-sky-700"
+                                aria-label={`Transferir ${item.produto.nome} de mesa`}
+                                title="Transferir item para outra mesa"
+                              >
+                                <ArrowRightLeft size={13} />
+                              </button>
+                            )}
+                            {gerente && (
+                              <button
                                 onClick={() =>
                                   itemArmado === item.id
                                     ? removerItem(pedido.id, item)
@@ -370,6 +432,55 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
             {/* Rodapé: totais e pagamento */}
             {conta && comandas.length > 0 && (
               <footer className="border-t border-rico-wood/25 bg-rico-light px-6 pb-5 pt-4 shadow-[0_-12px_30px_rgb(63_43_29/0.08)]">
+                {/* Seletor de destino da transferência (mesa inteira ou item) */}
+                {transferindo !== null && (
+                  <div className="mb-3 rounded-xl border border-sky-300 bg-sky-50 p-3">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-sky-700">
+                      {transferindo === 'mesa'
+                        ? 'Transferir a conta inteira para:'
+                        : 'Transferir o item para:'}
+                    </label>
+                    <select
+                      value={destinoId}
+                      onChange={(e) => setDestinoId(e.target.value)}
+                      className="mt-1 w-full rounded-lg bg-white px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-sky-300 focus:ring-sky-500"
+                    >
+                      <option value="">Escolha a mesa…</option>
+                      {destinos.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          Mesa {String(m.numero).padStart(2, '0')}
+                          {m.status === STATUS_MESA.LIVRE ? ' — livre' : ' — ocupada (juntar)'}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={confirmarTransferencia}
+                        disabled={!destinoId}
+                        className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-sky-700 disabled:opacity-40"
+                      >
+                        Confirmar transferência
+                      </button>
+                      <button
+                        onClick={() => setTransferindo(null)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-bold text-carvao-suave hover:bg-carvao/5"
+                      >
+                        Voltar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {gerente && transferindo === null && (
+                  <button
+                    onClick={() => abrirTransferencia('mesa')}
+                    className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl
+                      border border-sky-300 py-2.5 text-sm font-bold text-sky-700 transition hover:bg-sky-50"
+                  >
+                    <ArrowRightLeft size={15} /> Transferir mesa / juntar mesas
+                  </button>
+                )}
+
                 {mesa.status !== STATUS_MESA.AGUARDANDO_PAGAMENTO ? (
                   <button
                     onClick={preConta}
@@ -483,6 +594,24 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                                 ? `Pagamento parcial — restarão ${moeda(saldo - valorCentavos)}`
                                 : 'Valor cobre o saldo'}
                         </p>
+                        {/* Dividir igualmente: preenche o valor com a parte de cada um */}
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">
+                            Dividir:
+                          </span>
+                          {[2, 3, 4].map((n) => (
+                            <button
+                              key={n}
+                              onClick={() =>
+                                setValor((Math.ceil(saldo / n) / 100).toFixed(2).replace('.', ','))
+                              }
+                              className="rounded-lg bg-rico-wood/12 px-2.5 py-1 text-xs font-bold text-carvao-claro transition hover:bg-rico-wood/25"
+                              title={`${n} pessoas: ${moeda(Math.ceil(saldo / n))} cada`}
+                            >
+                              ÷{n} · {moeda(Math.ceil(saldo / n))}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
 

@@ -50,4 +50,25 @@ router.patch('/:id/taxa', somenteGerente, async (req, res) => {
   res.json(await mesasService.definirTaxa(parseId(req.params.id), req.body?.ativa));
 });
 
+// Transferências (cliente trocou de mesa / juntar mesas / item na mesa errada)
+router.post('/:id/transferir', somenteGerente, async (req, res) => {
+  res.json(
+    await mesasService.transferirMesa(
+      parseId(req.params.id),
+      parseId(req.body?.destinoId, 'Mesa de destino'),
+      req.usuario
+    )
+  );
+});
+
+router.post('/itens/:itemId/transferir', somenteGerente, async (req, res) => {
+  res.json(
+    await mesasService.transferirItem(
+      parseId(req.params.itemId, 'ID do item'),
+      parseId(req.body?.destinoId, 'Mesa de destino'),
+      req.usuario
+    )
+  );
+});
+
 module.exports = router;

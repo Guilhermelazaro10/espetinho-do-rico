@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
       tipo, mesaId, itens,
       clienteNome, clienteTelefone, clienteEndereco, taxaEntrega,
       telefone, endereco, taxa,
-    })
+    }, req.usuario)
   );
 });
 

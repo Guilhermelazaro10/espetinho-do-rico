@@ -123,7 +123,7 @@ export default function Cardapio({ sessao, aoSair }) {
 
   return (
     <AppShell titulo="Cardapio" acoes={acoes} sessao={sessao} aoSair={aoSair}>
-      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <section className="space-y-4">
           <form onSubmit={salvar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
             <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
@@ -177,7 +177,7 @@ export default function Cardapio({ sessao, aoSair }) {
           </div>
         </section>
 
-        <section className="grid content-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
+        <section className="grid grid-cols-1 content-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {filtrados.map((produto) => (
             <article
               key={produto.id}

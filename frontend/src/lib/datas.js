@@ -24,3 +24,16 @@ export function dataLoja(iso, opcoes = {}) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: FUSO_LOJA, ...opcoes });
 }
+
+// Minutos inteiros desde um instante (Cozinha usa pra cor de urgência).
+export function minutosDesde(iso, agora = Date.now()) {
+  return Math.max(0, Math.round((agora - new Date(iso).getTime()) / 60000));
+}
+
+// Rótulo de tempo decorrido: "agora", "há 12 min", "há 1h05".
+export function desdeMin(iso, agora = Date.now()) {
+  const min = minutosDesde(iso, agora);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  return `há ${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
+}

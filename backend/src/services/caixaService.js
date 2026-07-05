@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const AppError = require('../errors/AppError');
 const auditoriaService = require('./auditoriaService');
+const printerService = require('./printerService');
 const { criarMutex } = require('../lib/mutex');
 
 // Serializa a abertura de caixa (checa-depois-cria não é atômico no banco)
@@ -144,7 +145,11 @@ async function fechar({ valorContado, observacao }, usuario) {
       `contado R$ ${(valorContado / 100).toFixed(2)}, diferença R$ ${(diferenca / 100).toFixed(2)}`
   );
 
-  return { caixa: fechado, resumo: { ...resumo, valorContado, diferenca } };
+  // Cupom-resumo do fechamento na térmica (fire-and-forget, nunca trava o caixa)
+  const resumoCompleto = { ...resumo, valorContado, diferenca };
+  printerService.dispararImpressaoFechamento(fechado, resumoCompleto);
+
+  return { caixa: fechado, resumo: resumoCompleto };
 }
 
 module.exports = { statusAtual, abrir, registrarMovimento, fechar };
