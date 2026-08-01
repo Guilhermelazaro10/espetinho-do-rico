@@ -1,0 +1,42 @@
+version: 2
+
+# Atualizações automáticas de dependências. Agrupadas para virar poucos PRs
+# revisáveis por semana, em vez de uma enxurrada de um pacote por PR.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: America/Fortaleza
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'deps'
+      prefix-development: 'deps-dev'
+    groups:
+      # Correções de segurança/bug: seguras de aplicar em lote.
+      patch-e-minor:
+        update-types: [patch, minor]
+      # Ferramentas de build (não vão para o servidor) — juntas também.
+      ferramentas-de-build:
+        patterns:
+          - electron
+          - electron-builder
+          - vite
+          - vitest
+          - eslint*
+          - '@vitejs/*'
+          - '@capacitor/*'
+    ignore:
+      # Major exige leitura do changelog e teste manual: fica fora do
+      # automático para não abrir PR que ninguém vai revisar com calma.
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'ci'

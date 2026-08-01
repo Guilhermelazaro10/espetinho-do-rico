@@ -1,6 +1,9 @@
 {
   "name": "@espetinho-do-rico/backend",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "private": true,
   "description": "API do PDV Espetinho do Rico",
   "main": "src/server.js",

@@ -9,13 +9,24 @@
     "frontend"
   ],
   "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "test:backend": "npm run test -w backend",
+    "test:frontend": "npm run test -w frontend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "build": "npm run build -w frontend",
     "build:frontend": "npm run build -w frontend",
+    "verificar": "npm run lint && npm run test && npm run build",
     "seed": "npm run seed -w backend",
     "lan": "npm run build:frontend && node scripts/lan-server.cjs",
     "desktop": "npm run build:frontend && electron .",
     "desktop:prep": "npm install --prefix backend --omit=dev --no-audit --no-fund --no-package-lock",
     "desktop:pack": "npm run build:frontend && npm run desktop:prep && electron-builder --win --dir",
     "desktop:dist": "npm run build:frontend && npm run desktop:prep && electron-builder --win nsis portable"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "build": {
     "appId": "br.com.espetinhodorico.pdv",

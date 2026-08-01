@@ -5,7 +5,8 @@ const cors = require('cors');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-const { ipsPrivados } = require('./lib/rede');
+const { ipsPrivados, confiaEmProxy, saltosDeProxy } = require('./lib/rede');
+const { versao } = require('./lib/versao');
 const routes = require('./routes');
 const authRoutes = require('./routes/auth.routes');
 const eventosRoutes = require('./routes/eventos.routes');
@@ -15,6 +16,11 @@ const { autenticar } = require('./middlewares/auth');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 
 const app = express();
+
+// Atrás de proxy (VPS: Cloudflare → Caddy), sem isto req.ip seria sempre o
+// loopback e req.protocol seria "http". Fica DESLIGADO por padrão: ligar sem
+// proxy real na frente permitiria ao cliente forjar o próprio IP.
+if (confiaEmProxy()) app.set('trust proxy', saltosDeProxy());
 
 // Headers de segurança. CSP fica desligado (a SPA usa estilos inline + Google
 // Fonts; uma CSP estrita quebraria sem ajuste fino — Cloudflare cobre isso).
@@ -67,7 +73,8 @@ app.use(express.json({ limit: '100kb' }));
 // o PDV na varredura de rede do app (público). Sem contagens do banco — eram
 // dado de negócio exposto e uma query sem autenticação a cada hit.
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', app: 'espetinho-pdv', nome: os.hostname() });
+  // `versao` permite conferir, de fora, se o deploy subiu o código novo.
+  res.json({ status: 'ok', app: 'espetinho-pdv', nome: os.hostname(), versao });
 });
 
 app.get('/api/rede', autenticar, (req, res) => {

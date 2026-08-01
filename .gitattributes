@@ -1,0 +1,21 @@
+# Normaliza fim de linha: LF no repositório e no working tree.
+# Elimina os avisos "LF will be replaced by CRLF" e diffs falsos entre máquinas.
+* text=auto eol=lf
+
+# Scripts do Windows precisam de CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binários: nunca tocar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.db binary
+*.apk binary
+*.keystore binary

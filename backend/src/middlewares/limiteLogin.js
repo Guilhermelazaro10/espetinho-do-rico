@@ -1,4 +1,5 @@
 const AppError = require('../errors/AppError');
+const { ipDoCliente } = require('../lib/rede');
 
 /*
  * Limite de tentativas de login por IP (anti força-bruta de PIN), em memória.
@@ -24,17 +25,11 @@ function limpar(agora) {
   }
 }
 
+// Balde por IP real do cliente. O header CF-Connecting-IP só entra quando há
+// proxy declarado (TRUST_PROXY) — sem isso qualquer um trocaria o header a
+// cada tentativa e cairia num balde novo, anulando o bloqueio. Ver lib/rede.
 function chave(req) {
-  // Atrás do Cloudflare/Caddy, req.ip seria sempre o IP do proxy — o que
-  // colocaria todos os clientes no mesmo balde (um atacante travaria a
-  // equipe inteira). CF-Connecting-IP traz o IP real do cliente; em
-  // LAN/desktop (sem proxy) cai no req.ip normalmente.
-  return (
-    req.headers['cf-connecting-ip'] ||
-    req.ip ||
-    req.socket?.remoteAddress ||
-    'desconhecido'
-  );
+  return ipDoCliente(req);
 }
 
 function verificar(req) {

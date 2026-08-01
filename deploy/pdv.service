@@ -11,6 +11,13 @@ ExecStart=/usr/bin/node src/server.js
 Restart=always
 RestartSec=3
 
+# Desligamento gracioso: o SIGTERM faz o Node parar de aceitar conexão nova e
+# esperar as requisições em voo (SHUTDOWN_TIMEOUT_MS, 10s + 5s de folga).
+# TimeoutStopSec precisa ser MAIOR que isso, senão vem SIGKILL no meio de um
+# pagamento. Se aumentar um, aumente o outro.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
 # Endurecimento básico do processo
 NoNewPrivileges=true
 ProtectSystem=full
