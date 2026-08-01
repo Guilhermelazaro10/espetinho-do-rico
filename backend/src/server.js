@@ -2,6 +2,7 @@ const app = require('./app');
 const logger = require('./lib/logger');
 const prisma = require('./lib/prisma');
 const { criarDesligador } = require('./lib/desligamento');
+const { barramento } = require('./lib/eventos');
 
 const PORT = process.env.PORT || 3001;
 // Em produção atrás do Caddy, HOST=127.0.0.1 prende a API no loopback (só o
@@ -17,13 +18,21 @@ const servidor = app.listen(PORT, HOST, () => {
   logger.info('API Espetinho do Rico no ar', { porta: Number(PORT), host: HOST });
 });
 
-const desligar = criarDesligador({
+const desligarServidor = criarDesligador({
   servidor,
   prazoMs: PRAZO_DESLIGAMENTO_MS,
   fecharBanco: () => prisma.$disconnect(),
   logger,
   sair: (codigo) => process.exit(codigo),
 });
+
+// O long-poll da fila de impressão segura a requisição por até 25s. Avisamos
+// antes de desligar para ele responder na hora — senão o deploy esperaria o
+// prazo inteiro por uma conexão que está só aguardando.
+const desligar = (sinal, codigo) => {
+  barramento.emit('desligando');
+  return desligarServidor(sinal, codigo);
+};
 
 process.on('SIGTERM', () => desligar('SIGTERM')); // systemd (deploy/restart)
 process.on('SIGINT', () => desligar('SIGINT')); // Ctrl+C no terminal

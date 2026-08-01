@@ -4,5 +4,6 @@
   "impressora": "auto",
   "logo": "logo.png",
   "characterSet": "WPC1252",
-  "intervaloMs": 2000
+  "intervaloMs": 2000,
+  "esperaMs": 25000
 }

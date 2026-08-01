@@ -19,6 +19,17 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 - Zeradas as vulnerabilidades conhecidas das dependências (`npm audit`: 6
   altas + 1 crítica → 0).
 
+### Desempenho
+- **Cupom sai na hora do clique.** O agente perguntava ao servidor de 2 em 2
+  segundos se havia cupom novo; agora ele fica pendurado e o servidor responde
+  no instante em que o cupom entra na fila. Medido em bancada (impressora
+  simulada, sem latência de internet): **1572 ms → 46 ms**, 34× mais rápido.
+  Compatível nos dois sentidos — agente antigo com servidor novo, e vice-versa,
+  seguem funcionando no ritmo antigo.
+- Agente passa a considerar o PDV online por até 45 s (antes 15 s), porque
+  durante a espera ele fica conectado e quieto — o painel o marcaria offline
+  sem motivo.
+
 ### Adicionado
 - Desligamento gracioso (SIGTERM/SIGINT): o servidor para de aceitar conexão
   nova, espera as requisições em voo, derruba o SSE após o prazo e só então

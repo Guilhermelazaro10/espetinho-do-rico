@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const AppError = require('../errors/AppError');
+const { barramento } = require('../lib/eventos');
 
 /*
  * Fila de impressão (modo nuvem). O backend enfileira o cupom já formatado;
@@ -9,16 +10,57 @@ const AppError = require('../errors/AppError');
  * Para evitar impressão em duplicidade, `proximos` REIVINDICA os jobs
  * (status 'processando') ao servi-los; só voltam à fila se o agente reportar
  * falha ou se ficarem presos além de STALE_MS (agente caiu no meio).
+ *
+ * ENTREGA IMEDIATA: o agente não fica perguntando de tempos em tempos — ele
+ * pendura a requisição em `aguardarNovos` e o servidor responde no instante
+ * em que um cupom entra na fila. Perguntar de 2 em 2 segundos fazia o cupom
+ * levar ~1,6s para sair mesmo com tudo em rede local.
  */
 const MAX_TENTATIVAS = 5;
 const STALE_MS = 60 * 1000;
-const AGENTE_ONLINE_MS = 15 * 1000; // sem contato além disso = agente offline
+// Sem contato além disso = agente offline. Precisa ser MAIOR que a espera
+// máxima do long-poll (25s na rota): durante a espera o agente está conectado
+// e quieto, e um limite curto o marcaria como offline sem motivo.
+const AGENTE_ONLINE_MS = 45 * 1000;
+const EVENTO_CUPOM_NOVO = 'cupom-na-fila';
 
 // Quando o agente da loja bateu na fila pela última vez (memória; reseta no boot).
 let ultimoContatoAgente = null;
 
 async function enfileirar({ tipo, conteudo = '', refId = null, abrirGaveta = false }) {
-  return prisma.printJob.create({ data: { tipo, conteudo, refId, abrirGaveta } });
+  const job = await prisma.printJob.create({ data: { tipo, conteudo, refId, abrirGaveta } });
+  barramento.emit(EVENTO_CUPOM_NOVO); // acorda o agente pendurado no long-poll
+  return job;
+}
+
+/**
+ * Long-poll: segura a resposta até entrar cupom na fila, o prazo estourar ou
+ * o servidor começar a desligar. Devolve [] quando não veio nada — o agente
+ * simplesmente pergunta de novo.
+ */
+function aguardarNovos(limite, esperaMs, requisicao) {
+  return new Promise((resolve) => {
+    let encerrado = false;
+
+    const finalizar = (buscarNaFila) => {
+      if (encerrado) return;
+      encerrado = true;
+      barramento.off(EVENTO_CUPOM_NOVO, aoChegarCupom);
+      barramento.off('desligando', aoDesligar);
+      clearTimeout(temporizador);
+      requisicao?.off?.('close', aoFecharConexao);
+      resolve(buscarNaFila ? proximos(limite) : []);
+    };
+
+    const aoChegarCupom = () => finalizar(true);
+    const aoDesligar = () => finalizar(false); // deploy não espera o prazo inteiro
+    const aoFecharConexao = () => finalizar(false); // agente desistiu/caiu
+
+    const temporizador = setTimeout(() => finalizar(false), esperaMs);
+    barramento.once(EVENTO_CUPOM_NOVO, aoChegarCupom);
+    barramento.once('desligando', aoDesligar);
+    requisicao?.once?.('close', aoFecharConexao);
+  });
 }
 
 async function proximos(limite) {
@@ -104,6 +146,7 @@ async function reimprimir(id) {
 module.exports = {
   enfileirar,
   proximos,
+  aguardarNovos,
   concluir,
   falhar,
   resumo,

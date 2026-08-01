@@ -47,3 +47,25 @@ PDV (nuvem) enfileira cupom  ──▶  Agente (PC do caixa) puxa  ──▶  GE
 - Falha (sem papel, impressora off) volta pra fila e tenta de novo, até 5x;
   depois marca `erro`. Nada se perde se o agente ficar offline um tempo.
 - Se o IP da impressora mudar, o agente **redescobre sozinho** na próxima impressão.
+
+## Velocidade da impressão (entrega imediata)
+
+O agente **não** fica perguntando de tempos em tempos se há cupom novo: ele
+deixa a requisição pendurada e o servidor responde no instante em que o cupom
+entra na fila. Medido em bancada, do clique até os dados chegarem na
+impressora: **~1,6 s antes → ~46 ms agora**.
+
+Ajustes no `config.json` (raramente necessários):
+
+| Campo | Padrão | Para que serve |
+|---|---|---|
+| `esperaMs` | `25000` | Quanto o servidor pode segurar a resposta esperando cupom. `0` desliga a entrega imediata e volta a só perguntar. |
+| `intervaloMs` | `2000` | Pausa entre tentativas **quando o PDV está fora do ar** ou é uma versão antiga sem entrega imediata. |
+
+Se o cupom voltar a demorar, confira nesta ordem:
+1. `esperaMs` está `0` no `config.json`? Coloque `25000`.
+2. O PDV está atualizado? Versão antiga ignora a entrega imediata e o agente
+   cai no `intervaloMs` (2 s) — sem quebrar nada, só mais lento.
+3. A impressora responde? Se o IP não responder, o agente **varre a rede**
+   antes de imprimir, e isso custa alguns segundos. Fixe o IP no `config.json`
+   em vez de deixar `"auto"`.

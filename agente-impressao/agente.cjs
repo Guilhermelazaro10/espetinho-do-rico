@@ -48,6 +48,10 @@ function carregarConfig() {
     logo: process.env.PRINTER_LOGO || arquivo.logo || 'logo.png',
     characterSet: process.env.PRINTER_CHARACTER_SET || arquivo.characterSet || 'WPC1252',
     intervaloMs: Number(process.env.AGENTE_INTERVALO_MS || arquivo.intervaloMs || 2000),
+    // Quanto tempo o servidor pode segurar a resposta esperando cupom novo.
+    // É o que faz o cupom sair no instante do clique em vez de esperar o
+    // próximo ciclo. 0 desliga e volta ao comportamento de só perguntar.
+    esperaMs: Number(process.env.AGENTE_ESPERA_MS || arquivo.esperaMs || 25000),
   };
 }
 
@@ -201,19 +205,33 @@ async function imprimirLinhas(linhas, abrirGaveta) {
   await impressora.execute();
 }
 
-async function api(metodo, rota, corpo) {
-  const res = await fetch(`${cfg.pdvUrl}${rota}`, {
-    method: metodo,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.token}` },
-    body: corpo ? JSON.stringify(corpo) : undefined,
-  });
-  if (!res.ok) throw new Error(`${metodo} ${rota} -> HTTP ${res.status}`);
-  return res.status === 204 ? null : res.json().catch(() => null);
+async function api(metodo, rota, corpo, timeoutMs = 15000) {
+  // O long-poll fica pendurado de propósito: o timeout precisa ser maior que
+  // a espera combinada, senão o agente derruba a própria conexão.
+  const controlador = new AbortController();
+  const limite = setTimeout(() => controlador.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${cfg.pdvUrl}${rota}`, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.token}` },
+      body: corpo ? JSON.stringify(corpo) : undefined,
+      signal: controlador.signal,
+    });
+    if (!res.ok) throw new Error(`${metodo} ${rota} -> HTTP ${res.status}`);
+    return res.status === 204 ? null : res.json().catch(() => null);
+  } finally {
+    clearTimeout(limite);
+  }
 }
 
 async function ciclo() {
+  let proximaEm = cfg.intervaloMs;
   try {
-    const jobs = await api('GET', '/api/impressao/proximos?limite=5');
+    const t0 = Date.now();
+    const rota = `/api/impressao/proximos?limite=5${cfg.esperaMs > 0 ? `&espera=${cfg.esperaMs}` : ''}`;
+    const jobs = await api('GET', rota, null, cfg.esperaMs + 10000);
+    const demorou = Date.now() - t0;
+
     for (const job of jobs ?? []) {
       try {
         await imprimirLinhas(String(job.conteudo).split('\n'), job.abrirGaveta);
@@ -224,10 +242,19 @@ async function ciclo() {
         log(`FALHA #${job.id}:`, erro.message);
       }
     }
+
+    if (jobs?.length) {
+      proximaEm = 0; // fila com movimento: busca o próximo já
+    } else if (cfg.esperaMs > 0 && demorou >= 1000) {
+      // O servidor segurou a resposta esperando cupom: pode voltar já, porque
+      // quem espera é ele. (Se voltasse rápido e vazio seria um servidor antigo
+      // sem long-poll — aí mantemos o intervalo para não martelar a API.)
+      proximaEm = 0;
+    }
   } catch (erro) {
     log('sem conexão com o PDV:', erro.message);
   } finally {
-    setTimeout(ciclo, cfg.intervaloMs);
+    setTimeout(ciclo, proximaEm);
   }
 }
 
