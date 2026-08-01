@@ -3,7 +3,12 @@ const crypto = require('crypto');
 const AppError = require('../errors/AppError');
 const { PAPEIS } = require('../constantes');
 
-const SEGREDO = process.env.JWT_SECRET || 'espetinho-dev-secret-trocar-em-producao';
+// O fallback vem de lib/ambiente porque é lá que ele é BARRADO em produção.
+// Duplicar a string faria a barreira parar de valer no dia em que uma das duas
+// cópias mudasse — e o boot passaria com o segredo público.
+const { SEGREDO_DEV } = require('../lib/ambiente');
+
+const SEGREDO = process.env.JWT_SECRET || SEGREDO_DEV;
 const VALIDADE = '12h'; // um turno de trabalho
 
 function gerarToken(usuario) {

@@ -1,3 +1,9 @@
+// Antes de tudo: em produção, recusa subir com segredo ausente ou de
+// desenvolvimento. Vem antes do require do app de propósito — o middleware de
+// autenticação lê JWT_SECRET no topo do arquivo, então checar depois seria
+// checar um segredo que a aplicação já congelou.
+require('./lib/ambiente').exigirAmbienteValido();
+
 const app = require('./app');
 const logger = require('./lib/logger');
 const prisma = require('./lib/prisma');

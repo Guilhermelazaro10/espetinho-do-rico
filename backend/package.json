@@ -16,7 +16,10 @@
     "backup": "node scripts/backup-db.js"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/tests/setup-env.js"
+    ]
   },
   "prisma": {
     "seed": "node prisma/seed.js"

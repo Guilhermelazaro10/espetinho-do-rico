@@ -72,6 +72,30 @@ Pega o código novo, migra o banco, rebuilda o front e reinicia — **sem perder
 - Segredo JWT por instalação; rate-limit no login; `PRINT_MODE=queue`.
 - **Troque os PINs para 6 dígitos** (cadastro em Equipe) para exposição pública.
 
+## Se o serviço não subir depois de um deploy
+
+Com `NODE_ENV=production` a API **recusa iniciar** sem um `JWT_SECRET` decente
+(ausente, curto, ou o de desenvolvimento). É proposital: sem essa barreira ela
+subiria funcionando, mas assinando os tokens com um segredo que está publicado
+no repositório — qualquer um forjaria um login de gerente.
+
+```bash
+journalctl -u pdv -n 30      # a mensagem diz exatamente qual variável está errada
+```
+
+Conferir o segredo **sem** imprimi-lo (deve dizer 96):
+
+```bash
+sudo awk -F= '/^JWT_SECRET=/{print "tamanho:", length($2)}' /opt/espetinho/backend/.env.production
+```
+
+Gerar um novo, se precisar (todos refazem login depois — só isso):
+
+```bash
+sudo sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 48)|" /opt/espetinho/backend/.env.production
+sudo systemctl restart pdv
+```
+
 ## Comandos úteis
 ```bash
 systemctl status pdv           # estado do serviço

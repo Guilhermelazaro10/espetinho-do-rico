@@ -67,5 +67,21 @@ Se o cupom voltar a demorar, confira nesta ordem:
 2. O PDV está atualizado? Versão antiga ignora a entrega imediata e o agente
    cai no `intervaloMs` (2 s) — sem quebrar nada, só mais lento.
 3. A impressora responde? Se o IP não responder, o agente **varre a rede**
-   antes de imprimir, e isso custa alguns segundos. Fixe o IP no `config.json`
-   em vez de deixar `"auto"`.
+   antes de imprimir, e isso custa alguns segundos.
+
+## Se o agente não achar a impressora
+
+Ele varre só as faixas **privadas** (`10.x`, `172.16-31.x`, `192.168.x`) e faz
+duas passadas — a segunda mais paciente, para rede Wi-Fi lenta. Achando, grava
+o IP no `config.json` e nas próximas vezes é instantâneo. Se ainda assim falhar:
+
+1. **Descubra o IP pela impressora:** ligue-a segurando o botão de avanço de
+   papel. Sai a auto-teste com `[Current Network]` e o IP dela.
+2. Confirme que esse IP está na **mesma faixa** do PC (`ipconfig`). Se a
+   impressora estiver em `192.168.0.x` e o PC em `192.168.1.x`, elas não se
+   enxergam — é caso de mexer no roteador, não no agente.
+3. Como último recurso, fixe no `config.json`:
+   `"impressora": "tcp://192.168.1.81:9100"`.
+
+> **Dica:** o IP vem por DHCP e pode mudar sozinho. Crie uma **reserva** no
+> roteador para o MAC da impressora (aparece na auto-teste) e ele nunca muda.

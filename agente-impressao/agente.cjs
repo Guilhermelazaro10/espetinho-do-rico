@@ -70,12 +70,26 @@ function extrairIp(iface) {
   return m ? m[1] : null;
 }
 
+// A impressora está SEMPRE na rede local, então só faixas privadas (RFC1918)
+// entram na varredura. Sem esse filtro, um adaptador virtual com IP público
+// (VPN, Docker, Hyper-V — no PC do caixa era o "Topaz Loopback", 54.232.189.x)
+// fazia o agente varrer 254 endereços da INTERNET na porta 9100 antes de olhar
+// a rede da loja: lento e, se algum host lá fora respondesse, o cupom com dados
+// do cliente sairia impresso na máquina de um estranho.
+function ehRedePrivada(ip) {
+  const [a, b] = ip.split('.').map(Number);
+  if (a === 10) return true; //            10.0.0.0/8
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+  if (a === 192 && b === 168) return true; //  192.168.0.0/16
+  return false; // 169.254.x (placa sem DHCP) cai aqui: nunca tem impressora
+}
+
 // sub-redes /24 das interfaces locais (ex.: "192.168.1")
 function subRedesLocais() {
   const bases = new Set();
   for (const ifaces of Object.values(os.networkInterfaces())) {
     for (const i of ifaces || []) {
-      if (i.family === 'IPv4' && !i.internal) {
+      if (i.family === 'IPv4' && !i.internal && ehRedePrivada(i.address)) {
         bases.add(i.address.split('.').slice(0, 3).join('.'));
       }
     }
@@ -83,7 +97,7 @@ function subRedesLocais() {
   return [...bases];
 }
 
-function porta9100Aberta(ip, timeout = 400) {
+function porta9100Aberta(ip, timeout = 500) {
   return new Promise((resolve) => {
     const s = net.createConnection({ host: ip, port: 9100 });
     let fechado = false;
@@ -100,17 +114,30 @@ function porta9100Aberta(ip, timeout = 400) {
   });
 }
 
+async function varrer(base, timeout) {
+  const candidatos = [];
+  for (let n = 1; n <= 254; n++) candidatos.push(`${base}.${n}`);
+  const LOTE = 32; // varre em lotes pra não abrir 254 sockets de uma vez
+  for (let i = 0; i < candidatos.length; i += LOTE) {
+    const grupo = candidatos.slice(i, i + LOTE);
+    const achados = await Promise.all(
+      grupo.map(async (ip) => ((await porta9100Aberta(ip, timeout)) ? ip : null))
+    );
+    const ip = achados.find(Boolean);
+    if (ip) return ip;
+  }
+  return null;
+}
+
 async function descobrirImpressora() {
-  for (const base of subRedesLocais()) {
-    const candidatos = [];
-    for (let n = 1; n <= 254; n++) candidatos.push(`${base}.${n}`);
-    const LOTE = 32; // varre em lotes pra não abrir 254 sockets de uma vez
-    for (let i = 0; i < candidatos.length; i += LOTE) {
-      const grupo = candidatos.slice(i, i + LOTE);
-      const achados = await Promise.all(
-        grupo.map(async (ip) => ((await porta9100Aberta(ip)) ? ip : null))
-      );
-      const ip = achados.find(Boolean);
+  // Duas passadas. A rápida resolve o caso normal em poucos segundos; a
+  // paciente cobre o PC ligado no Wi-Fi com ARP frio, onde a impressora demora
+  // a responder e some da varredura mesmo estando ligada — foi exatamente o que
+  // aconteceu na loja: ela respondia em 73ms depois de acordada, mas não dentro
+  // dos 400ms da primeira tentativa, no meio de 32 conexões simultâneas.
+  for (const timeout of [500, 2500]) {
+    for (const base of subRedesLocais()) {
+      const ip = await varrer(base, timeout);
       if (ip) return ip;
     }
   }
@@ -135,7 +162,9 @@ async function resolverInterface() {
   const configurada = cfg.impressora;
   if (configurada && configurada !== 'auto') {
     const ip = extrairIp(configurada);
-    if (ip && (await porta9100Aberta(ip))) {
+    // Aqui é uma conexão só, sem varredura concorrente: pode esperar à vontade
+    // em vez de cair numa varredura de rede inteira por 200ms de atraso.
+    if (ip && (await porta9100Aberta(ip, 3000))) {
       interfaceImpressora = configurada;
       return interfaceImpressora;
     }
@@ -283,7 +312,7 @@ async function imprimirTeste() {
   log('Teste enviado. Confira o papel.');
 }
 
-(async () => {
+async function principal() {
   if (!cfg.pdvUrl || !cfg.token) {
     console.error('Faltou configurar pdvUrl e token (config.json ou variáveis de ambiente).');
     process.exit(1);
@@ -302,4 +331,12 @@ async function imprimirTeste() {
     }
   }
   ciclo();
-})();
+}
+
+// Só roda quando chamado direto (`node agente.cjs`). Sem esta guarda, importar
+// o arquivo num teste dispara o long-poll e o processo nunca termina.
+if (require.main === module) {
+  principal();
+}
+
+module.exports = { subRedesLocais, extrairIp };
