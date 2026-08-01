@@ -7,10 +7,18 @@ lan-err.txt
 *.log
 .claude/
 
-# Banco SQLite local e variaveis de ambiente
-backend/.env
+# Banco SQLite local e variaveis de ambiente.
+# O .env* pega tambem o .env.production da VPS, que guarda JWT_SECRET e
+# PRINT_AGENT_TOKEN: quem opera direto no servidor digita `git add -A` sem
+# pensar, e sem esta linha os segredos da loja subiriam para o GitHub.
+backend/.env*
+!backend/.env*.example
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
+
+# Banco de PRODUCAO na VPS (/opt/espetinho/data/pdv.db) — fica dentro da pasta
+# do repositorio. Sao as vendas, os clientes e a equipe: nunca versionar.
+/data/
 
 # Segredo JWT por instalacao (gerado em runtime)
 backend/.jwt-secret

@@ -10,7 +10,22 @@ cd "$APP_DIR"
 ENV_FILE="$APP_DIR/backend/.env.production"
 
 echo "==> Buscando código novo (git pull)…"
-git pull --ff-only 2>/dev/null || echo "   (sem git/remoto — se você sobe por upload, ignore)"
+# Duas situações que ANTES viravam a mesma mensagem amigável: "não uso git aqui"
+# (upload manual — legítimo, segue) e "o pull não passou" (arquivo editado na
+# VPS, histórico divergente). No segundo caso o script seguia adiante, rebuildava
+# e anunciava "Atualizado e no ar" rodando o código ANTIGO — o deploy mentia.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git remote get-url origin >/dev/null 2>&1; then
+  if ! git pull --ff-only; then
+    echo "" >&2
+    echo "!! O 'git pull' não passou — NADA foi atualizado." >&2
+    echo "   Causa comum: algum arquivo editado direto na VPS, ou histórico divergente." >&2
+    echo "   Veja o que está pendente antes de repetir o deploy:" >&2
+    echo "     cd $APP_DIR && git status" >&2
+    exit 1
+  fi
+else
+  echo "   (sem git/remoto — você sobe por upload; seguindo)"
+fi
 
 # Variáveis novas não entram sozinhas em instalações antigas: o setup-vps só
 # escreve o .env na primeira vez. Cada linha é "CHAVE=valor padrão".
