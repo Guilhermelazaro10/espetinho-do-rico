@@ -137,7 +137,7 @@ export default function Cardapio({ sessao, aoSair }) {
                   value={form.categoria}
                   onChange={(e) => alterar('categoria', e.target.value)}
                   list="categorias-cardapio"
-                className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+                  className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
                   required
                 />
                 <datalist id="categorias-cardapio">
@@ -200,14 +200,14 @@ export default function Cardapio({ sessao, aoSair }) {
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-rico-wood/25 pt-3">
                 <button
                   onClick={() => editar(produto)}
-                  className="rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light"
+                  className="flex min-h-10 items-center gap-1.5 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95"
                 >
-                  <Edit3 size={14} className="inline" /> Editar
+                  <Edit3 size={14} /> Editar
                 </button>
                 {produto.ativo ? (
                   <button
                     onClick={() => desativar(produto)}
-                    className="flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
+                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-amber-100 px-3.5 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-200 active:scale-95"
                     title="Marcar como esgotado (some do cardapio e dos garcons)"
                   >
                     <EyeOff size={14} /> Esgotou
@@ -215,7 +215,7 @@ export default function Cardapio({ sessao, aoSair }) {
                 ) : (
                   <button
                     onClick={() => reativar(produto)}
-                    className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-emerald-700"
+                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-emerald-800 active:scale-95"
                     title="Voltar a vender"
                   >
                     <RotateCcw size={14} /> Disponibilizar
@@ -238,7 +238,7 @@ function Campo({ rotulo, valor, onChange, required = false }) {
         value={valor}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+        className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
       />
     </label>
   );

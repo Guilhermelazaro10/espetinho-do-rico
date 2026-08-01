@@ -457,7 +457,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                       <button
                         onClick={confirmarTransferencia}
                         disabled={!destinoId}
-                        className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-sky-700 disabled:opacity-40"
+                        className="rounded-lg bg-sky-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-sky-800 disabled:opacity-40"
                       >
                         Confirmar transferência
                       </button>

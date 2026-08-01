@@ -34,7 +34,7 @@ function ContatoCliente({ pedido }) {
           href={linkWhats(pedido.clienteTelefone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 underline-offset-2 hover:underline"
         >
           <Phone size={11} /> {pedido.clienteTelefone}
         </a>
@@ -96,7 +96,7 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           onClick={() => onAceitar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white shadow-suave transition hover:bg-emerald-800 active:scale-[0.98]"
         >
           <CheckCircle2 size={16} /> Aceitar
         </button>
@@ -163,13 +163,13 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
         <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
         <div className="flex flex-wrap justify-end gap-2">
           {podeAvancar && (
-            <button onClick={() => onAvancar(pedido)} className="rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light">
-              <CheckCircle2 size={14} className="inline" /> Avancar
+            <button onClick={() => onAvancar(pedido)} className="flex min-h-10 items-center gap-1 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95">
+              <CheckCircle2 size={14} /> Avancar
             </button>
           )}
           <button
             onClick={() => onReimprimir(pedido)}
-            className="rounded-lg p-2 text-carvao-suave hover:bg-carvao/10 hover:text-carvao"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-carvao-claro transition hover:bg-carvao/10 hover:text-carvao"
             aria-label="Reimprimir comanda"
             title="Reimprimir"
           >
@@ -177,19 +177,19 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
           </button>
           {gerente && pedido.status === 'entregue' && (
             <>
-              <button onClick={() => onPagar(pedido, 'pix')} className="flex items-center gap-1 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light" title="Pagar com Pix">
+              <button onClick={() => onPagar(pedido, 'pix')} className="flex min-h-10 items-center gap-1 rounded-lg bg-rico-red px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-vinho-profundo active:scale-95" title="Pagar com Pix">
                 <QrCode size={14} /> Pix
               </button>
-              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar em dinheiro">
+              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex min-h-10 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar em dinheiro">
                 <Banknote size={14} /> Dinheiro
               </button>
-              <button onClick={() => onPagar(pedido, 'cartao')} className="flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35" title="Pagar no cartão">
+              <button onClick={() => onPagar(pedido, 'cartao')} className="flex min-h-10 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar no cartão">
                 <CreditCard size={14} /> Cartao
               </button>
             </>
           )}
           {gerente && (
-            <button onClick={() => onCancelar(pedido)} className="rounded-lg p-2 text-rico-red hover:bg-rico-red/10" aria-label="Cancelar">
+            <button onClick={() => onCancelar(pedido)} className="flex h-10 w-10 items-center justify-center rounded-lg text-rico-red transition hover:bg-rico-red/10" aria-label="Cancelar">
               <Ban size={16} />
             </button>
           )}

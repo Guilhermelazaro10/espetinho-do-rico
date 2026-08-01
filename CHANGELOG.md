@@ -6,6 +6,21 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Interface (auditoria de acessibilidade e UX)
+- **Contraste WCAG AA em todo o app.** O tom de texto secundário media 3,62:1
+  (reprovado para texto pequeno); o novo tom `#856b52` mede 4,86:1 mantendo o
+  marrom quente da marca. Botão "Aceitar" (2,54:1) e links de WhatsApp também
+  corrigidos para verdes que passam.
+- **Foco de teclado visível** em todos os elementos interativos (a auditoria
+  encontrou zero) — anel na cor da marca, só para navegação por teclado.
+- **Alvos de toque ≥40px** nos botões de operação (pills de categoria eram
+  28px; Editar/Esgotou 32px; abas 36px) — menos toque errado no corre.
+- **Salão:** cada mesa ocupada mostra **há quanto tempo** está com comanda
+  aberta; esqueleto de carregamento no lugar da tela em branco; estado vazio
+  com instrução; a legenda (livres/ocupadas/aguardando) não some mais no
+  celular.
+- Respeito a `prefers-reduced-motion` e seleção de texto na cor da marca.
+
 ### Segurança
 - **Corrigido bypass do bloqueio de força-bruta do PIN.** O header
   `CF-Connecting-IP` era aceito sem validação: bastava variá-lo a cada

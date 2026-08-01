@@ -330,8 +330,8 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                     <button
                       key={c}
                       onClick={() => setCatAtiva(c)}
-                      className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition ${
-                        c === catAtiva ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-white text-carvao-suave ring-1 ring-rico-wood/25'
+                      className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition active:scale-95 ${
+                        c === catAtiva ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-white text-carvao-claro ring-1 ring-rico-wood/25 hover:ring-rico-red/35'
                       }`}
                     >
                       {c}
@@ -529,8 +529,8 @@ function Aba({ ativa, onClick, Icone, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${
-        ativa ? 'bg-rico-red text-rico-light shadow-brasa' : 'text-carvao-suave hover:bg-carvao/5'
+      className={`flex min-h-10 items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${
+        ativa ? 'bg-rico-red text-rico-light shadow-brasa' : 'text-carvao-claro hover:bg-carvao/5'
       }`}
     >
       <Icone size={16} /> {children}
@@ -546,7 +546,7 @@ function Input({ rotulo, valor, onChange, onBlur, dica }) {
         value={valor}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
-        className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+        className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
       />
       {dica && <span className="mt-0.5 block text-[10px] font-semibold text-rico-light/40">{dica}</span>}
     </label>

@@ -22,7 +22,9 @@
   /* Texto Primário / Fundo Dark — Marrom Carvão */
   --color-carvao: #3f2b1d;
   --color-carvao-claro: #6d4f37;
-  --color-carvao-suave: #9a8068;
+  /* Suave: 4.86:1 sobre o creme (WCAG AA até em texto pequeno). O tom antigo
+     #9a8068 media 3.62:1 e reprovava nos rótulos/horários miúdos. */
+  --color-carvao-suave: #856b52;
 
   /* Destaque / Status — Brasa (degradê laranja) */
   --color-brasa: #d4a96e;
@@ -108,5 +110,29 @@
 
   * {
     scrollbar-color: #d4a96e #fffcf7;
+  }
+
+  /* Foco de teclado visível em TODO o app (auditoria: nenhum elemento tinha).
+     :focus-visible só aparece navegando por teclado — clique/toque não ganha anel. */
+  :focus-visible {
+    outline: 2px solid var(--color-rico-red);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Seleção de texto na cor da marca */
+  ::selection {
+    background: rgb(179 42 42 / 0.18);
+  }
+
+  /* Respeita quem configurou o aparelho para reduzir movimento */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

@@ -348,7 +348,7 @@ export default function Pedir() {
               <div>
                 <p className="text-sm font-extrabold text-carvao">Retire na loja</p>
                 <p className="text-sm font-semibold text-carvao-suave">{loja.endereco}</p>
-                <p className="mt-1 text-xs font-bold text-emerald-600">Retirada · grátis</p>
+                <p className="mt-1 text-xs font-bold text-emerald-700">Retirada · grátis</p>
               </div>
             </div>
           )}
