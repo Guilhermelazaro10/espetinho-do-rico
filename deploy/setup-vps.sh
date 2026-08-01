@@ -124,8 +124,10 @@ $CADDY_SITE {
 EOF
 systemctl reload caddy 2>/dev/null || systemctl restart caddy
 
-# Firewall: só SSH + HTTP/HTTPS (Node fica em 127.0.0.1, nunca exposto)
-ufw allow OpenSSH >/dev/null 2>&1 || true
+# Firewall: só SSH + HTTP/HTTPS (Node fica em 127.0.0.1, nunca exposto).
+# SSH pela PORTA explícita: 'ufw allow OpenSSH' depende do perfil de app
+# existir e já falhou em silêncio uma vez — deixou a VPS sem SSH externo.
+ufw allow 22/tcp >/dev/null 2>&1 || true
 ufw allow 80/tcp >/dev/null 2>&1 || true
 ufw allow 443/tcp >/dev/null 2>&1 || true
 yes | ufw enable >/dev/null 2>&1 || true

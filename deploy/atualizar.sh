@@ -31,6 +31,13 @@ if [ -f "$ENV_FILE" ]; then
   garantir_variavel "SHUTDOWN_TIMEOUT_MS=10000"
 fi
 
+# SSH nunca pode ficar trancado: na instalação original o 'ufw allow OpenSSH'
+# falhou em silêncio e a VPS ficou acessível só pelo console da Hostinger.
+# A regra explícita é idempotente — garante em todo deploy.
+if command -v ufw >/dev/null 2>&1; then
+  ufw allow 22/tcp >/dev/null 2>&1 || true
+fi
+
 npm ci
 ( cd backend && set -a; . .env.production; set +a; npx prisma generate && npx prisma migrate deploy )
 npm run build -w frontend
