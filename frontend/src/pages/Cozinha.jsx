@@ -112,7 +112,7 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
           {pedidos.map((pedido) => {
             const minutos = minutosDesde(pedido.criadoEm);
             return (
-              <li key={pedido.id} className="rounded-xl bg-rico-light/5 p-4 ring-1 ring-rico-light/10">
+              <li key={pedido.id} className="animate-card-entrada rounded-xl bg-rico-light/5 p-4 ring-1 ring-rico-light/10">
                 <div className="flex items-center justify-between">
                   <span className="font-display text-2xl">
                     {tituloPedido(pedido)}

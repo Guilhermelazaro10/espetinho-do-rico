@@ -44,6 +44,34 @@
   --animate-toast-in: toast-in 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
   --animate-toast-out: toast-out 0.22s ease-in forwards;
 
+  /* Card novo entra deslizando; como os cards têm key por id, o React só
+     monta DOM novo para pedido NOVO — quem já estava na tela não re-anima. */
+  --animate-card-entrada: card-entrada 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Pedido online: entra E pulsa uma vez (anel esmeralda) — o olho do
+     operador vai direto no que acabou de chegar. */
+  --animate-chegada-online:
+    card-entrada 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    pulso-novo 1.3s ease-out 0.4s 1;
+
+  @keyframes card-entrada {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pulso-novo {
+    0% {
+      box-shadow: 0 0 0 0 rgb(16 185 129 / 0.5);
+    }
+    100% {
+      box-shadow: 0 0 0 16px rgb(16 185 129 / 0);
+    }
+  }
+
   @keyframes toast-in {
     from {
       opacity: 0;

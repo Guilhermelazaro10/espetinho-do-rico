@@ -100,11 +100,12 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
       notificar.info(`Mesa ${mesa.numero} reaberta`, 'Garçom pode lançar pedidos de novo');
     }, 'Não foi possível reabrir a mesa');
 
-  const removerItem = (pedidoId, item) =>
+  // Sem quantidade remove o item inteiro; com ela, só a parte (1 de "3x carne")
+  const removerItem = (pedidoId, item, quantidade) =>
     executar(async () => {
-      await api.pedidos.removerItem(pedidoId, item.id);
+      await api.pedidos.removerItem(pedidoId, item.id, quantidade);
       setItemArmado(null);
-      notificar.sucesso('Item removido', `${item.quantidade}× ${item.produto.nome}`);
+      notificar.sucesso('Item removido', `${quantidade ?? item.quantidade}× ${item.produto.nome}`);
     }, 'Não foi possível remover o item');
 
   const reimprimir = (pedidoId) =>
@@ -385,23 +386,44 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                                 <ArrowRightLeft size={13} />
                               </button>
                             )}
-                            {gerente && (
+                            {gerente && itemArmado !== item.id && (
                               <button
-                                onClick={() =>
-                                  itemArmado === item.id
-                                    ? removerItem(pedido.id, item)
-                                    : setItemArmado(item.id)
-                                }
-                                className={`shrink-0 rounded-md p-1 text-xs font-bold transition ${
-                                  itemArmado === item.id
-                                    ? 'bg-rico-red px-2 text-rico-light'
-                                    : 'text-carvao/30 hover:bg-rico-red/10 hover:text-rico-red'
-                                }`}
+                                onClick={() => setItemArmado(item.id)}
+                                className="shrink-0 rounded-md p-1 text-carvao/30 transition hover:bg-rico-red/10 hover:text-rico-red"
                                 aria-label={`Remover ${item.produto.nome}`}
-                                title="Remover item (toque duas vezes)"
+                                title="Remover item"
                               >
-                                {itemArmado === item.id ? 'remover?' : <X size={13} />}
+                                <X size={13} />
                               </button>
+                            )}
+                            {gerente && itemArmado === item.id && (
+                              <span className="flex shrink-0 items-center gap-1">
+                                {/* 3x carne, cliente desistiu de 1: tira só 1 */}
+                                {item.quantidade > 1 && (
+                                  <button
+                                    onClick={() => removerItem(pedido.id, item, 1)}
+                                    className="rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
+                                    title="Remover só 1 unidade"
+                                  >
+                                    −1
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => removerItem(pedido.id, item)}
+                                  className="rounded-md bg-rico-red px-2 py-1 text-xs font-bold text-rico-light transition hover:bg-vinho-profundo"
+                                  title="Remover o item inteiro"
+                                >
+                                  {item.quantidade > 1 ? `todos (${item.quantidade})` : 'remover?'}
+                                </button>
+                                <button
+                                  onClick={() => setItemArmado(null)}
+                                  className="rounded-md p-1 text-carvao/40 transition hover:bg-carvao/10"
+                                  aria-label="Cancelar remoção"
+                                  title="Cancelar"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </span>
                             )}
                           </li>
                         ))}

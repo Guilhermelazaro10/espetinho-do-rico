@@ -180,15 +180,22 @@ function montarLinhasPreConta({ mesa, comandas, subtotal, taxa, totalDevido, pag
   linhas.push(justificar(`MESA ${String(mesa.numero).padStart(2, '0')}`, formatarDataHora()));
   linhas.push(divisoria());
 
+  // Agrupa o mesmo produto de comandas diferentes ("3 cervejas no início +
+  // 2 depois" viram "5x Cerveja"): o cliente confere a conta de uma olhada,
+  // sem caçar o mesmo item espalhado pelo cupom. Preço diferente (reajuste no
+  // meio do consumo) não mistura — o valor congelado de cada venda é sagrado.
+  const grupos = new Map();
   for (const comanda of comandas) {
     for (const item of comanda.itens) {
-      linhas.push(
-        justificar(
-          `${item.quantidade}x ${item.produto?.nome ?? `Produto ${item.produtoId}`}`,
-          moeda(item.precoUnitario * item.quantidade)
-        )
-      );
+      const nome = item.produto?.nome ?? `Produto ${item.produtoId}`;
+      const chave = `${nome}|${item.precoUnitario}`;
+      const grupo = grupos.get(chave) ?? { nome, precoUnitario: item.precoUnitario, quantidade: 0 };
+      grupo.quantidade += item.quantidade;
+      grupos.set(chave, grupo);
     }
+  }
+  for (const g of grupos.values()) {
+    linhas.push(justificar(`${g.quantidade}x ${g.nome}`, moeda(g.precoUnitario * g.quantidade)));
   }
 
   linhas.push(divisoria());

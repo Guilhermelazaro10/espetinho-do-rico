@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import {
   LayoutGrid, Bike, ChefHat, TrendingUp, Wallet, Users, UtensilsCrossed, LogOut, Smartphone, Printer,
 } from 'lucide-react';
-import { ToasterGlobal } from '../ui/toast';
+import { notificar, ToasterGlobal } from '../ui/toast';
 import { ehGerente } from '../lib/constantes';
+import { baseUrl, ehNativo } from '../lib/servidor';
+import { tocarCampainha } from '../lib/som';
 
 const ITENS_NAV = [
   { href: '#/', rotulo: 'Salao', Icone: LayoutGrid, gerente: false },
@@ -27,6 +30,29 @@ function rotaAtiva(href) {
 
 export default function AppShell({ children, titulo, acoes = null, sessao, aoSair }) {
   const itens = itensVisiveis(sessao);
+
+  // Campainha de pedido online: toca em QUALQUER tela do PDV — ninguém
+  // precisa ficar vigiando a aba Delivery para saber que entrou pedido.
+  useEffect(() => {
+    if (ehNativo()) return undefined; // APK do garçom usa polling, sem SSE
+    const fonte = new EventSource(`${baseUrl()}/api/eventos`);
+    fonte.onmessage = (evento) => {
+      try {
+        const dados = JSON.parse(evento.data);
+        if (dados?.tipo === 'pedido_criado' && dados.online) {
+          tocarCampainha();
+          notificar.brasa(
+            '🔔 Pedido do cardápio online!',
+            'Abra a aba Delivery para aceitar ou recusar'
+          );
+        }
+      } catch {
+        /* evento sem JSON (ping) — ignora */
+      }
+    };
+    fonte.onerror = () => {}; // EventSource reconecta sozinho
+    return () => fonte.close();
+  }, []);
 
   return (
     <div className="flex min-h-dvh bg-rico-light">

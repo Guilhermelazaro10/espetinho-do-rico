@@ -68,7 +68,7 @@ function LinhaPagamentoPretendido({ pedido, className }) {
 
 export function PendenteCard({ pedido, onAceitar, onRecusar }) {
   return (
-    <article className="rounded-xl border border-emerald-200 bg-white p-3 shadow-suave">
+    <article className="animate-chegada-online rounded-xl border border-emerald-200 bg-white p-3 shadow-suave">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-display text-lg text-carvao">
@@ -114,7 +114,7 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
 export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCancelar, onReimprimir }) {
   const podeAvancar = ['aberto', 'em_preparo'].includes(pedido.status);
   return (
-    <article className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
+    <article className="animate-card-entrada rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-xl text-carvao">

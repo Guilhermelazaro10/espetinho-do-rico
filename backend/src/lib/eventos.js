@@ -8,7 +8,9 @@ const barramento = new EventEmitter();
 barramento.setMaxListeners(200); // muitos clientes SSE simultâneos
 
 function publicar(tipo, detalhe = {}) {
-  barramento.emit('mudanca', { tipo, ...detalhe, em: Date.now() });
+  // `tipo` por último: um detalhe com campo homônimo (ex.: tipo do pedido)
+  // não pode sobrescrever o NOME do evento que os clientes filtram.
+  barramento.emit('mudanca', { ...detalhe, tipo, em: Date.now() });
 }
 
 module.exports = { barramento, publicar };

@@ -6,6 +6,22 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Operação do balcão
+- **Campainha de pedido online**: quando entra pedido pelo cardápio, toca um
+  "din-don" e aparece aviso em QUALQUER tela do PDV — ninguém mais precisa
+  vigiar a aba Delivery. (O som destrava no primeiro toque na tela, exigência
+  dos navegadores.)
+- **Remover só uma unidade**: em "3x carne", o gerente agora escolhe entre
+  tirar 1 (−1) ou o item inteiro — antes só dava para remover os 3 e relançar.
+- **Pré-conta agrupada**: cerveja pedida em 3 rodadas sai como "5x Cerveja"
+  numa linha só — o cliente confere de uma olhada. Preços congelados
+  diferentes (reajuste no meio do consumo) não se misturam.
+- **Cards com entrada animada**: pedido novo desliza e o online pulsa uma vez
+  (anel verde) — o olho do operador vai direto no que mudou. Como a animação
+  só roda em card recém-montado, quem já estava na tela não pisca.
+- Corrigido: o campo `tipo` do detalhe dos eventos SSE sobrescrevia o NOME do
+  evento (pedido_criado virava "DELIVERY") — filtros por tipo nunca casavam.
+
 ### Interface (auditoria de acessibilidade e UX)
 - **Contraste WCAG AA em todo o app.** O tom de texto secundário media 3,62:1
   (reprovado para texto pequeno); o novo tom `#856b52` mede 4,86:1 mantendo o

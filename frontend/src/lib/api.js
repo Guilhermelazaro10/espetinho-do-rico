@@ -78,8 +78,11 @@ export const api = {
     aceitar: (id) => requisitar(`/pedidos/${id}/aceitar`, { method: 'POST' }),
     recusar: (id, motivo) =>
       requisitar(`/pedidos/${id}/recusar`, { method: 'POST', body: { motivo } }),
-    removerItem: (pedidoId, itemId) =>
-      requisitar(`/pedidos/${pedidoId}/itens/${itemId}`, { method: 'DELETE' }),
+    removerItem: (pedidoId, itemId, quantidade) =>
+      requisitar(
+        `/pedidos/${pedidoId}/itens/${itemId}${quantidade ? `?quantidade=${quantidade}` : ''}`,
+        { method: 'DELETE' }
+      ),
     imprimir: (id) => requisitar(`/pedidos/${id}/imprimir`, { method: 'POST' }),
   },
   produtos: {

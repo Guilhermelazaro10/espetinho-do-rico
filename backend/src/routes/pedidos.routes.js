@@ -65,12 +65,14 @@ router.post('/:id/cancelar', somenteGerente, async (req, res) => {
   res.json(await pedidosService.cancelar(parseId(req.params.id), req.body?.motivo, req.usuario));
 });
 
+// ?quantidade=N remove só uma parte (ex.: 1 de "3x carne"); sem ela, o item todo
 router.delete('/:id/itens/:itemId', somenteGerente, async (req, res) => {
   res.json(
     await pedidosService.removerItem(
       parseId(req.params.id),
       parseId(req.params.itemId, 'ID do item'),
-      req.usuario
+      req.usuario,
+      req.query.quantidade
     )
   );
 });

@@ -109,6 +109,38 @@ describe('PrinterService — pré-conta (conferência)', () => {
     expect(texto).toMatch(/TOTAL A PAGAR\s+R\$ 50,60/);
   });
 
+  it('agrupa o mesmo produto pedido em rodadas diferentes (3+2 = 5x)', () => {
+    // Cliente pediu 3 cervejas na chegada e 2 na segunda rodada (comandas
+    // separadas): a pré-conta soma numa linha só, fácil de conferir.
+    const contaComRodadas = {
+      ...conta,
+      comandas: [
+        { itens: [{ quantidade: 3, precoUnitario: 800, produto: { nome: 'Cerveja' } }] },
+        { itens: [{ quantidade: 1, precoUnitario: 1500, produto: { nome: 'Medalhão' } }] },
+        { itens: [{ quantidade: 2, precoUnitario: 800, produto: { nome: 'Cerveja' } }] },
+      ],
+      subtotal: 5500,
+    };
+    const texto = montarLinhasPreConta(contaComRodadas).join('\n');
+    expect(texto).toMatch(/5x Cerveja\s+R\$ 40,00/);
+    expect((texto.match(/Cerveja/g) || []).length).toBe(1); // uma linha só
+  });
+
+  it('mesmo produto com preço congelado diferente NÃO mistura', () => {
+    // Reajuste no meio do consumo: as 2 primeiras a R$ 8, a nova a R$ 9.
+    const contaReajuste = {
+      ...conta,
+      comandas: [
+        { itens: [{ quantidade: 2, precoUnitario: 800, produto: { nome: 'Cerveja' } }] },
+        { itens: [{ quantidade: 1, precoUnitario: 900, produto: { nome: 'Cerveja' } }] },
+      ],
+      subtotal: 2500,
+    };
+    const texto = montarLinhasPreConta(contaReajuste).join('\n');
+    expect(texto).toMatch(/2x Cerveja\s+R\$ 16,00/);
+    expect(texto).toMatch(/1x Cerveja\s+R\$ 9,00/);
+  });
+
   it('com pagamento parcial mostra o saldo restante', () => {
     const texto = montarLinhasPreConta({ ...conta, pago: 2000, saldoDevedor: 3060 }).join('\n');
     expect(texto).toMatch(/Pago parcialmente\s+- R\$ 20,00/);

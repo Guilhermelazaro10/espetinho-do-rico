@@ -191,7 +191,11 @@ async function criar(dados, usuario) {
 
   // Online aguarda aceitação (só imprime no "Aceitar"); o resto imprime já.
   if (!ehOnline) printerService.dispararImpressao(pedido);
-  publicar('pedido_criado', { mesaId: cabecalho.mesaId, tipo: cabecalho.tipo, online: ehOnline });
+  publicar('pedido_criado', {
+    mesaId: cabecalho.mesaId,
+    tipoPedido: cabecalho.tipo,
+    online: ehOnline,
+  });
 
   return pedido;
 }
@@ -361,15 +365,46 @@ async function cancelar(id, motivo, usuario) {
 
 /**
  * Remove um item da comanda (erro de lançamento) recalculando o total.
+ * `quantidade` permite tirar só uma parte (ex.: 1 de "3x carne" — o cliente
+ * desistiu de uma); sem informar, remove o item inteiro.
  * Comanda que ficar vazia é cancelada automaticamente.
  */
-async function removerItem(pedidoId, itemId, usuario) {
+async function removerItem(pedidoId, itemId, usuario, quantidade) {
   const pedido = await buscarPorId(pedidoId);
   if (!STATUS_PEDIDO_EM_ABERTO.includes(pedido.status)) {
     throw new AppError(`Pedido ${pedido.status} não pode ser alterado`, 409);
   }
   const item = pedido.itens.find((i) => i.id === itemId);
   if (!item) throw new AppError('Item não encontrado nesta comanda', 404);
+
+  const qtd = quantidade == null ? item.quantidade : Number(quantidade);
+  if (!Number.isInteger(qtd) || qtd < 1 || qtd > item.quantidade) {
+    throw new AppError(`Quantidade a remover deve ser entre 1 e ${item.quantidade}`);
+  }
+
+  // Remoção parcial: só diminui a quantidade e abate do total — a comanda
+  // continua íntegra, sem o efeito colateral de cancelar/liberar mesa.
+  if (qtd < item.quantidade) {
+    const atualizado = await prisma.$transaction(async (tx) => {
+      await tx.itemPedido.update({
+        where: { id: itemId },
+        data: { quantidade: item.quantidade - qtd },
+      });
+      await tx.pedido.update({
+        where: { id: pedidoId },
+        data: { total: pedido.total - item.precoUnitario * qtd },
+      });
+      return tx.pedido.findUnique({ where: { id: pedidoId }, include: INCLUDE_COMPLETO });
+    });
+
+    auditoriaService.registrar(
+      usuario,
+      'remocao_item',
+      `${qtd}x "${item.produto.nome}" removido da comanda #${pedidoId} (restaram ${item.quantidade - qtd})`
+    );
+    publicar('pedido_alterado', { mesaId: pedido.mesaId });
+    return atualizado;
+  }
 
   const atualizado = await prisma.$transaction(async (tx) => {
     await tx.itemPedido.delete({ where: { id: itemId } });
