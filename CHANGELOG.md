@@ -7,6 +7,16 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 ## [Não lançado]
 
 ### Operação do balcão
+- **Venda rápida no balcão** (gerente): só itens + forma de pagamento, sem
+  cadastrar cliente. O pagamento entra na hora no caixa do turno; em dinheiro,
+  o "valor recebido" calcula o troco. A comanda vai pra chapa e o pedido fecha
+  sozinho como pago quando sair "entregue". "Entregue na hora" (ex.: só
+  bebida) não imprime nem passa pela cozinha. Cancelar gera estorno negativo
+  na mesma forma — o pagamento original nunca é apagado.
+- **Pausar delivery** (gerente): botão na tela Delivery/Balcão. Pausado, o
+  cardápio online mostra só retirada e a API recusa entrega (vale mesmo com a
+  página do cliente aberta antes da pausa). Fica gravado no banco, sobrevive a
+  restart e vai para a auditoria.
 - **Campainha de pedido online**: quando entra pedido pelo cardápio, toca um
   "din-don" e aparece aviso em QUALQUER tela do PDV — ninguém mais precisa
   vigiar a aba Delivery. (O som destrava no primeiro toque na tela, exigência

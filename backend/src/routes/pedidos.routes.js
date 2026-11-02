@@ -55,6 +55,15 @@ router.post('/:id/recusar', async (req, res) => {
 });
 
 // Dinheiro e correções: EXCLUSIVO do gerente
+
+// Venda rápida no balcão: itens + forma de pagamento, sem cadastro de cliente
+router.post('/venda-rapida', somenteGerente, async (req, res) => {
+  const { itens, formaPagamento, valorRecebido, entregueNaHora } = req.body ?? {};
+  res
+    .status(201)
+    .json(await pedidosService.vendaRapida({ itens, formaPagamento, valorRecebido, entregueNaHora }, req.usuario));
+});
+
 router.patch('/:id/pagamento', somenteGerente, async (req, res) => {
   res.json(
     await pedidosService.pagarPedido(parseId(req.params.id), req.body?.formaPagamento, req.usuario)

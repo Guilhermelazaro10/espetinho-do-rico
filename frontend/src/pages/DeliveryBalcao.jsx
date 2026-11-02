@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CreditCard,
-  Banknote, QrCode, ReceiptText, Loader2, BellRing, Search,
+  Banknote, QrCode, ReceiptText, Loader2, BellRing, Search, Zap, CirclePause, CirclePlay,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { PendenteCard, PedidoCard } from '../components/CardsDelivery';
@@ -13,8 +13,12 @@ import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 
 const FORM_VAZIO = {
   clienteNome: '', clienteTelefone: '', clienteEndereco: '', bairro: '',
-  taxaEntrega: '5,00', pagamento: '', troco: '',
+  taxaEntrega: '5,00', pagamento: '', troco: '', recebido: '', entregueNaHora: false,
 };
+
+// Aba extra da tela (não é um tipo de pedido): venda de balcão sem cadastro,
+// paga na hora. No banco ela vira um BALCAO com pagoAntecipado=true.
+const ABA_RAPIDA = 'RAPIDA';
 
 const PAGAMENTOS = [
   { id: 'pix', rotulo: 'Pix', Icone: QrCode },
@@ -36,7 +40,10 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const [bairros, setBairros] = useState([]);
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [agora, setAgora] = useState(() => Date.now());
+  const [deliveryAtivo, setDeliveryAtivo] = useState(true);
+  const [alternandoDelivery, setAlternandoDelivery] = useState(false);
   const gerente = ehGerente(sessao);
+  const rapida = aba === ABA_RAPIDA;
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
@@ -52,6 +59,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       setPedidos([...delivery, ...balcao]);
       setPendentes(online);
       setBairros(publico?.loja?.bairros ?? []);
+      setDeliveryAtivo(publico?.loja?.delivery !== false);
     } catch (e) {
       notificar.erro('Delivery indisponivel', e.message);
     } finally {
@@ -84,6 +92,10 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const taxa = aba === TIPOS_PEDIDO.DELIVERY ? paraCentavos(form.taxaEntrega) : 0;
   const totalItens = carrinho.reduce((soma, item) => soma + item.produto.preco * item.quantidade, 0);
   const total = totalItens + taxa;
+  const recebido = rapida && form.pagamento === 'dinheiro' && form.recebido.trim()
+    ? paraCentavos(form.recebido)
+    : null;
+  const troco = recebido != null && recebido >= total ? recebido - total : null;
 
   const qtdPorProduto = useMemo(() => {
     const m = {};
@@ -152,6 +164,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       notificar.erro('Comanda vazia', 'Adicione ao menos um item');
       return;
     }
+    if (rapida) return finalizarVendaRapida();
     setEnviando(true);
     const corpo = {
       tipo: aba,
@@ -182,6 +195,66 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       notificar.erro('Pedido nao enviado', e.message);
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function finalizarVendaRapida() {
+    if (!form.pagamento) {
+      notificar.erro('Forma de pagamento', 'Escolha Pix, Cartão ou Dinheiro');
+      return;
+    }
+    if (recebido != null && recebido < total) {
+      notificar.erro('Valor recebido menor que o total', `Faltam ${moeda(total - recebido)}`);
+      return;
+    }
+    setEnviando(true);
+    try {
+      const venda = await api.pedidos.vendaRapida({
+        formaPagamento: form.pagamento,
+        valorRecebido: recebido ?? undefined,
+        entregueNaHora: form.entregueNaHora,
+        itens: carrinho.map((item) => ({
+          produtoId: item.produto.id,
+          quantidade: item.quantidade,
+          observacao: item.observacao?.trim() || undefined,
+        })),
+      });
+      notificar.sucesso(
+        `Venda #${venda.id} paga · ${moeda(venda.total)}`,
+        venda.troco > 0 ? `TROCO: ${moeda(venda.troco)}` : form.entregueNaHora ? 'Entregue' : 'Comanda enviada pra chapa'
+      );
+      setCarrinho([]);
+      // Mantém a forma de pagamento e o "entregue na hora": a próxima venda
+      // costuma ser igual, e isso economiza toques no movimento.
+      setForm((atual) => ({ ...FORM_VAZIO, pagamento: atual.pagamento, entregueNaHora: atual.entregueNaHora }));
+      await recarregar();
+    } catch (e) {
+      notificar.erro('Venda nao registrada', e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function alternarDelivery() {
+    const novo = !deliveryAtivo;
+    if (!novo) {
+      const ok = await confirmar({
+        titulo: 'Pausar o delivery?',
+        mensagem: 'O cardápio online vai aceitar só pedidos para retirada até você reativar. Pedidos de entrega já feitos continuam normalmente.',
+        confirmarRotulo: 'Pausar delivery',
+        perigo: true,
+      });
+      if (!ok) return;
+    }
+    setAlternandoDelivery(true);
+    try {
+      await api.loja.definirDelivery(novo);
+      setDeliveryAtivo(novo);
+      notificar.sucesso(novo ? 'Delivery reativado' : 'Delivery pausado', novo ? 'Cardápio online aceita entregas' : 'Cardápio online: só retirada');
+    } catch (e) {
+      notificar.erro('Nao foi possivel alterar o delivery', e.message);
+    } finally {
+      setAlternandoDelivery(false);
     }
   }
 
@@ -260,16 +333,37 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     }
   }
 
-  const pedidosDaAba = pedidos.filter((pedido) => pedido.tipo === aba);
-  const totalAberto = pedidos.reduce((s, p) => s + p.total, 0);
+  const pedidosDaAba = pedidos.filter((pedido) =>
+    rapida ? pedido.pagoAntecipado : pedido.tipo === aba && !pedido.pagoAntecipado
+  );
+  // Venda rápida já está paga: não é dinheiro "em aberto"
+  const totalAberto = pedidos.reduce((s, p) => s + (p.pagoAntecipado ? 0 : p.total), 0);
 
   const acoes = (
-    <button
-      onClick={recarregar}
-      className="flex items-center gap-2 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
-    >
-      <RefreshCw size={14} className={carregando ? 'animate-spin' : ''} /> Atualizar
-    </button>
+    <div className="flex items-center gap-2">
+      {gerente && (
+        <button
+          onClick={alternarDelivery}
+          disabled={alternandoDelivery}
+          aria-pressed={!deliveryAtivo}
+          title={deliveryAtivo ? 'Pausar entregas no cardápio online' : 'Reativar entregas no cardápio online'}
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition disabled:opacity-50 ${
+            deliveryAtivo
+              ? 'bg-white text-carvao ring-1 ring-rico-wood/35 hover:ring-rico-red/40'
+              : 'bg-amber-500 text-white shadow-suave hover:bg-amber-600'
+          }`}
+        >
+          {deliveryAtivo ? <CirclePause size={14} /> : <CirclePlay size={14} />}
+          {deliveryAtivo ? 'Pausar delivery' : 'Delivery pausado · reativar'}
+        </button>
+      )}
+      <button
+        onClick={recarregar}
+        className="flex items-center gap-2 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
+      >
+        <RefreshCw size={14} className={carregando ? 'animate-spin' : ''} /> Atualizar
+      </button>
+    </div>
   );
 
   return (
@@ -303,7 +397,22 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
             </section>
           )}
 
-          <div className="inline-flex rounded-xl bg-white p-1 shadow-suave ring-1 ring-rico-wood/30">
+          {!deliveryAtivo && (
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+              <CirclePause size={18} className="mt-0.5 shrink-0 text-amber-600" />
+              <p className="text-sm font-semibold text-amber-800">
+                <strong>Delivery pausado.</strong> O cardápio online está aceitando só retirada.
+                {gerente ? ' Use o botão no topo para reativar.' : ''}
+              </p>
+            </div>
+          )}
+
+          <div className="inline-flex flex-wrap rounded-xl bg-white p-1 shadow-suave ring-1 ring-rico-wood/30">
+            {gerente && (
+              <Aba ativa={rapida} onClick={() => setAba(ABA_RAPIDA)} Icone={Zap}>
+                Venda rapida
+              </Aba>
+            )}
             <Aba ativa={aba === TIPOS_PEDIDO.DELIVERY} onClick={() => setAba(TIPOS_PEDIDO.DELIVERY)} Icone={Bike}>
               Delivery
             </Aba>
@@ -373,7 +482,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
 
             <aside className="rounded-xl bg-rico-dark p-4 text-rico-light shadow-media">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
-                <ReceiptText size={16} /> Novo pedido
+                {rapida ? <Zap size={16} /> : <ReceiptText size={16} />} {rapida ? 'Venda rapida' : 'Novo pedido'}
               </h2>
               <div className="mt-4 space-y-3">
                 {aba === TIPOS_PEDIDO.DELIVERY && (
@@ -385,7 +494,9 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                     dica={buscandoCliente ? 'buscando cliente...' : 'sai do campo p/ buscar pelo histórico'}
                   />
                 )}
-                <Input rotulo="Cliente" valor={form.clienteNome} onChange={(v) => alterarForm('clienteNome', v)} />
+                {!rapida && (
+                  <Input rotulo="Cliente" valor={form.clienteNome} onChange={(v) => alterarForm('clienteNome', v)} />
+                )}
                 {aba === TIPOS_PEDIDO.DELIVERY && (
                   <>
                     <Input rotulo="Endereco" valor={form.clienteEndereco} onChange={(v) => alterarForm('clienteEndereco', v)} />
@@ -424,12 +535,43 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                       </button>
                     ))}
                   </div>
-                  {form.pagamento === 'dinheiro' && (
+                  {form.pagamento === 'dinheiro' && !rapida && (
                     <div className="mt-2">
                       <Input rotulo="Troco para" valor={form.troco} onChange={(v) => alterarForm('troco', v)} />
                     </div>
                   )}
+                  {form.pagamento === 'dinheiro' && rapida && (
+                    <div className="mt-2">
+                      <Input
+                        rotulo="Valor recebido (opcional)"
+                        valor={form.recebido}
+                        onChange={(v) => alterarForm('recebido', v)}
+                        dica={
+                          recebido == null
+                            ? 'preencha para calcular o troco'
+                            : troco != null
+                              ? `troco: ${moeda(troco)}`
+                              : `faltam ${moeda(total - recebido)}`
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {rapida && (
+                  <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10">
+                    <input
+                      type="checkbox"
+                      checked={form.entregueNaHora}
+                      onChange={(e) => alterarForm('entregueNaHora', e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-rico-red"
+                    />
+                    <span className="text-xs font-semibold text-rico-light/80">
+                      <strong className="block text-rico-light">Entregue na hora</strong>
+                      Ex.: só bebida. Não imprime comanda nem vai pra chapa.
+                    </span>
+                  </label>
+                )}
               </div>
 
               <ul className="mt-4 space-y-2">
@@ -476,6 +618,12 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                   <span>Total</span>
                   <span className="text-rico-wood">{moeda(total)}</span>
                 </div>
+                {rapida && troco != null && troco > 0 && (
+                  <div className="mt-1 flex justify-between text-lg font-bold">
+                    <span>Troco</span>
+                    <span className="text-emerald-300">{moeda(troco)}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={criarPedido}
@@ -485,6 +633,10 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 {enviando ? (
                   <>
                     <Loader2 size={17} className="animate-spin" /> Enviando...
+                  </>
+                ) : rapida ? (
+                  <>
+                    <Zap size={17} /> Receber {moeda(total)}
                   </>
                 ) : (
                   <>

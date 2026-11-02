@@ -69,6 +69,7 @@ export const api = {
     listarPendentes: () => requisitar('/pedidos?status=pendente'),
     buscarCliente: (telefone) => requisitar(`/pedidos/cliente?telefone=${encodeURIComponent(telefone)}`),
     criar: (corpo) => requisitar('/pedidos', { method: 'POST', body: corpo }),
+    vendaRapida: (corpo) => requisitar('/pedidos/venda-rapida', { method: 'POST', body: corpo }),
     atualizarStatus: (id, status) =>
       requisitar(`/pedidos/${id}/status`, { method: 'PATCH', body: { status } }),
     pagar: (id, formaPagamento) =>
@@ -105,6 +106,10 @@ export const api = {
   },
   rede: {
     info: () => requisitar('/rede'),
+  },
+  loja: {
+    estado: () => requisitar('/loja'),
+    definirDelivery: (ativo) => requisitar('/loja/delivery', { method: 'PATCH', body: { ativo } }),
   },
   caixa: {
     atual: () => requisitar('/caixa/atual'),

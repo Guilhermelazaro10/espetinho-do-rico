@@ -2,6 +2,8 @@ const request = require('supertest');
 
 jest.mock('../src/services/produtosService', () => ({ listar: jest.fn() }));
 jest.mock('../src/services/pedidosService', () => ({ criar: jest.fn(), statusPublico: jest.fn() }));
+// Pausa do delivery fica no banco; aqui o delivery está sempre ativo (ver pausa-delivery.test.js)
+jest.mock('../src/services/configService', () => ({ deliveryAtivo: jest.fn().mockResolvedValue(true) }));
 
 const produtosService = require('../src/services/produtosService');
 const pedidosService = require('../src/services/pedidosService');

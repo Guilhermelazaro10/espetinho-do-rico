@@ -2,6 +2,7 @@ const { Router } = require('express');
 const produtosService = require('../services/produtosService');
 const pedidosService = require('../services/pedidosService');
 const loja = require('../loja');
+const configService = require('../services/configService');
 const { limitePedidoPublico } = require('../middlewares/limitePublico');
 const AppError = require('../errors/AppError');
 const parseId = require('../utils/parseId');
@@ -24,12 +25,14 @@ router.get('/cardapio', async (req, res) => {
   }
 
   const { aberto, texto } = loja.statusHorario();
+  const delivery = await configService.deliveryAtivo();
   res.json({
     loja: {
       nome: loja.nome,
       endereco: loja.endereco,
       whatsapp: loja.whatsapp,
       aberto,
+      delivery, // false = gerente pausou: cardápio só oferece retirada
       horario: texto,
       proximaAbertura: loja.proximaAbertura()?.texto ?? null,
       bairros: loja.bairros(),
@@ -52,6 +55,11 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
   }
   if (corpo.tipo !== 'DELIVERY' && corpo.tipo !== 'BALCAO') {
     throw new AppError('Tipo deve ser DELIVERY (entrega) ou BALCAO (retirada)');
+  }
+  // Pausa do delivery vale no SERVIDOR: esconder o botão no app não basta
+  // (página aberta antes da pausa, ou chamada direta à API).
+  if (corpo.tipo === 'DELIVERY' && !(await configService.deliveryAtivo())) {
+    throw new AppError('O delivery está pausado no momento. Você pode pedir para retirada.', 409);
   }
   if (Array.isArray(corpo.itens) && corpo.itens.length > 40) {
     throw new AppError('Pedido com itens demais');

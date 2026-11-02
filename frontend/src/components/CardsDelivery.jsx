@@ -55,6 +55,13 @@ function ContatoCliente({ pedido }) {
 
 function LinhaPagamentoPretendido({ pedido, className }) {
   if (!pedido.pagamentoPretendido) return null;
+  if (pedido.pagoAntecipado) {
+    return (
+      <p className={`${className} inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700`}>
+        <CheckCircle2 size={12} /> Pago no {ROTULO_PAGAMENTO[pedido.formaPagamento] ?? pedido.formaPagamento}
+      </p>
+    );
+  }
   const rotulo = ROTULO_PAGAMENTO[pedido.pagamentoPretendido] ?? pedido.pagamentoPretendido;
   return (
     <p className={className}>
@@ -126,7 +133,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
             )}
           </p>
           <p className="truncate text-sm font-bold text-carvao-claro">
-            {pedido.clienteNome}
+            {pedido.clienteNome ?? (pedido.pagoAntecipado ? 'Venda rápida' : '')}
             {pedido.criadoPor && pedido.criadoPor !== 'Online' && (
               <span className="font-semibold text-carvao-suave"> · por {pedido.criadoPor}</span>
             )}

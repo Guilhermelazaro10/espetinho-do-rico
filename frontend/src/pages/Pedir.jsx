@@ -65,6 +65,7 @@ export default function Pedir() {
       .cardapio()
       .then((d) => {
         setLoja(d.loja);
+        if (d.loja?.delivery === false) setTipo('BALCAO'); // delivery pausado: só retirada
         setCategorias(d.categorias);
         setCategoria((c) => c ?? d.categorias[0]?.nome ?? null);
       })
@@ -188,6 +189,15 @@ export default function Pedir() {
       setEtapa('sucesso');
     } catch (e) {
       setErroCheckout(e.message);
+      // A loja pode ter pausado o delivery com esta página já aberta:
+      // relê o estado para a tela mostrar só retirada, sem perder a sacola.
+      api.publico
+        .cardapio()
+        .then((d) => {
+          setLoja(d.loja);
+          if (d.loja?.delivery === false) setTipo('BALCAO');
+        })
+        .catch(() => {});
     } finally {
       setEnviando(false);
     }
@@ -245,6 +255,7 @@ export default function Pedir() {
   }
 
   const fechada = loja && loja.aberto === false;
+  const deliveryPausado = loja?.delivery === false;
 
   /* ---------- acompanhamento do pedido ---------- */
   if (etapa === 'acompanhar') {
@@ -335,12 +346,26 @@ export default function Pedir() {
             {[
               { id: 'DELIVERY', rotulo: 'Entrega', Icone: Bike },
               { id: 'BALCAO', rotulo: 'Retirada', Icone: ShoppingBag },
-            ].map(({ id, rotulo, Icone }) => (
-              <button key={id} onClick={() => setTipo(id)} className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-4 py-4 font-extrabold transition ${tipo === id ? 'border-rico-red bg-rico-red/8 text-rico-red' : 'border-rico-wood/25 bg-white text-carvao-suave'}`}>
-                <Icone size={24} /> {rotulo}
-              </button>
-            ))}
+            ].map(({ id, rotulo, Icone }) => {
+              const indisponivel = id === 'DELIVERY' && deliveryPausado;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setTipo(id)}
+                  disabled={indisponivel}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-4 py-4 font-extrabold transition disabled:cursor-not-allowed disabled:opacity-45 ${tipo === id ? 'border-rico-red bg-rico-red/8 text-rico-red' : 'border-rico-wood/25 bg-white text-carvao-suave'}`}
+                >
+                  <Icone size={24} /> {rotulo}
+                  {indisponivel && <span className="text-[11px] font-bold uppercase tracking-wide">Pausado hoje</span>}
+                </button>
+              );
+            })}
           </div>
+          {deliveryPausado && (
+            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800 ring-1 ring-amber-200">
+              Hoje estamos atendendo só <strong>retirada no local</strong>. Faça seu pedido e busque aqui.
+            </p>
+          )}
 
           {tipo === 'BALCAO' && loja?.endereco && (
             <div className="mt-4 flex items-start gap-3 rounded-2xl bg-white p-4 ring-1 ring-rico-wood/20">

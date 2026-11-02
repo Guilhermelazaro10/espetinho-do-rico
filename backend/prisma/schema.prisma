@@ -56,6 +56,7 @@ model Pedido {
   trocoPara          Int?         @map("troco_para") // centavos, quando dinheiro
   agendadoPara       String?      @map("agendado_para") // rótulo do agendamento (pedido feito com a loja fechada)
   criadoPor          String?      @map("criado_por") // snapshot de quem lançou (garçom/gerente); 'Online' no cardápio web
+  pagoAntecipado     Boolean      @default(false) @map("pago_antecipado") // venda rápida: pago no balcão ANTES de sair da chapa
   motivoCancelamento String?      @map("motivo_cancelamento")
   criadoEm           DateTime     @default(now()) @map("criado_em")
   itens              ItemPedido[]
@@ -168,4 +169,14 @@ model PrintJob {
 
   @@index([status])
   @@map("print_jobs")
+}
+
+// Configurações operacionais da loja que o gerente muda pelo app, sem deploy
+// (ex.: pausar o delivery num dia sem entregador). Chave → valor em texto.
+model Configuracao {
+  chave        String   @id
+  valor        String
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  @@map("configuracoes")
 }

@@ -124,6 +124,8 @@ function montarLinhasCupom(pedido) {
     for (const l of quebrarTexto(`Entrega: ${pedido.clienteEndereco ?? '-'}`, LARGURA)) {
       linhas.push(l);
     }
+  } else if (tipo === 'BALCAO' && pedido.pagoAntecipado) {
+    linhas.push(centralizar('***  VENDA RAPIDA - PAGO  ***'));
   } else if (tipo === 'BALCAO') {
     linhas.push(centralizar('***  BALCAO / RETIRADA  ***'));
     linhas.push('');

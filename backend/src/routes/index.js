@@ -8,6 +8,7 @@ const usuariosRoutes = require('./usuarios.routes');
 const caixaRoutes = require('./caixa.routes');
 const perfilRoutes = require('./perfil.routes');
 const impressoraRoutes = require('./impressora.routes');
+const lojaRoutes = require('./loja.routes');
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use('/usuarios', usuariosRoutes);
 router.use('/caixa', caixaRoutes);
 router.use('/perfil', perfilRoutes);
 router.use('/impressora', impressoraRoutes);
+router.use('/loja', lojaRoutes);
 
 module.exports = router;
