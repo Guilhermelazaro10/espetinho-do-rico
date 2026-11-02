@@ -90,7 +90,9 @@ async function main() {
   });
 
   await prisma.usuario.createMany({
-    data: usuarios.map((u) => ({ nome: u.nome, papel: u.papel, pinHash: gerarHashPin(u.pin) })),
+    data: await Promise.all(
+      usuarios.map(async (u) => ({ nome: u.nome, papel: u.papel, pinHash: await gerarHashPin(u.pin) }))
+    ),
   });
 
   const totais = {

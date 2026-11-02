@@ -3,9 +3,9 @@ const prisma = require('../lib/prisma');
 const AppError = require('../errors/AppError');
 const auditoriaService = require('./auditoriaService');
 const { gerarHashPin, verificarPin } = require('../lib/pin');
-const { PAPEIS } = require('../constantes');
+const { PAPEIS, TAMANHO_PIN_GERENTE } = require('../constantes');
 
-// RH — cadastro de equipe com geração de PIN de 4 dígitos.
+// RH — cadastro de equipe com geração de PIN (4 a 6 dígitos; gerente sempre 6).
 // O PIN é exibido UMA única vez na criação; no banco só existe o hash.
 
 async function listar() {
@@ -15,21 +15,32 @@ async function listar() {
   });
 }
 
-// Gera PIN que não colide com nenhum usuário ativo (login é só por PIN)
-function validarTamanhoPin(tamanhoPin = 4) {
-  const tamanho = Number(tamanhoPin);
+function validarTamanhoPin(tamanhoPin, papel) {
+  if (papel === PAPEIS.GERENTE) {
+    if (tamanhoPin != null && Number(tamanhoPin) !== TAMANHO_PIN_GERENTE) {
+      throw new AppError(`PIN de gerente deve ter ${TAMANHO_PIN_GERENTE} digitos`);
+    }
+    return TAMANHO_PIN_GERENTE;
+  }
+  const tamanho = Number(tamanhoPin ?? 4);
   if (!Number.isInteger(tamanho) || tamanho < 4 || tamanho > 6) {
     throw new AppError('PIN deve ter entre 4 e 6 digitos');
   }
   return tamanho;
 }
 
+async function algumConfere(pin, usuarios) {
+  const confere = await Promise.all(usuarios.map((u) => verificarPin(pin, u.pinHash)));
+  return confere.some(Boolean);
+}
+
+// Gera PIN que não colide com nenhum usuário ativo (login é só por PIN)
 async function gerarPinLivre(usuarios, tamanho = 4) {
   const limite = 10 ** tamanho;
+  const ativos = usuarios.filter((u) => u.ativo);
   for (let tentativa = 0; tentativa < 50; tentativa++) {
     const pin = String(crypto.randomInt(0, limite)).padStart(tamanho, '0');
-    const colide = usuarios.some((u) => u.ativo && verificarPin(pin, u.pinHash));
-    if (!colide) return pin;
+    if (!(await algumConfere(pin, ativos))) return pin;
   }
   throw new AppError('Não foi possível gerar um PIN único — tente novamente', 500);
 }
@@ -43,12 +54,12 @@ async function criar({ nome, papel, tamanhoPin }, usuarioLogado) {
     throw new AppError(`Papel inválido. Use: ${Object.values(PAPEIS).join(', ')}`);
   }
 
-  const tamanho = validarTamanhoPin(tamanhoPin);
+  const tamanho = validarTamanhoPin(tamanhoPin, papelFinal);
   const existentes = await prisma.usuario.findMany();
   const pin = await gerarPinLivre(existentes, tamanho);
 
   const criado = await prisma.usuario.create({
-    data: { nome: nome.trim(), papel: papelFinal, pinHash: gerarHashPin(pin) },
+    data: { nome: nome.trim(), papel: papelFinal, pinHash: await gerarHashPin(pin) },
   });
 
   auditoriaService.registrar(
@@ -84,8 +95,9 @@ async function regerarPin(id, usuarioLogado) {
   if (!usuario || !usuario.ativo) throw new AppError('Funcionário não encontrado', 404);
 
   const existentes = await prisma.usuario.findMany({ where: { id: { not: id } } });
-  const pin = await gerarPinLivre(existentes);
-  await prisma.usuario.update({ where: { id }, data: { pinHash: gerarHashPin(pin) } });
+  const tamanho = usuario.papel === PAPEIS.GERENTE ? TAMANHO_PIN_GERENTE : 4;
+  const pin = await gerarPinLivre(existentes, tamanho);
+  await prisma.usuario.update({ where: { id }, data: { pinHash: await gerarHashPin(pin) } });
 
   auditoriaService.registrar(
     usuarioLogado,
@@ -102,17 +114,20 @@ async function trocarPin(usuarioLogado, pinAtual, pinNovo) {
   }
   const usuario = await prisma.usuario.findUnique({ where: { id: usuarioLogado.id } });
   if (!usuario || !usuario.ativo) throw new AppError('Usuário não encontrado', 404);
-  if (!verificarPin(String(pinAtual ?? ''), usuario.pinHash)) {
+  if (usuario.papel === PAPEIS.GERENTE && String(pinNovo).length !== TAMANHO_PIN_GERENTE) {
+    throw new AppError(`PIN de gerente deve ter ${TAMANHO_PIN_GERENTE} digitos`);
+  }
+  if (!(await verificarPin(String(pinAtual ?? ''), usuario.pinHash))) {
     throw new AppError('PIN atual incorreto', 401);
   }
   // Login é só por PIN: precisa continuar único entre os ativos
   const outros = await prisma.usuario.findMany({ where: { ativo: true, id: { not: usuario.id } } });
-  if (outros.some((u) => verificarPin(String(pinNovo), u.pinHash))) {
+  if (await algumConfere(String(pinNovo), outros)) {
     throw new AppError('Esse PIN já está em uso por outro funcionário');
   }
   await prisma.usuario.update({
     where: { id: usuario.id },
-    data: { pinHash: gerarHashPin(String(pinNovo)) },
+    data: { pinHash: await gerarHashPin(String(pinNovo)) },
   });
   auditoriaService.registrar(usuarioLogado, 'troca_pin', `${usuario.nome} trocou o próprio PIN`);
 }

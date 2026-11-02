@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api } from '../lib/api';
-import { PAPEIS } from '../lib/constantes';
+import { PAPEIS, ehGerente } from '../lib/constantes';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 
@@ -38,13 +38,19 @@ export default function Equipe({ sessao, aoSair }) {
   }, [recarregar]);
 
   function alterar(campo, valor) {
-    setForm((atual) => ({ ...atual, [campo]: valor }));
+    setForm((atual) => {
+      const novo = { ...atual, [campo]: valor };
+      // Gerente sempre com 6 dígitos (o servidor recusa menos)
+      if (novo.papel === PAPEIS.GERENTE) novo.tamanhoPin = 6;
+      return novo;
+    });
   }
 
   async function trocarMeuPin(e) {
     e.preventDefault();
-    if (!/^\d{4,6}$/.test(trocaPin.novo)) {
-      notificar.erro('PIN invalido', 'O novo PIN deve ter de 4 a 6 digitos');
+    const souGerente = ehGerente(sessao);
+    if (souGerente ? !/^\d{6}$/.test(trocaPin.novo) : !/^\d{4,6}$/.test(trocaPin.novo)) {
+      notificar.erro('PIN invalido', souGerente ? 'PIN de gerente deve ter 6 digitos' : 'O novo PIN deve ter de 4 a 6 digitos');
       return;
     }
     try {
@@ -230,7 +236,8 @@ export default function Equipe({ sessao, aoSair }) {
                 <select
                   value={form.tamanhoPin}
                   onChange={(e) => alterar('tamanhoPin', e.target.value)}
-                  className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
+                  disabled={form.papel === PAPEIS.GERENTE}
+                  className="mt-1 disabled:opacity-70 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
                 >
                   <option value={4}>4 digitos</option>
                   <option value={5}>5 digitos</option>

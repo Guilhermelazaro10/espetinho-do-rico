@@ -18,8 +18,11 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
     if (pin.length < 4 || entrando) return;
     setEntrando(true);
     try {
-      const { token, usuario } = await api.auth.login(pin);
+      const { token, usuario, avisoPinCurto } = await api.auth.login(pin);
       salvarSessao({ token, usuario });
+      if (avisoPinCurto) {
+        notificar.brasa('Troque seu PIN', 'Gerente agora usa PIN de 6 digitos. Troque em Equipe > Trocar meu PIN.');
+      }
       if (String(usuario.papel).toUpperCase() === 'GARCOM') window.location.hash = '#/garcom';
       aoEntrar({ token, usuario });
     } catch (e) {

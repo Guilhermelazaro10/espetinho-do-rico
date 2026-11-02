@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('POST /api/auth/login', () => {
   it('autentica com PIN correto e devolve token + papel', async () => {
     prisma.usuario.findMany.mockResolvedValue([
-      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: gerarHashPin('2222') },
+      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: await gerarHashPin('2222') },
     ]);
 
     const res = await request(app).post('/api/auth/login').send({ pin: '2222' });
@@ -31,7 +31,7 @@ describe('POST /api/auth/login', () => {
 
   it('PIN errado: 401 sem vazar detalhes', async () => {
     prisma.usuario.findMany.mockResolvedValue([
-      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: gerarHashPin('2222') },
+      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: await gerarHashPin('2222') },
     ]);
 
     const res = await request(app).post('/api/auth/login').send({ pin: '0000' });
@@ -58,7 +58,7 @@ describe('POST /api/auth/login', () => {
 
   it('bloqueia com 429 após muitas tentativas erradas (anti força-bruta)', async () => {
     prisma.usuario.findMany.mockResolvedValue([
-      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: gerarHashPin('2222') },
+      { id: 1, nome: 'Maria Caixa', papel: 'caixa', pinHash: await gerarHashPin('2222') },
     ]);
 
     // 5 tentativas erradas → na 6ª o IP está bloqueado

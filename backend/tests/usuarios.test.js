@@ -44,7 +44,7 @@ describe('RH — /api/usuarios (exclusivo do gerente)', () => {
     expect(res.body.pin).toMatch(/^\d{4}$/);
     // O PIN devolvido confere com o hash gravado no banco
     const { pinHash } = prisma.usuario.create.mock.calls[0][0].data;
-    expect(verificarPin(res.body.pin, pinHash)).toBe(true);
+    expect(await verificarPin(res.body.pin, pinHash)).toBe(true);
     // Resposta nunca expõe o hash
     expect(res.body.pinHash).toBeUndefined();
   });

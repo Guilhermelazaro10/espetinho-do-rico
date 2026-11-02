@@ -39,6 +39,9 @@ const FORMAS_PAGAMENTO = Object.freeze(['dinheiro', 'cartao', 'pix']);
 
 const PERCENTUAL_TAXA_SERVICO = 0.1;
 
+// Gerente mexe em dinheiro: PIN de 4 dígitos (10.000 combinações) é pouco.
+const TAMANHO_PIN_GERENTE = 6;
+
 module.exports = {
   PAPEIS,
   STATUS_MESA,
@@ -47,4 +50,5 @@ module.exports = {
   STATUS_PEDIDO_EM_ABERTO,
   FORMAS_PAGAMENTO,
   PERCENTUAL_TAXA_SERVICO,
+  TAMANHO_PIN_GERENTE,
 };

@@ -17,11 +17,11 @@ const limiteLogin = require('../src/middlewares/limiteLogin');
 
 const TRUST_PROXY_ORIGINAL = process.env.TRUST_PROXY;
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   limiteLogin._resetar();
   prisma.usuario.findMany.mockResolvedValue([
-    { id: 1, nome: 'Rico Gerente', papel: 'GERENTE', pinHash: gerarHashPin('9999') },
+    { id: 1, nome: 'Rico Gerente', papel: 'GERENTE', pinHash: await gerarHashPin('9999') },
   ]);
 });
 
