@@ -3,6 +3,7 @@ const AppError = require('../errors/AppError');
 const printerService = require('./printerService');
 const auditoriaService = require('./auditoriaService');
 const { publicar } = require('../lib/eventos');
+const { LIMITES_TEXTO, exigirTextoAte } = require('../utils/limiteTexto');
 const {
   STATUS_MESA,
   TIPOS_PEDIDO,
@@ -56,7 +57,7 @@ function validarCabecalho(dados) {
     return { tipo, mesaId: dados.mesaId, taxaEntrega: 0 };
   }
 
-  const nome = (dados.clienteNome ?? '').trim();
+  const nome = (exigirTextoAte(dados.clienteNome, LIMITES_TEXTO.clienteNome, 'Nome do cliente') ?? '').trim();
   if (nome.length < 2) throw new AppError('Nome do cliente é obrigatório');
 
   if (tipo === TIPOS_PEDIDO.BALCAO) {
@@ -64,8 +65,12 @@ function validarCabecalho(dados) {
   }
 
   // DELIVERY
-  const telefone = (dados.clienteTelefone ?? dados.telefone ?? '').trim();
-  const endereco = (dados.clienteEndereco ?? dados.endereco ?? '').trim();
+  const telefone = (
+    exigirTextoAte(dados.clienteTelefone ?? dados.telefone, LIMITES_TEXTO.clienteTelefone, 'Telefone') ?? ''
+  ).trim();
+  const endereco = (
+    exigirTextoAte(dados.clienteEndereco ?? dados.endereco, LIMITES_TEXTO.clienteEndereco, 'Endereço') ?? ''
+  ).trim();
   const taxaEntrega = Number(dados.taxaEntrega ?? dados.taxa ?? 0);
   if (telefone.length < 8) throw new AppError('Telefone do cliente é obrigatório para delivery');
   if (endereco.length < 5) throw new AppError('Endereço de entrega é obrigatório para delivery');
@@ -297,6 +302,7 @@ async function recusar(id, motivo, usuario) {
   if (pedido.status !== STATUS_PEDIDO.PENDENTE) {
     throw new AppError('Este pedido não está aguardando confirmação', 409);
   }
+  if (typeof motivo === 'string') exigirTextoAte(motivo, LIMITES_TEXTO.motivo, 'Motivo');
   const texto = typeof motivo === 'string' && motivo.trim() ? motivo.trim() : 'Recusado pela loja';
   const { count } = await prisma.pedido.updateMany({
     where: { id, status: STATUS_PEDIDO.PENDENTE },
@@ -417,6 +423,7 @@ async function cancelar(id, motivo, usuario) {
   if (typeof motivo !== 'string' || motivo.trim().length < 3) {
     throw new AppError('Informe o motivo do cancelamento (mínimo 3 caracteres)');
   }
+  exigirTextoAte(motivo, LIMITES_TEXTO.motivo, 'Motivo');
   const pedido = await buscarPorId(id);
 
   const cancelado = await prisma.$transaction(async (tx) => {

@@ -61,6 +61,26 @@ describe('Cardápio online — rotas públicas', () => {
     );
   });
 
+  it('nome com 50.000 caracteres: 400 sem chegar ao serviço', async () => {
+    const res = await request(app).post('/api/publico/pedidos').send({
+      tipo: 'BALCAO', clienteNome: 'a'.repeat(50000), itens: [{ produtoId: 1, quantidade: 1 }],
+    });
+    expect(res.status).toBe(400);
+    expect(pedidosService.criar).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['clienteTelefone', '8'.repeat(21)],
+    ['clienteEndereco', 'a'.repeat(201)],
+  ])('%s acima do limite no pedido público: 400', async (campo, valor) => {
+    const res = await request(app).post('/api/publico/pedidos').send({
+      tipo: 'DELIVERY', clienteNome: 'Ana', clienteTelefone: '88999990000',
+      clienteEndereco: 'Rua das Brasas, 10', itens: [{ produtoId: 1, quantidade: 1 }], [campo]: valor,
+    });
+    expect(res.status).toBe(400);
+    expect(pedidosService.criar).not.toHaveBeenCalled();
+  });
+
   describe('com bairros configurados (LOJA_BAIRROS)', () => {
     const delivery = {
       tipo: 'DELIVERY', clienteNome: 'Ana', clienteTelefone: '88999990000',

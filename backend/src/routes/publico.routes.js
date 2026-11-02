@@ -6,6 +6,7 @@ const configService = require('../services/configService');
 const { limitePedidoPublico } = require('../middlewares/limitePublico');
 const AppError = require('../errors/AppError');
 const parseId = require('../utils/parseId');
+const { LIMITES_TEXTO, exigirTextoAte } = require('../utils/limiteTexto');
 
 const router = Router();
 
@@ -61,6 +62,10 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
   if (corpo.tipo === 'DELIVERY' && !(await configService.deliveryAtivo())) {
     throw new AppError('O delivery está pausado no momento. Você pode pedir para retirada.', 409);
   }
+  // Endpoint aberto à internet: barra texto gigante antes de qualquer trabalho
+  exigirTextoAte(corpo.clienteNome, LIMITES_TEXTO.clienteNome, 'Nome');
+  exigirTextoAte(corpo.clienteTelefone, LIMITES_TEXTO.clienteTelefone, 'Telefone');
+  exigirTextoAte(corpo.clienteEndereco, LIMITES_TEXTO.clienteEndereco, 'Endereço');
   if (Array.isArray(corpo.itens) && corpo.itens.length > 40) {
     throw new AppError('Pedido com itens demais');
   }
