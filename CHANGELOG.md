@@ -77,8 +77,10 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
   derruba mais o caixa e a cozinha. Os PINs atuais continuam valendo.
 - **Bloqueio contra ataque de vários endereços ao mesmo tempo.** Além do
   bloqueio por aparelho, se o sistema receber mais de 30 PINs errados em um
-  minuto (somando todos), o login fica pausado por 1 minuto para todo mundo.
-  Quem já está logado não é afetado.
+  minuto (somando todos), o login fica pausado por 1 minuto para endereços
+  desconhecidos. Os aparelhos e o Wi-Fi da loja que fizeram login nos
+  últimos 7 dias continuam entrando normalmente, e quem já está logado não é
+  afetado.
 - **Tablet/celular não guarda mais dados do caixa depois do logout.** O app
   guardava no aparelho respostas como caixa e pedidos para usar sem internet;
   agora só o cardápio público fica guardado, e sair do PDV apaga o que havia

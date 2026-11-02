@@ -105,6 +105,23 @@ Todos os aparelhos da equipe no Wi-Fi da loja saem pelo mesmo IP. 10 logins
 por minuto sobra para a troca de turno, mas se a equipe crescer muito, suba
 esse número.
 
+### Como funciona o bloqueio global de login (no servidor)
+
+Além do limite por IP, se o servidor receber **mais de 30 PINs errados em 1
+minuto** (somando todos os IPs), ele pausa o login por **60s**. Durante essa
+pausa:
+
+- **IPs que fizeram login certo nos últimos 7 dias continuam entrando**,
+  ainda sob o limite por IP (5 erros bloqueiam aquele IP). Na prática, o
+  Wi-Fi da loja segue funcionando: ele já logou antes.
+- **IPs desconhecidos recebem 429** até a pausa acabar.
+- A lista de IPs conhecidos fica **só na memória**, com no máximo 500
+  (sai o mais antigo). Ela começa vazia a cada restart. Um ataque logo
+  depois do deploy, antes de alguém da loja logar, barraria também a loja
+  por até 60s. Depois do primeiro login, isso já não acontece.
+- Celular da equipe no **4G** tem IP que muda: pode cair no 429 durante a
+  pausa. É só esperar 1 minuto ou entrar pelo Wi-Fi da loja.
+
 ## 7. Avisar a equipe
 
 - **Gerentes com PIN de 4 dígitos** devem trocar para 6: Equipe → "Trocar meu

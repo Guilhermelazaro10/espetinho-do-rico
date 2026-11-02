@@ -90,6 +90,55 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
     expect((await tentarDe('198.51.100.1', '987654')).status).toBe(200);
   });
 
+  it('durante o bloqueio global, IP que já logou antes entra; IP novo recebe 429', async () => {
+    process.env.TRUST_PROXY = 'true';
+    await prepararGerente();
+
+    expect((await tentarDe('198.51.100.7', '987654')).status).toBe(200); // aparelho da loja
+    for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+
+    expect((await tentarDe('198.51.100.7', '987654')).status).toBe(200);
+    expect((await tentarDe('198.51.100.8', '987654')).status).toBe(429);
+  });
+
+  it('IP conhecido continua sujeito ao limite por IP durante o bloqueio global', async () => {
+    process.env.TRUST_PROXY = 'true';
+    await prepararGerente();
+
+    await tentarDe('198.51.100.7', '987654');
+    for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+    for (let i = 0; i < limiteLogin.MAX_FALHAS; i++) await tentarDe('198.51.100.7');
+
+    expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
+  });
+
+  it('IP que não loga há mais de 7 dias deixa de ser conhecido', async () => {
+    process.env.TRUST_PROXY = 'true';
+    await prepararGerente();
+    const agora = Date.now();
+    const relogio = jest.spyOn(Date, 'now').mockReturnValue(agora);
+    try {
+      await tentarDe('198.51.100.7', '987654');
+      relogio.mockReturnValue(agora + 7 * 24 * 60 * 60 * 1000 + 1000);
+      for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+      expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
+    } finally {
+      relogio.mockRestore();
+    }
+  });
+
+  it('lista de IPs conhecidos guarda no máximo 500 (sai o mais antigo)', async () => {
+    process.env.TRUST_PROXY = 'true';
+    await prepararGerente();
+
+    await tentarDe('198.51.100.7', '987654'); // o mais antigo
+    for (let i = 0; i < 500; i++) limiteLogin.ok({ headers: { 'cf-connecting-ip': `10.0.${i >> 8}.${i & 255}` } });
+    for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+
+    expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
+    expect((await tentarDe('10.0.1.243', '987654')).status).toBe(200); // o 500º, mais recente
+  });
+
   it('o bloqueio global dura 60s', async () => {
     process.env.TRUST_PROXY = 'true';
     await prepararGerente();

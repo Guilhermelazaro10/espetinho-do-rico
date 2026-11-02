@@ -13,15 +13,27 @@ const BLOQUEIO_MAX_MS = 15 * 60 * 1000;
 
 // Limite GLOBAL (todos os IPs somados): o bloqueio por IP não segura um ataque
 // distribuído, em que cada IP erra poucas vezes. Passou de MAX_FALHAS_GLOBAL
-// falhas no último minuto, ninguém tenta login por BLOQUEIO_GLOBAL_MS.
+// falhas no último minuto, só IPs conhecidos tentam login por BLOQUEIO_GLOBAL_MS.
 const MAX_FALHAS_GLOBAL = 30;
 const JANELA_GLOBAL_MS = 60 * 1000;
 const BLOQUEIO_GLOBAL_MS = 60 * 1000;
+
+// IPs com login certo recente. Sem isso o bloqueio global trancava a equipe
+// inteira: bastava ao atacante errar 31 PINs por minuto. Com a lista, o
+// aparelho/Wi-Fi da loja segue entrando (ainda sob o limite por IP).
+const VALIDADE_CONHECIDO_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_CONHECIDOS = 500;
 
 const registros = new Map(); // ip -> { falhas, ultimaEm, bloqueadoAte }
 let ultimaLimpeza = 0;
 let falhasGlobais = []; // instantes das falhas no último minuto (no máx. ~31)
 let bloqueioGlobalAte = 0;
+const conhecidos = new Map(); // ip -> último login certo (ordem = mais antigo primeiro)
+
+function ipConhecido(ip, agora) {
+  const em = conhecidos.get(ip);
+  return em != null && agora - em <= VALIDADE_CONHECIDO_MS;
+}
 
 // Remove IPs inativos além da janela (impede o Map crescer pra sempre).
 function limpar(agora) {
@@ -48,7 +60,9 @@ function erroBloqueio(ate, agora) {
 
 function verificar(req) {
   const agora = Date.now();
-  if (agora < bloqueioGlobalAte) throw erroBloqueio(bloqueioGlobalAte, agora);
+  if (agora < bloqueioGlobalAte && !ipConhecido(chave(req), agora)) {
+    throw erroBloqueio(bloqueioGlobalAte, agora);
+  }
   limpar(agora);
   const reg = registros.get(chave(req));
   if (!reg) return;
@@ -81,7 +95,11 @@ function falhou(req) {
 }
 
 function ok(req) {
-  registros.delete(chave(req));
+  const k = chave(req);
+  registros.delete(k);
+  conhecidos.delete(k); // reinserir move para o fim (mais recente)
+  conhecidos.set(k, Date.now());
+  if (conhecidos.size > MAX_CONHECIDOS) conhecidos.delete(conhecidos.keys().next().value);
 }
 
 // Para os testes não vazarem estado entre suítes
@@ -89,6 +107,7 @@ function _resetar() {
   registros.clear();
   falhasGlobais = [];
   bloqueioGlobalAte = 0;
+  conhecidos.clear();
 }
 
 module.exports = { verificar, falhou, ok, _resetar, MAX_FALHAS };
