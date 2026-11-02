@@ -7,6 +7,7 @@ jest.mock('../src/lib/prisma', () => ({
   pedido: {
     findUnique: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     count: jest.fn(),
   },
   itemPedido: { delete: jest.fn(), findMany: jest.fn(), update: jest.fn() },
@@ -49,7 +50,7 @@ beforeEach(() => {
 describe('DELETE /pedidos/:id/itens/:itemId?quantidade=N — remoção parcial', () => {
   it('remove 1 de 3: decrementa a quantidade e abate do total', async () => {
     prisma.itemPedido.update.mockResolvedValue({});
-    prisma.pedido.update.mockResolvedValue({});
+    prisma.pedido.updateMany.mockResolvedValue({ count: 1 });
 
     const res = await request(app)
       .delete('/api/pedidos/5/itens/10?quantidade=1')
@@ -62,8 +63,8 @@ describe('DELETE /pedidos/:id/itens/:itemId?quantidade=N — remoção parcial',
       data: { quantidade: 2 },
     });
     // total: 3600 - 1200
-    expect(prisma.pedido.update).toHaveBeenCalledWith({
-      where: { id: 5 },
+    expect(prisma.pedido.updateMany).toHaveBeenCalledWith({
+      where: { id: 5, status: { in: expect.any(Array) }, pagoAntecipado: false },
       data: { total: 2400 },
     });
     // NÃO apagou o item
@@ -73,7 +74,7 @@ describe('DELETE /pedidos/:id/itens/:itemId?quantidade=N — remoção parcial',
   it('quantidade igual ao item inteiro cai na remoção total', async () => {
     prisma.itemPedido.delete.mockResolvedValue({});
     prisma.itemPedido.findMany.mockResolvedValue([]); // comanda ficou vazia
-    prisma.pedido.update.mockResolvedValue({});
+    prisma.pedido.updateMany.mockResolvedValue({ count: 1 });
     prisma.pedido.count.mockResolvedValue(0);
     prisma.mesa.update.mockResolvedValue({});
 
@@ -88,7 +89,7 @@ describe('DELETE /pedidos/:id/itens/:itemId?quantidade=N — remoção parcial',
   it('sem quantidade continua removendo o item inteiro (compatível)', async () => {
     prisma.itemPedido.delete.mockResolvedValue({});
     prisma.itemPedido.findMany.mockResolvedValue([]);
-    prisma.pedido.update.mockResolvedValue({});
+    prisma.pedido.updateMany.mockResolvedValue({ count: 1 });
     prisma.pedido.count.mockResolvedValue(0);
     prisma.mesa.update.mockResolvedValue({});
 

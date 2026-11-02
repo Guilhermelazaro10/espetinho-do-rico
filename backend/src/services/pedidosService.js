@@ -502,6 +502,19 @@ async function removerItem(pedidoId, itemId, usuario, quantidade) {
     throw new AppError(`Quantidade a remover deve ser entre 1 e ${item.quantidade}`);
   }
 
+  // A checagem de status lá em cima é só para a mensagem de erro: entre ela e
+  // a transação a conta pode ter sido paga. O guard atômico (como em
+  // cancelar) reverte a remoção se o pedido já não estiver em aberto.
+  async function gravarPedidoSeAberto(tx, data) {
+    const { count } = await tx.pedido.updateMany({
+      where: { id: pedidoId, status: { in: STATUS_PEDIDO_EM_ABERTO }, pagoAntecipado: false },
+      data,
+    });
+    if (count === 0) {
+      throw new AppError('Pedido foi fechado ou alterado durante a remoção — confira e tente de novo', 409);
+    }
+  }
+
   // Remoção parcial: só diminui a quantidade e abate do total — a comanda
   // continua íntegra, sem o efeito colateral de cancelar/liberar mesa.
   if (qtd < item.quantidade) {
@@ -510,10 +523,7 @@ async function removerItem(pedidoId, itemId, usuario, quantidade) {
         where: { id: itemId },
         data: { quantidade: item.quantidade - qtd },
       });
-      await tx.pedido.update({
-        where: { id: pedidoId },
-        data: { total: pedido.total - item.precoUnitario * qtd },
-      });
+      await gravarPedidoSeAberto(tx, { total: pedido.total - item.precoUnitario * qtd });
       return tx.pedido.findUnique({ where: { id: pedidoId }, include: INCLUDE_COMPLETO });
     });
 
@@ -533,13 +543,10 @@ async function removerItem(pedidoId, itemId, usuario, quantidade) {
       restantes.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0) + pedido.taxaEntrega;
 
     if (restantes.length === 0) {
-      await tx.pedido.update({
-        where: { id: pedidoId },
-        data: {
-          status: STATUS_PEDIDO.CANCELADO,
-          total: 0,
-          motivoCancelamento: 'todos os itens removidos',
-        },
+      await gravarPedidoSeAberto(tx, {
+        status: STATUS_PEDIDO.CANCELADO,
+        total: 0,
+        motivoCancelamento: 'todos os itens removidos',
       });
       if (pedido.mesaId) {
         const abertosNaMesa = await tx.pedido.count({
@@ -553,7 +560,7 @@ async function removerItem(pedidoId, itemId, usuario, quantidade) {
         }
       }
     } else {
-      await tx.pedido.update({ where: { id: pedidoId }, data: { total: novoTotal } });
+      await gravarPedidoSeAberto(tx, { total: novoTotal });
     }
     return tx.pedido.findUnique({ where: { id: pedidoId }, include: INCLUDE_COMPLETO });
   });
