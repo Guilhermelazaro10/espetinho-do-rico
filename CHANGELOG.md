@@ -17,6 +17,26 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
   cardápio online mostra só retirada e a API recusa entrega (vale mesmo com a
   página do cliente aberta antes da pausa). Fica gravado no banco, sobrevive a
   restart e vai para a auditoria.
+- Corrigido: **entrega saía de graça** quando o cliente não escolhia o bairro.
+  Agora, com a lista de bairros configurada, o pedido de entrega só passa com
+  um bairro da lista — e a taxa é sempre a desse bairro.
+- Corrigido: **loja aparecia fechada na madrugada do próprio turno.** Num
+  horário como 17:00 às 02:00, à 01:00 de domingo o cardápio dizia "fechado"
+  (o turno é de sábado) — e na terça à 01:00 dizia "aberto", embora segunda
+  não abra. O horário também passou a seguir o relógio do Ceará.
+- Corrigido: tirar item de uma comanda **no mesmo instante em que ela era
+  paga** mexia no total de um pedido já fechado. Agora a remoção é recusada e
+  o gerente vê a comanda como ficou.
+- **Gerente usa PIN de 6 dígitos.** Cadastro, "novo PIN" e "trocar meu PIN"
+  de gerente exigem 6 dígitos. Gerente que ainda tem PIN de 4 continua
+  entrando normalmente, mas vê um aviso pedindo a troca (Equipe → Trocar meu
+  PIN). Garçom continua com 4.
+- **Acompanhar pedido online por link próprio.** O cliente acompanha pelo
+  código que recebe ao pedir, não mais pelo número do pedido. Pedidos feitos
+  antes desta versão continuam na lista "Meus pedidos", só sem o status ao
+  vivo.
+- Cardápio online com título e dados da loja (endereço, tipo de comida) que o
+  Google entende — ajuda a aparecer na busca por "espetinho em Jaguaruana".
 - **Campainha de pedido online**: quando entra pedido pelo cardápio, toca um
   "din-don" e aparece aviso em QUALQUER tela do PDV — ninguém mais precisa
   vigiar a aba Delivery. (O som destrava no primeiro toque na tela, exigência
@@ -48,6 +68,33 @@ versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 - Respeito a `prefers-reduced-motion` e seleção de texto na cor da marca.
 
 ### Segurança
+- **Funcionário desligado perde o acesso na hora.** Antes, quem já estava
+  logado continuava usando o PDV até o fim do turno (até 12h). Agora o
+  sistema confere a cada poucos segundos se o funcionário segue ativo, e o
+  desligamento corta o acesso dele imediatamente.
+- **Login não trava mais o sistema.** A conferência do PIN deixou de
+  "congelar" o servidor a cada tentativa — uma enxurrada de PINs errados não
+  derruba mais o caixa e a cozinha. Os PINs atuais continuam valendo.
+- **Bloqueio contra ataque de vários endereços ao mesmo tempo.** Além do
+  bloqueio por aparelho, se o sistema receber mais de 30 PINs errados em um
+  minuto (somando todos), o login fica pausado por 1 minuto para todo mundo.
+  Quem já está logado não é afetado.
+- **Tablet/celular não guarda mais dados do caixa depois do logout.** O app
+  guardava no aparelho respostas como caixa e pedidos para usar sem internet;
+  agora só o cardápio público fica guardado, e sair do PDV apaga o que havia
+  ficado das versões anteriores. Cada aparelho precisa recarregar o app uma
+  vez após a atualização.
+- **Ninguém consegue mais somar o faturamento online pelo acompanhamento.**
+  O número do pedido era sequencial: bastava testar 1, 2, 3... para ver o
+  valor de cada pedido. O código de acompanhamento novo é impossível de
+  adivinhar.
+- **Anti-spam do cardápio online não é mais burlável** trocando um cabeçalho
+  da requisição (o mesmo furo que já tinha sido fechado no login).
+- **Textos gigantes são recusados**: nome (até 60 letras), telefone (20),
+  endereço e motivo de cancelamento/recusa (200). Evita travar a impressora
+  e encher o banco com lixo.
+- O tempo real (avisos de "algo mudou") tem teto de conexões por endereço,
+  folgado o bastante para todos os aparelhos da loja no mesmo Wi-Fi.
 - **Corrigido bypass do bloqueio de força-bruta do PIN.** O header
   `CF-Connecting-IP` era aceito sem validação: bastava variá-lo a cada
   tentativa para cair sempre num balde novo e nunca ser bloqueado (o PIN tem
