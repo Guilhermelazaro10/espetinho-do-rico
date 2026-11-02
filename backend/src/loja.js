@@ -48,10 +48,13 @@ function hhmmParaMin(s) {
   return h * 60 + (m || 0);
 }
 
-// Dia da semana (0=Dom) e minutos do dia AGORA em São Paulo (servidor roda em UTC).
-function agoraSP() {
+// Fuso da LOJA (Jaguaruana/CE), nunca o do servidor (a VPS roda em UTC).
+const FUSO_LOJA = 'America/Fortaleza';
+
+// Dia da semana (0=Dom) e minutos do dia AGORA no fuso da loja.
+function agoraLoja() {
   const partes = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZone: FUSO_LOJA, weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(new Date());
   const v = (t) => partes.find((p) => p.type === t)?.value;
   const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -61,11 +64,14 @@ function agoraSP() {
 function statusHorario() {
   if (!ABERTURA || !FECHAMENTO) return { aberto: true, texto: '' };
   const dias = parseDias();
-  const { dia, minutos } = agoraSP();
+  const { dia, minutos } = agoraLoja();
   const ini = hhmmParaMin(ABERTURA);
   const fim = hhmmParaMin(FECHAMENTO);
   const naHora = fim > ini ? minutos >= ini && minutos < fim : minutos >= ini || minutos < fim;
-  const noDia = dias.length === 0 || dias.includes(dia);
+  // Turno que vira a meia-noite: na madrugada, o turno é o que abriu ONTEM
+  // (dom 01:00 de um 17:00–02:00 é o sábado trabalhando).
+  const diaDoTurno = fim <= ini && minutos < fim ? (dia + 6) % 7 : dia;
+  const noDia = dias.length === 0 || dias.includes(diaDoTurno);
   const label = labelDias(dias);
   const texto = `${label ? label + ', ' : ''}${ABERTURA} às ${FECHAMENTO}`;
   return { aberto: noDia && naHora, texto };
@@ -73,10 +79,10 @@ function statusHorario() {
 
 const NOMES_CURTO = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
-// Data atual (ano/mês/dia) no fuso de São Paulo.
-function dataSP() {
+// Data atual (ano/mês/dia) no fuso da loja.
+function dataLoja() {
   const p = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: FUSO_LOJA, year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date());
   const v = (t) => Number(p.find((x) => x.type === t)?.value);
   return { ano: v('year'), mes: v('month'), diaMes: v('day') };
@@ -88,9 +94,9 @@ function proximaAbertura() {
   if (!ABERTURA || !FECHAMENTO) return null;
   const dias = parseDias();
   if (!dias.length) return null;
-  const { dia, minutos } = agoraSP();
+  const { dia, minutos } = agoraLoja();
   const ini = hhmmParaMin(ABERTURA);
-  const { ano, mes, diaMes } = dataSP();
+  const { ano, mes, diaMes } = dataLoja();
   for (let off = 0; off <= 7; off++) {
     const d = (dia + off) % 7;
     if (!dias.includes(d)) continue;
