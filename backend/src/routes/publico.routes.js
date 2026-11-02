@@ -5,7 +5,6 @@ const loja = require('../loja');
 const configService = require('../services/configService');
 const { limitePedidoPublico } = require('../middlewares/limitePublico');
 const AppError = require('../errors/AppError');
-const parseId = require('../utils/parseId');
 const { LIMITES_TEXTO, exigirTextoAte } = require('../utils/limiteTexto');
 
 const router = Router();
@@ -101,6 +100,7 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
 
   res.status(201).json({
     id: pedido.id,
+    codigo: pedido.codigoAcompanhamento, // único jeito de acompanhar depois
     tipo: pedido.tipo,
     total: pedido.total,
     taxaEntrega: pedido.taxaEntrega,
@@ -114,9 +114,10 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
   });
 });
 
-// Acompanhamento público do pedido (só o status, sem dados pessoais).
-router.get('/pedidos/:id/status', async (req, res) => {
-  res.json(await pedidosService.statusPublico(parseId(req.params.id)));
+// Acompanhamento público do pedido (só o status, sem dados pessoais), pelo
+// código aleatório que o cliente recebeu ao pedir — não pelo ID sequencial.
+router.get('/pedidos/acompanhar/:codigo', async (req, res) => {
+  res.json(await pedidosService.statusPublico(req.params.codigo));
 });
 
 module.exports = router;

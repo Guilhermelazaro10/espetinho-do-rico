@@ -128,7 +128,7 @@ export const api = {
   publico: {
     cardapio: () => requisitar('/publico/cardapio'),
     pedir: (corpo) => requisitar('/publico/pedidos', { method: 'POST', body: corpo }),
-    statusPedido: (id) => requisitar(`/publico/pedidos/${id}/status`),
+    acompanhar: (codigo) => requisitar(`/publico/pedidos/acompanhar/${encodeURIComponent(codigo)}`),
   },
 };
 

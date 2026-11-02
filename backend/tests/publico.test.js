@@ -110,12 +110,13 @@ describe('Cardápio online — rotas públicas', () => {
     });
   });
 
-  it('GET /pedidos/:id/status devolve só o status (acompanhamento público)', async () => {
-    pedidosService.statusPublico.mockResolvedValue({ status: 'pendente', tipo: 'DELIVERY', total: 2500 });
-    const res = await request(app).get('/api/publico/pedidos/7/status');
+  it('GET /pedidos/acompanhar/:codigo devolve só o status (acompanhamento público)', async () => {
+    const codigo = '3f2b8c1e-9d4a-4b6f-8e2a-1c5d7f9a0b3e';
+    pedidosService.statusPublico.mockResolvedValue({ id: 7, status: 'pendente', tipo: 'DELIVERY', total: 2500 });
+    const res = await request(app).get(`/api/publico/pedidos/acompanhar/${codigo}`);
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: 'pendente', tipo: 'DELIVERY', total: 2500 });
-    expect(pedidosService.statusPublico).toHaveBeenCalledWith(7);
+    expect(res.body).toEqual({ id: 7, status: 'pendente', tipo: 'DELIVERY', total: 2500 });
+    expect(pedidosService.statusPublico).toHaveBeenCalledWith(codigo);
   });
 
   it('bloqueia após exceder o limite de pedidos por IP (anti-spam)', async () => {

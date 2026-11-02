@@ -76,11 +76,11 @@ export default function Pedir() {
 
   // Acompanhamento: enquanto estiver na tela de status, atualiza sozinho.
   useEffect(() => {
-    if (etapa !== 'acompanhar' || !pedidoFeito) return undefined;
+    if (etapa !== 'acompanhar' || !pedidoFeito?.codigo) return undefined;
     let vivo = true;
     const buscar = () =>
       api.publico
-        .statusPedido(pedidoFeito.id)
+        .acompanhar(pedidoFeito.codigo)
         .then((s) => vivo && setAcomp(s))
         .catch(() => {});
     buscar();
@@ -179,7 +179,7 @@ export default function Pedir() {
       } catch { /* ignora */ }
       setPedidoFeito(pedido);
       const lista = [
-        { id: pedido.id, total: pedido.total, tipo: pedido.tipo, criadoEm: Date.now() },
+        { id: pedido.id, codigo: pedido.codigo, total: pedido.total, tipo: pedido.tipo, criadoEm: Date.now() },
         ...carregarMeusPedidos(),
       ].slice(0, 30);
       try {

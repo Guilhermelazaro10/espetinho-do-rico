@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const AppError = require('../errors/AppError');
 const printerService = require('./printerService');
@@ -177,7 +178,12 @@ async function criar(dados, usuario) {
   }
   // Pedido online entra como PENDENTE: só vai pra cozinha quando a loja "Aceitar".
   const ehOnline = extras.origem === 'online';
-  if (ehOnline) extras.status = STATUS_PEDIDO.PENDENTE;
+  if (ehOnline) {
+    extras.status = STATUS_PEDIDO.PENDENTE;
+    // Link de acompanhamento do cliente: aleatório, nunca o ID sequencial
+    // (que deixaria qualquer um varrer os pedidos e somar o faturamento).
+    extras.codigoAcompanhamento = crypto.randomUUID();
+  }
 
   // Quem lançou: snapshot do nome (comanda mostra o garçom); online = 'Online'.
   extras.criadoPor = ehOnline ? 'Online' : usuario?.nome ?? null;
@@ -333,13 +339,18 @@ async function clientePorTelefone(telefone) {
 }
 
 // Acompanhamento público do pedido (só status, sem dados pessoais).
-async function statusPublico(id) {
+const FORMATO_CODIGO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function statusPublico(codigo) {
+  if (typeof codigo !== 'string' || !FORMATO_CODIGO.test(codigo)) {
+    throw new AppError('Pedido não encontrado', 404);
+  }
   const pedido = await prisma.pedido.findUnique({
-    where: { id },
-    select: { status: true, tipo: true, total: true, origem: true },
+    where: { codigoAcompanhamento: codigo },
+    select: { id: true, status: true, tipo: true, total: true, origem: true },
   });
   if (!pedido || pedido.origem !== 'online') throw new AppError('Pedido não encontrado', 404);
-  return { status: pedido.status, tipo: pedido.tipo, total: pedido.total };
+  return { id: pedido.id, status: pedido.status, tipo: pedido.tipo, total: pedido.total };
 }
 
 // Fluxo de produção (cozinha/garçom): aberto → em_preparo → entregue.

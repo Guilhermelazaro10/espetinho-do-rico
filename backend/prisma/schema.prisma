@@ -57,6 +57,7 @@ model Pedido {
   agendadoPara       String?      @map("agendado_para") // rótulo do agendamento (pedido feito com a loja fechada)
   criadoPor          String?      @map("criado_por") // snapshot de quem lançou (garçom/gerente); 'Online' no cardápio web
   pagoAntecipado     Boolean      @default(false) @map("pago_antecipado") // venda rápida: pago no balcão ANTES de sair da chapa
+  codigoAcompanhamento String?    @unique @map("codigo_acompanhamento") // pedido online: link de acompanhamento (UUID, não sequencial)
   motivoCancelamento String?      @map("motivo_cancelamento")
   criadoEm           DateTime     @default(now()) @map("criado_em")
   itens              ItemPedido[]

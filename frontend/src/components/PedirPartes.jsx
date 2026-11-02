@@ -84,9 +84,11 @@ export function MeusPedidos({ lista, onIrAoCardapio }) {
     if (lista.length === 0) return undefined;
     let vivo = true;
     const buscar = async () => {
-      const ids = lista.slice(0, 15).map((p) => p.id);
+      // Pedido salvo antes do código de acompanhamento não tem como ser
+      // consultado (a rota por ID saiu): fica na lista, sem status ao vivo.
+      const comCodigo = lista.slice(0, 15).filter((p) => p.codigo);
       const res = await Promise.all(
-        ids.map((id) => api.publico.statusPedido(id).then((s) => [id, s]).catch(() => [id, null]))
+        comCodigo.map((p) => api.publico.acompanhar(p.codigo).then((s) => [p.id, s]).catch(() => [p.id, null]))
       );
       if (vivo) setMapa(Object.fromEntries(res));
     };
@@ -130,7 +132,9 @@ export function MeusPedidos({ lista, onIrAoCardapio }) {
                   <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${vis.bg} ${vis.tx}`}>
                     <vis.Icone size={14} className={s?.cor === 'sky' ? 'animate-spin' : ''} />
                   </span>
-                  <span className="text-sm font-bold text-carvao">{s ? s.texto : 'Atualizando…'}</span>
+                  <span className="text-sm font-bold text-carvao">
+                    {s ? s.texto : p.codigo ? 'Atualizando…' : 'Status indisponível (pedido antigo)'}
+                  </span>
                 </div>
               </li>
             );
