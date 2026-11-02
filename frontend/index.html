@@ -10,7 +10,25 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Espetinho do Rico · PDV</title>
+    <title>Espetinho do Rico — Peça online | Delivery e Retirada</title>
+    <!-- Dados estruturados para o Google (endereço igual ao de backend/src/loja.js) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "Espetinho do Rico",
+        "url": "https://espetinhodorico.com/cardapio",
+        "image": "https://espetinhodorico.com/logo_clean.png",
+        "servesCuisine": "Espetinhos",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Rua Adolfo Francisco da Rocha, 608 — Bairro Juazeiro",
+          "addressLocality": "Jaguaruana",
+          "addressRegion": "CE",
+          "addressCountry": "BR"
+        }
+      }
+    </script>
     <!-- Preview ao compartilhar o link do cardápio (WhatsApp, Instagram, etc.) -->
     <meta name="description" content="Cardápio online do Espetinho do Rico — peça entrega ou retirada." />
     <meta property="og:type" content="website" />
