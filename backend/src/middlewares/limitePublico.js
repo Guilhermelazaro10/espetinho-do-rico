@@ -1,19 +1,17 @@
 const AppError = require('../errors/AppError');
+const { ipDoCliente } = require('../lib/rede');
 
 /*
  * Anti-spam dos pedidos públicos (cardápio online): limita a criação por IP,
  * em memória. O endpoint é aberto na internet, então sem isso um bot poderia
- * inundar a cozinha. O IP real vem do Cloudflare (CF-Connecting-IP).
+ * inundar a cozinha. O IP vem de ipDoCliente: CF-Connecting-IP só vale com
+ * TRUST_PROXY ligado — sem proxy, o bot trocaria o header a cada pedido.
  */
 const MAX = 6; // pedidos
 const JANELA_MS = 10 * 60 * 1000; // por 10 minutos
 
 const registros = new Map(); // ip -> [timestamps]
 let ultimaLimpeza = 0;
-
-function ipDe(req) {
-  return req.headers['cf-connecting-ip'] || req.ip || req.socket?.remoteAddress || 'desconhecido';
-}
 
 // Remove IPs sem registros recentes (impede o Map crescer pra sempre). Roda no
 // máximo 1x por janela, dentro da própria requisição (sem timer).
@@ -28,7 +26,7 @@ function limpar(agora) {
 }
 
 function limitePedidoPublico(req, res, next) {
-  const ip = ipDe(req);
+  const ip = ipDoCliente(req);
   const agora = Date.now();
   limpar(agora);
   const recentes = (registros.get(ip) || []).filter((t) => agora - t < JANELA_MS);
