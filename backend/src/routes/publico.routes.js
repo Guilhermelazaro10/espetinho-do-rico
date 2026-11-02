@@ -76,7 +76,8 @@ router.post('/pedidos', limitePedidoPublico, async (req, res) => {
   let clienteEndereco = corpo.clienteEndereco;
   if (corpo.tipo === 'DELIVERY') {
     const lista = loja.bairros();
-    if (lista.length && corpo.bairro) {
+    // Com lista configurada, o bairro é obrigatório: omitir não pode zerar a taxa.
+    if (lista.length) {
       const b = lista.find((x) => x.nome === corpo.bairro);
       if (!b) throw new AppError('Bairro de entrega inválido');
       taxaEntrega = b.taxa;

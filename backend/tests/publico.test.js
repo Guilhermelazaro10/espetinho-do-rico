@@ -61,6 +61,35 @@ describe('Cardápio online — rotas públicas', () => {
     );
   });
 
+  describe('com bairros configurados (LOJA_BAIRROS)', () => {
+    const delivery = {
+      tipo: 'DELIVERY', clienteNome: 'Ana', clienteTelefone: '88999990000',
+      clienteEndereco: 'Rua das Brasas, 10', itens: [{ produtoId: 1, quantidade: 1 }],
+    };
+
+    beforeEach(() => {
+      process.env.LOJA_BAIRROS = JSON.stringify([{ nome: 'Centro', taxa: 500 }]);
+    });
+    afterEach(() => {
+      delete process.env.LOJA_BAIRROS;
+    });
+
+    it('DELIVERY sem bairro é recusado (não vira entrega grátis)', async () => {
+      const res = await request(app).post('/api/publico/pedidos').send(delivery);
+      expect(res.status).toBe(400);
+      expect(pedidosService.criar).not.toHaveBeenCalled();
+    });
+
+    it('DELIVERY com bairro da lista cobra a taxa do servidor', async () => {
+      pedidosService.criar.mockResolvedValue({ id: 8, tipo: 'DELIVERY', total: 1700, taxaEntrega: 500, itens: [] });
+      const res = await request(app)
+        .post('/api/publico/pedidos')
+        .send({ ...delivery, bairro: 'Centro', taxaEntrega: 0 });
+      expect(res.status).toBe(201);
+      expect(pedidosService.criar).toHaveBeenCalledWith(expect.objectContaining({ taxaEntrega: 500 }));
+    });
+  });
+
   it('GET /pedidos/:id/status devolve só o status (acompanhamento público)', async () => {
     pedidosService.statusPublico.mockResolvedValue({ status: 'pendente', tipo: 'DELIVERY', total: 2500 });
     const res = await request(app).get('/api/publico/pedidos/7/status');
