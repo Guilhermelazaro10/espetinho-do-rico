@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const AppError = require('../errors/AppError');
+const prisma = require('../lib/prisma');
 const { PAPEIS } = require('../constantes');
 
 // O fallback vem de lib/ambiente porque é lá que ele é BARRADO em produção.
@@ -19,17 +20,47 @@ function gerarToken(usuario) {
   );
 }
 
-// Exige token válido; anexa req.usuario {id, nome, papel}
-function autenticar(req, res, next) {
+// O JWT vale um turno inteiro: sem conferir o banco, funcionário desligado
+// seguiria com acesso por até 12h. Cache curto por id para não consultar o
+// banco a cada requisição; desligar invalida a entrada na hora.
+const CACHE_ATIVO_MS = 30 * 1000;
+const cacheAtivo = new Map(); // id -> { ativo, ate }
+
+async function usuarioAtivo(id) {
+  const agora = Date.now();
+  const guardado = cacheAtivo.get(id);
+  if (guardado && agora < guardado.ate) return guardado.ativo;
+  const usuario = await prisma.usuario.findUnique({ where: { id }, select: { ativo: true } });
+  const ativo = Boolean(usuario?.ativo);
+  cacheAtivo.set(id, { ativo, ate: agora + CACHE_ATIVO_MS });
+  return ativo;
+}
+
+function invalidarUsuario(id) {
+  cacheAtivo.delete(id);
+}
+
+// Exige token válido de usuário ainda ativo; anexa req.usuario {id, nome, papel}
+async function autenticar(req, res, next) {
   const cabecalho = req.headers.authorization;
   const token = cabecalho?.startsWith('Bearer ') ? cabecalho.slice(7) : null;
   if (!token) throw new AppError('Autenticação necessária', 401);
+  let usuario;
   try {
-    req.usuario = jwt.verify(token, SEGREDO);
+    usuario = jwt.verify(token, SEGREDO);
   } catch {
     throw new AppError('Sessão inválida ou expirada', 401);
   }
+  if (!Number.isInteger(usuario?.id) || !(await usuarioAtivo(usuario.id))) {
+    throw new AppError('Sessão inválida ou expirada', 401);
+  }
+  req.usuario = usuario;
   next();
+}
+
+// Para os testes não vazarem estado entre suítes
+function _limparCacheUsuarios() {
+  cacheAtivo.clear();
 }
 
 // Restringe a rota a determinados papéis (GERENTE sempre passa)
@@ -66,4 +97,12 @@ function autenticarAgente(req, res, next) {
   next();
 }
 
-module.exports = { gerarToken, autenticar, exigirPapel, somenteGerente, autenticarAgente };
+module.exports = {
+  gerarToken,
+  autenticar,
+  exigirPapel,
+  somenteGerente,
+  autenticarAgente,
+  invalidarUsuario,
+  _limparCacheUsuarios,
+};

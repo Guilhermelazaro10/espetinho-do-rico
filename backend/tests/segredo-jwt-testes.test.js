@@ -7,6 +7,11 @@
  * `.env` com JWT_SECRET — e passa nas que não têm. Era essa assimetria que
  * fazia a CI ficar verde enquanto a suíte local acusava 401.
  */
+// Auth confere se o usuário do token segue ativo; aqui o foco é só o segredo.
+jest.mock('../src/lib/prisma', () => ({
+  usuario: { findUnique: jest.fn().mockResolvedValue({ ativo: true }) },
+}));
+
 // A ordem abaixo replica pedidos-online.test.js e é ESSENCIAL: o helper lê o
 // segredo ao ser carregado, o Prisma injeta o .env depois, e só então o
 // middleware lê o seu. Trocar a ordem esconde o bug que este arquivo vigia.
@@ -14,10 +19,10 @@ const { tokenDe } = require('./helpers/token');
 require('@prisma/client');
 const { autenticar } = require('../src/middlewares/auth');
 
-function autenticarCom(token) {
+async function autenticarCom(token) {
   const req = { headers: { authorization: `Bearer ${token}` } };
   let seguiu = false;
-  autenticar(req, {}, () => {
+  await autenticar(req, {}, () => {
     seguiu = true;
   });
   return { seguiu, usuario: req.usuario };
@@ -28,15 +33,15 @@ describe('segredo JWT dos testes', () => {
     expect(process.env.JWT_SECRET).toBe('segredo-fixo-para-os-testes-nao-usar-em-producao');
   });
 
-  it('o token do helper é aceito pelo middleware', () => {
-    const { seguiu, usuario } = autenticarCom(tokenDe('GARCOM'));
+  it('o token do helper é aceito pelo middleware', async () => {
+    const { seguiu, usuario } = await autenticarCom(tokenDe('GARCOM'));
     expect(seguiu).toBe(true);
     expect(usuario).toMatchObject({ papel: 'GARCOM' });
   });
 
-  it('continua rejeitando token assinado com outro segredo', () => {
+  it('continua rejeitando token assinado com outro segredo', async () => {
     const jwt = require('jsonwebtoken');
     const intruso = jwt.sign({ id: 1, papel: 'GERENTE' }, 'segredo-errado');
-    expect(() => autenticarCom(intruso)).toThrow(/Sessão inválida/);
+    await expect(autenticarCom(intruso)).rejects.toThrow(/Sessão inválida/);
   });
 });

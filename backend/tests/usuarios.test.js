@@ -20,6 +20,8 @@ const garcom = tokenDe('GARCOM');
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Auth confere se o usuário do token segue ativo; cada teste pode sobrescrever
+  prisma.usuario.findUnique.mockResolvedValue({ id: 1, ativo: true });
   prisma.auditoria.create.mockResolvedValue({});
 });
 

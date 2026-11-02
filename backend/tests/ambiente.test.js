@@ -8,6 +8,11 @@
  * Quem lesse o repositório forjaria um token de GERENTE e liberaria as ações de
  * dinheiro. A falha era silenciosa; a ideia aqui é que ela grite no deploy.
  */
+// Auth confere se o usuário do token segue ativo; aqui o foco é só o segredo.
+jest.mock('../src/lib/prisma', () => ({
+  usuario: { findUnique: jest.fn().mockResolvedValue({ ativo: true }) },
+}));
+
 const { conferirAmbiente, SEGREDO_DEV } = require('../src/lib/ambiente');
 
 const FORTE = 'a'.repeat(96);
@@ -56,17 +61,17 @@ describe('conferirAmbiente', () => {
 describe('o fallback barrado é o mesmo que o middleware usa', () => {
   // Se as duas cópias divergirem, conferirAmbiente aprova um segredo que a
   // autenticação de fato usa — a barreira existiria mas não pegaria nada.
-  it('um token assinado com SEGREDO_DEV é aceito pelo middleware', () => {
+  it('um token assinado com SEGREDO_DEV é aceito pelo middleware', async () => {
     const original = process.env.JWT_SECRET;
     try {
-      jest.isolateModules(() => {
+      await jest.isolateModulesAsync(async () => {
         delete process.env.JWT_SECRET; // força o middleware a cair no fallback
         const jwt = require('jsonwebtoken');
         const { autenticar } = require('../src/middlewares/auth');
 
         const req = { headers: { authorization: `Bearer ${jwt.sign({ id: 1 }, SEGREDO_DEV)}` } };
         let seguiu = false;
-        autenticar(req, {}, () => {
+        await autenticar(req, {}, () => {
           seguiu = true;
         });
         expect(seguiu).toBe(true);

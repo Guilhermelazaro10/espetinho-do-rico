@@ -4,6 +4,7 @@ const AppError = require('../errors/AppError');
 const auditoriaService = require('./auditoriaService');
 const { gerarHashPin, verificarPin } = require('../lib/pin');
 const { PAPEIS, TAMANHO_PIN_GERENTE } = require('../constantes');
+const { invalidarUsuario } = require('../middlewares/auth');
 
 // RH — cadastro de equipe com geração de PIN (4 a 6 dígitos; gerente sempre 6).
 // O PIN é exibido UMA única vez na criação; no banco só existe o hash.
@@ -82,6 +83,7 @@ async function desativar(id, usuarioLogado) {
   }
 
   await prisma.usuario.update({ where: { id }, data: { ativo: false } });
+  invalidarUsuario(id); // corta o token dele já na próxima requisição
   auditoriaService.registrar(
     usuarioLogado,
     'desligamento_funcionario',

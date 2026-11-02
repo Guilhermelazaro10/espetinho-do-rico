@@ -1,6 +1,8 @@
 const request = require('supertest');
 
 jest.mock('../src/lib/prisma', () => ({
+  // Auth confere se o usuário do token segue ativo (middlewares/auth)
+  usuario: { findUnique: jest.fn().mockResolvedValue({ ativo: true }) },
   mesa: { findUnique: jest.fn(), update: jest.fn() },
   pedido: {
     findMany: jest.fn(), updateMany: jest.fn(), update: jest.fn(),
