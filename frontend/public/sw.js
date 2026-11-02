@@ -1,13 +1,16 @@
 /*
- * Service Worker — Espetinho do Rico PDV (v2)
+ * Service Worker — Espetinho do Rico PDV (v3)
  * Estratégia:
  *   - Navegações (HTML): network-first — deploy novo chega na hora;
  *     offline cai no shell em cache.
- *   - /api: network-first com fallback ao último dado bom conhecido;
- *     sem rede e sem cache, responde 503 JSON para a UI degradar com elegância.
+ *   - /api/publico/cardapio: network-first com fallback ao último cardápio.
+ *     É o ÚNICO dado da API que vai para o cache: o resto (caixa, pedidos,
+ *     relatórios) é privado e ficaria legível no aparelho depois do logout.
+ *   - Demais /api: só rede; sem rede, 503 JSON para a UI degradar com elegância.
  *   - Assets estáticos (JS/CSS com hash, ícones): cache-first.
  */
-const CACHE = 'espetinho-pdv-v2';
+// Subir a versão faz o activate apagar os caches antigos (o v2 guardava a API toda)
+const CACHE = 'espetinho-pdv-v3';
 const SHELL = [
   '/',
   '/index.html',
@@ -43,14 +46,31 @@ self.addEventListener('fetch', (evento) => {
   // SSE nunca passa pelo cache
   if (url.pathname.startsWith('/api/eventos')) return;
 
-  if (url.pathname.startsWith('/api')) {
+  if (url.pathname === '/api/publico/cardapio') {
     evento.respondWith(redePrimeiro(request));
+  } else if (url.pathname.startsWith('/api')) {
+    evento.respondWith(soRede(request));
   } else if (request.mode === 'navigate') {
     evento.respondWith(navegacaoRedePrimeiro(request));
   } else {
     evento.respondWith(cachePrimeiro(request));
   }
 });
+
+function semConexao() {
+  return new Response(JSON.stringify({ erro: 'Sem conexão com o servidor' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function soRede(request) {
+  try {
+    return await fetch(request);
+  } catch {
+    return semConexao();
+  }
+}
 
 async function redePrimeiro(request) {
   const cache = await caches.open(CACHE);
@@ -59,12 +79,7 @@ async function redePrimeiro(request) {
     if (resposta.ok) cache.put(request, resposta.clone());
     return resposta;
   } catch {
-    const guardada = await cache.match(request);
-    if (guardada) return guardada;
-    return new Response(JSON.stringify({ erro: 'Sem conexão com o servidor' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return (await cache.match(request)) ?? semConexao();
   }
 }
 
