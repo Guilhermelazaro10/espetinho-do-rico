@@ -1,5 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Fontes locais (sem Google Fonts): funcionam no APK sem internet e não
+// bloqueiam a renderização. Só o subconjunto latino, que cobre o português.
+import '@fontsource/alfa-slab-one/latin-400.css'
+import '@fontsource/inter/latin-400.css'
+import '@fontsource/inter/latin-500.css'
+import '@fontsource/inter/latin-600.css'
+import '@fontsource/inter/latin-700.css'
+import '@fontsource/inter/latin-800.css'
 import './index.css'
 import App from './App.jsx'
 import DialogosGlobais from './components/DialogosGlobais.jsx'
