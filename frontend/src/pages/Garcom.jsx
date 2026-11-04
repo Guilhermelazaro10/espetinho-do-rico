@@ -409,7 +409,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
                 className={`flex min-h-[78px] w-full items-center justify-between gap-4 rounded-2xl px-4 py-3 text-left ring-1 transition active:scale-[0.98] ${qtd > 0 ? 'bg-rico-light/12 ring-rico-red/40' : 'bg-rico-light/6 ring-rico-light/10 active:bg-rico-light/12'}`}
               >
                 <span className="min-w-0">
-                  <span className="block text-base font-extrabold text-rico-light">{produto.nome}</span>
+                  <span data-nome-produto className="block text-base font-extrabold text-rico-light">{produto.nome}</span>
                   <span className="mt-1 block text-sm font-bold text-rico-wood">{moeda(produto.preco)}</span>
                 </span>
                 <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
@@ -514,7 +514,7 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
             {linhas.map((linha, i) => (
               <li key={`${linha.produto.id}-${i}`} className="rounded-2xl border border-rico-wood/25 bg-white p-3 shadow-suave">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="min-w-0 flex-1 text-base font-extrabold text-carvao">{linha.produto.nome}</p>
+                  <p data-nome-produto className="min-w-0 flex-1 text-base font-extrabold text-carvao">{linha.produto.nome}</p>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => acoes.mudarQuantidade(i, -1)}

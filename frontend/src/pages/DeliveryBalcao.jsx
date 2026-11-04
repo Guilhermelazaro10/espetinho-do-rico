@@ -458,7 +458,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                       className={`flex min-h-20 items-center justify-between rounded-xl border bg-white/82 px-4 py-3 text-left shadow-suave transition hover:-translate-y-0.5 hover:shadow-media ${qtd > 0 ? 'border-rico-red/40' : 'border-rico-wood/25 hover:border-rico-red/35'}`}
                     >
                       <span className="min-w-0">
-                        <span className="block truncate font-bold text-carvao">{produto.nome}</span>
+                        <span data-nome-produto className="block truncate font-bold text-carvao">{produto.nome}</span>
                         <span className="text-sm font-semibold text-rico-red">{moeda(produto.preco)}</span>
                       </span>
                       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rico-red text-rico-light">
@@ -578,7 +578,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 {carrinho.map((item, indice) => (
                   <li key={`${item.produto.id}-${indice}`} className="rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-bold">{item.produto.nome}</p>
+                      <p data-nome-produto className="min-w-0 truncate text-sm font-bold">{item.produto.nome}</p>
                       <p className="text-sm font-bold text-rico-wood">
                         {moeda(item.produto.preco * item.quantidade)}
                       </p>

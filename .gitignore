@@ -29,3 +29,6 @@ agente-impressao/config.json
 # Cupons simulados (fallback da impressora termica) e backups do banco
 backend/cupons/
 backend/backups/
+
+# Saida da auditoria visual (capturas e relatorios)
+qa/

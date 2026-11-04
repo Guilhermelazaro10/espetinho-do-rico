@@ -168,7 +168,7 @@ export default function Financeiro({ sessao, aoSair }) {
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rico-red/10 text-xs font-bold text-rico-red">
                           {i + 1}
                         </span>
-                        <span className="truncate font-semibold text-carvao">{produto.nome}</span>
+                        <span data-nome-produto className="truncate font-semibold text-carvao">{produto.nome}</span>
                       </span>
                       <span className="shrink-0 font-bold text-carvao-claro">
                         {produto.quantidade}x · {moeda(produto.valor)}

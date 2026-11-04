@@ -202,7 +202,7 @@ export function Sacola({ fechar, linhas, total, totalItens, mudarQtd, mudarObs }
             {linhas.map((l, i) => (
               <li key={`${l.produto.id}-${i}`} className="rounded-2xl bg-white p-3 shadow-suave ring-1 ring-rico-wood/15">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="min-w-0 flex-1 text-base font-extrabold text-carvao">{l.produto.nome}</p>
+                  <p data-nome-produto className="min-w-0 flex-1 text-base font-extrabold text-carvao">{l.produto.nome}</p>
                   <div className="flex items-center gap-2">
                     <button onClick={() => mudarQtd(i, -1)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-carvao/8 active:scale-95" aria-label="Diminuir">
                       {l.quantidade === 1 ? <Trash2 size={19} /> : <Minus size={19} />}

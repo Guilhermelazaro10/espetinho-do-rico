@@ -93,7 +93,7 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
       )}
       <ul className="mt-2 space-y-0.5 text-sm text-carvao-claro">
         {pedido.itens?.map((it) => (
-          <li key={it.id}>
+          <li key={it.id} data-nome-produto>
             {it.quantidade}x {it.produto?.nome}
             {it.observacao && <em className="text-carvao-suave"> — {it.observacao}</em>}
           </li>
@@ -157,7 +157,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
       <ul className="mt-3 space-y-1 text-sm text-carvao-claro">
         {pedido.itens?.map((item) => (
           <li key={item.id} className="flex justify-between gap-3">
-            <span className="min-w-0 truncate">
+            <span data-nome-produto className="min-w-0 truncate">
               {item.quantidade}x {item.produto?.nome}
               {item.observacao && <em className="text-carvao-suave"> — {item.observacao}</em>}
             </span>

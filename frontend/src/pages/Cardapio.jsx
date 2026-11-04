@@ -187,7 +187,7 @@ export default function Cardapio({ sessao, aoSair }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-lg font-bold text-carvao">{produto.nome}</p>
+                  <p data-nome-produto className="truncate text-lg font-bold text-carvao">{produto.nome}</p>
                   <p className="text-sm font-semibold text-carvao-suave">{produto.categoria}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${

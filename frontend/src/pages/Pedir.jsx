@@ -502,7 +502,7 @@ export default function Pedir() {
               <li key={produto.id}>
                 <button onClick={() => adicionar(produto)} className={`flex min-h-[72px] w-full items-center justify-between gap-4 rounded-2xl bg-white px-4 py-3 text-left shadow-suave ring-1 transition active:scale-[0.98] ${qtd > 0 ? 'ring-rico-red/40' : 'ring-rico-wood/15'}`}>
                   <span className="min-w-0">
-                    <span className="block text-base font-extrabold text-carvao">{produto.nome}</span>
+                    <span data-nome-produto className="block text-base font-extrabold text-carvao">{produto.nome}</span>
                     <span className="mt-0.5 block text-sm font-bold text-rico-red">{moeda(produto.preco)}</span>
                   </span>
                   <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa">
