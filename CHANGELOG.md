@@ -4,7 +4,120 @@ Mudanças relevantes do PDV do Espetinho do Rico.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/);
 versionamento em [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [1.5.0] — 2026-11-04
+
+Visual novo em todo o sistema, sem mudar onde ficam os botões nem o que eles
+fazem. Funciona do celular pequeno (320px) até a TV de 1920px.
+
+### Cardápio do cliente (o que o cliente vê no celular)
+- **Topo novo da loja**: logo, nome e se está **aberto agora (até que horas)**
+  ou **fechado (e quando abre)**. Mostra "entrega a partir de R$ X" (a menor
+  taxa dos bairros), "só retirada hoje" quando o delivery está pausado, o
+  endereço com link para o Google Maps e um botão de WhatsApp.
+- **Cardápio inteiro numa lista só**, com os nomes das categorias. A barra de
+  categorias fica presa no topo ao rolar e mostra em qual o cliente está;
+  tocar numa categoria leva até ela. A busca procura no cardápio todo.
+- **Botão "+" vira "− 2 +"** na própria linha do produto. Com 1 unidade, o
+  "−" vira lixeira.
+- **Sacola numa barra só** ("3 · Ver sacola · R$ 24,00"). Ela abre por baixo,
+  com os itens, as observações e o botão **Avançar para a entrega**.
+- **Finalizar pedido**: resumo do pedido no topo, taxa de entrega que já
+  aparece ao escolher o bairro, e o aviso de erro **ao lado do campo** que
+  falta (nome, telefone, endereço, bairro, pagamento). O celular sugere nome,
+  telefone e endereço sozinho.
+- **No computador**, o cardápio fica com a sacola fixa ao lado, e o
+  checkout com o resumo à direita.
+
+### Delivery e balcão (tela mais usada do caixa)
+- Corrigido: **a tela "passava da borda" no celular** e precisava arrastar
+  para o lado.
+- **Pedido online novo vira uma faixa** com Aceitar e Recusar, em vez de uma
+  caixa grande.
+- **Venda rápida, Delivery, Balcão e Em andamento** num controle só, com a
+  contagem de pedidos em andamento. No celular aparece como "Rápida" e "Fila".
+  Em andamento mostra os pedidos de delivery, balcão e venda rápida (mesa não
+  entra).
+- **No celular, o carrinho vira uma barra embaixo** ("3 itens · R$ 34,00 ·
+  Revisar e enviar") que abre o formulário e o botão de enviar.
+- **No notebook do caixa**, produtos à esquerda e o carrinho fixo à direita.
+  Em telas bem largas (1536px ou mais), uma terceira coluna com os pedidos em
+  andamento.
+- **Nomes de produto inteiros** (antes, a 1024 e 1366px, todos apareciam como
+  "Espeto ...").
+- Card de pedido com **Pix, Dinheiro e Cartão numa linha própria**, e
+  imprimir/cancelar como ícones.
+- Os três quadros do topo (em andamento, novos online, em aberto) saíram: a
+  contagem foi para o controle, os pedidos online viraram faixas e o total em
+  aberto aparece em cima da lista de em andamento.
+
+### Navegação
+- **No celular**: Salão, Delivery, Cozinha e Caixa fixos embaixo, e um botão
+  **Mais** com Financeiro, Equipe, Cardápio, Impressão e Garçom. O garçom vê
+  só o que usa. Antes, 4 das 9 telas ficavam escondidas numa rolagem lateral.
+- Botões do topo viram ícones no celular (o nome aparece ao segurar e para
+  leitor de tela).
+
+### Salão e garçom
+- **Card de mesa sempre do mesmo tamanho**, com o número sempre no mesmo
+  lugar, com ou sem consumo. Status curto: **Livre, Ocupada, Conta** (a conta
+  pedida agora em amarelo, igual à legenda).
+- Mesa com **taxa de serviço** mostra **10%** no card.
+- Celular: 2 colunas de mesas até nas telas pequenas.
+
+### Cozinha
+- Corrigido: **o pedido mais novo aparecia em cima.** Agora cada coluna vai do
+  mais antigo para o mais novo, na ordem de chegada.
+- **Letra maior para ler de longe** (20px no tablet), quantidade destacada e
+  observação em amarelo.
+- Selo **"Pago · venda rápida"** nos pedidos que já foram pagos no balcão.
+- Em telas de 1280px ou mais, **três colunas**: fila, na chapa e a
+  continuação da fila.
+
+### Financeiro e caixa
+- Gráfico da semana com **o valor em cima de cada barra** ("R$ 1,2 mil") e o
+  dia embaixo.
+- No celular, os indicadores (dia, 7 dias, mês) ficam lado a lado.
+- **Nomes inteiros** em "Vendas por atendente" e "Mais vendidos" (antes até
+  "Davi" aparecia cortado no celular).
+- Caixa: o botão **Fechar caixa** desabilitado agora diz por quê ("Informe o
+  valor contado para fechar"). Sangria aparece com "−" em vermelho e
+  suprimento com "+" em verde.
+
+### Equipe, cardápio e impressão
+- **Equipe no celular** em cartões, com Novo PIN e Desligar à mão (antes as
+  colunas de status e ações ficavam escondidas). Ao escolher **Gerente**, o
+  cadastro avisa que o PIN tem 6 dígitos.
+- **Cardápio (gerente)** no celular em linhas compactas, com um menu "⋯" para
+  Editar e Esgotou. **Novo produto** abre um painel em vez de ficar fixo no
+  topo da tela.
+- **Impressão**: cupom com erro mostra o selo vermelho e o **Reimprimir** ao
+  lado. Os tipos aparecem certos: Cupom, Pré-conta, Fechamento, Teste.
+
+### Login
+- Fundo mais limpo (sem o logo grande desfocado).
+- Os pontos mostram **quantos dígitos você já digitou**, sem fixar 4 ou 6.
+- PIN errado: aparece **"PIN não reconhecido"** e o campo dá uma leve tremida.
+
+### Para todo o sistema
+- **Acentos corrigidos** em todos os textos (Salão, Balcão, Garçom, Cardápio,
+  Cartão, Observação, Endereço...). Plural certo ("1 item", "3 itens").
+- **Datas no formato dd/mm** (o Financeiro mostrava "2026-10-27 ate ...").
+- **Botões e campos de no mínimo 44px** no celular e no tablet: menos toque
+  errado no corre. Nenhum texto menor que 12px.
+- **Contraste** melhor em textos secundários, campos e botões desabilitados.
+- **Fontes da loja embutidas no app**: funcionam no APK sem internet e a tela
+  abre mais rápido.
+- Rótulos sem CAIXA ALTA.
+
+### Interno
+- Auditoria visual automática (`npm run auditoria:visual`): 939 problemas
+  antes, 0 depois, em 11 telas e 7 larguras.
+- Componentes base em `frontend/src/ui` (Botao, Campo, Selo, Segmentado,
+  Sheet, AcaoTopo).
+- Teste do limite global de login deixou de falhar às vezes em máquina lenta.
+- `cenario-demo.js` usava um status de mesa que a API recusa; corrigido.
+
+## [1.4.0]
 
 ### Operação do balcão
 - **Venda rápida no balcão** (gerente): só itens + forma de pagamento, sem
