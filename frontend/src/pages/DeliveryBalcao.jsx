@@ -12,6 +12,7 @@ import { notificar } from '../ui/toast';
 import { pedirTexto, confirmar } from '../lib/dialogos';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 import CampoBase from '../ui/Campo';
+import AcaoTopo from '../ui/AcaoTopo';
 
 const FORM_VAZIO = {
   clienteNome: '', clienteTelefone: '', clienteEndereco: '', bairro: '',
@@ -344,32 +345,21 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   const acoes = (
     <div className="flex items-center gap-2">
       {gerente && (
-        <button
-          onClick={alternarDelivery}
-          disabled={alternandoDelivery}
+        <AcaoTopo
+          icone={deliveryAtivo ? CirclePause : CirclePlay}
+          rotulo={deliveryAtivo ? 'Pausar delivery' : 'Delivery pausado · reativar'}
+          variante={deliveryAtivo ? 'neutra' : 'atencao'}
           aria-pressed={!deliveryAtivo}
-          title={deliveryAtivo ? 'Pausar entregas no cardápio online' : 'Reativar entregas no cardápio online'}
-          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition disabled:opacity-50 ${
-            deliveryAtivo
-              ? 'bg-white text-carvao ring-1 ring-rico-wood/35 hover:ring-rico-red/40'
-              : 'bg-atencao text-white shadow-suave hover:bg-atencao-escuro'
-          }`}
-        >
-          {deliveryAtivo ? <CirclePause size={14} /> : <CirclePlay size={14} />}
-          {deliveryAtivo ? 'Pausar delivery' : 'Delivery pausado · reativar'}
-        </button>
+          disabled={alternandoDelivery}
+          onClick={alternarDelivery}
+        />
       )}
-      <button
-        onClick={recarregar}
-        className="flex items-center gap-2 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
-      >
-        <RefreshCw size={14} className={carregando ? 'animate-spin' : ''} /> Atualizar
-      </button>
+      <AcaoTopo icone={RefreshCw} rotulo="Atualizar" variante="escura" girando={carregando} onClick={recarregar} />
     </div>
   );
 
   return (
-    <AppShell titulo="Delivery e Balcão" acoes={acoes} sessao={sessao} aoSair={aoSair}>
+    <AppShell titulo="Delivery e Balcão" tituloCurto="Delivery" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20">
           <p className="text-rotulo font-semibold text-carvao-suave">Em andamento</p>

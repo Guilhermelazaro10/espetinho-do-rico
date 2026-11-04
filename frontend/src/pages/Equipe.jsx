@@ -9,6 +9,7 @@ import { PAPEIS, ehGerente } from '../lib/constantes';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 import { plural } from '../lib/plural';
+import AcaoTopo from '../ui/AcaoTopo';
 
 export default function Equipe({ sessao, aoSair }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -135,16 +136,7 @@ export default function Equipe({ sessao, aoSair }) {
 
   const ativos = usuarios.filter((usuario) => usuario.ativo).length;
 
-  const acoes = (
-    <button
-      onClick={recarregar}
-      className="rounded-lg bg-carvao p-2 text-rico-light transition hover:bg-carvao-claro"
-      aria-label="Atualizar equipe"
-      title="Atualizar"
-    >
-      <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
-    </button>
-  );
+  const acoes = <AcaoTopo icone={RefreshCw} rotulo="Atualizar equipe" variante="escura" girando={carregando} onClick={recarregar} />;
 
   return (
     <AppShell titulo="Equipe" acoes={acoes} sessao={sessao} aoSair={aoSair}>

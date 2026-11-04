@@ -8,6 +8,7 @@ import { api, moeda, paraCentavos } from '../lib/api';
 import { dataHoraLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 import { plural } from '../lib/plural';
+import AcaoTopo from '../ui/AcaoTopo';
 
 const FORMAS = [
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
@@ -102,16 +103,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
     }
   }
 
-  const acoes = (
-    <button
-      onClick={recarregar}
-      className="rounded-lg bg-carvao p-2 text-rico-light transition hover:bg-carvao-claro"
-      aria-label="Atualizar caixa"
-      title="Atualizar"
-    >
-      <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
-    </button>
-  );
+  const acoes = <AcaoTopo icone={RefreshCw} rotulo="Atualizar caixa" variante="escura" girando={carregando} onClick={recarregar} />;
 
   return (
     <AppShell titulo="Caixa" acoes={acoes} sessao={sessao} aoSair={aoSair}>

@@ -7,6 +7,7 @@ import AppShell from '../components/AppShell';
 import { api } from '../lib/api';
 import { horaLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
+import AcaoTopo from '../ui/AcaoTopo';
 
 // Mapa fixo: o tipo cru da API ("fechamento", "pre_conta") nunca aparece na tela.
 const ROTULO_TIPO = {
@@ -97,14 +98,7 @@ export default function Impressora({ sessao, aoSair }) {
   const fila = dados?.fila ?? {};
   const recentes = dados?.recentes ?? [];
 
-  const acoes = (
-    <button
-      onClick={() => recarregar()}
-      className="flex items-center gap-2 rounded-lg border border-rico-wood/30 bg-white/70 px-3 py-2 text-sm font-bold text-rico-dark transition hover:bg-white"
-    >
-      <RefreshCw size={15} className={carregando ? 'animate-spin' : ''} /> Atualizar
-    </button>
-  );
+  const acoes = <AcaoTopo icone={RefreshCw} rotulo="Atualizar" girando={carregando} onClick={() => recarregar()} />;
 
   return (
     <AppShell titulo="Impressão" sessao={sessao} aoSair={aoSair} acoes={acoes}>

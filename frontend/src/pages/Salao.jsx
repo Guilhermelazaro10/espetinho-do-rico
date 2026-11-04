@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { notificar } from '../ui/toast';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
 import { STATUS_MESA, TIPOS_PEDIDO, ehGerente } from '../lib/constantes';
+import AcaoTopo from '../ui/AcaoTopo';
 
 /*
  * Salão — mapa de mesas (desktop e tablet do caixa).
@@ -101,12 +102,7 @@ export default function Salao({ sessao, aoSair }) {
         </span>
       </div>
       {gerente && (
-        <button
-          onClick={adicionarMesa}
-          className="flex min-h-11 items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0"
-        >
-          <Plus size={15} /> Mesa
-        </button>
+        <AcaoTopo icone={Plus} rotulo="Mesa" aria-label="Adicionar mesa" title="Adicionar mesa" variante="marca" onClick={adicionarMesa} />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 import CampoBase from '../ui/Campo';
+import AcaoTopo from '../ui/AcaoTopo';
 
 const FORM_INICIAL = { id: null, nome: '', categoria: '', preco: '' };
 
@@ -103,22 +104,13 @@ export default function Cardapio({ sessao, aoSair }) {
 
   const acoes = (
     <div className="flex items-center gap-2">
-      <button
+      <AcaoTopo
+        icone={mostrarInativos ? Eye : EyeOff}
+        rotulo={mostrarInativos ? 'Ocultar inativos' : 'Mostrar inativos'}
+        aria-pressed={mostrarInativos}
         onClick={() => setMostrarInativos((valor) => !valor)}
-        className="rounded-lg bg-white p-2 text-carvao shadow-suave ring-1 ring-carvao/10"
-        aria-label={mostrarInativos ? 'Ocultar inativos' : 'Mostrar inativos'}
-        title={mostrarInativos ? 'Ocultar inativos' : 'Mostrar inativos'}
-      >
-        {mostrarInativos ? <Eye size={17} /> : <EyeOff size={17} />}
-      </button>
-      <button
-        onClick={recarregar}
-        className="rounded-lg bg-carvao p-2 text-rico-light transition hover:bg-carvao-claro"
-        aria-label="Atualizar cardápio"
-        title="Atualizar"
-      >
-        <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
-      </button>
+      />
+      <AcaoTopo icone={RefreshCw} rotulo="Atualizar cardápio" variante="escura" girando={carregando} onClick={recarregar} />
     </div>
   );
 
