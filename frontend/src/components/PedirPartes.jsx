@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Plus, Minus, Trash2, ShoppingBag, Loader2, CheckCircle2, Clock, Ban, ClipboardList, User,
   Bike, MapPin, MessageCircle, Store, ChevronDown, ExternalLink,
@@ -234,7 +234,7 @@ export function BottomNav({ vista, setVista, qtdPedidos }) {
 /* ---------------- produto e quantidade ---------------- */
 
 // Controle "− 2 +" na própria linha. Com 1, o "−" vira lixeira.
-export function Stepper({ quantidade, aoMenos, aoMais, nome }) {
+export function Stepper({ quantidade, aoMenos, aoMais, nome, maisRef }) {
   return (
     <div className="flex h-11 shrink-0 items-center rounded-lg bg-creme-escuro">
       <button
@@ -250,6 +250,7 @@ export function Stepper({ quantidade, aoMenos, aoMais, nome }) {
       </span>
       <button
         type="button"
+        ref={maisRef}
         onClick={aoMais}
         aria-label={`Mais um ${nome}`}
         className="grid h-11 w-11 place-items-center rounded-lg bg-rico-red text-white transition-colors hover:bg-vinho-profundo"
@@ -261,6 +262,21 @@ export function Stepper({ quantidade, aoMenos, aoMais, nome }) {
 }
 
 export function LinhaProduto({ produto, quantidade, aoAdicionar, aoRemover }) {
+  // O "+" vira o controle "− 1 +" (e volta) ao mudar a quantidade: o botão
+  // focado some e o foco cairia na página. Leva o foco para o botão
+  // equivalente, só quando ele de fato se perdeu (teclado e leitor de tela).
+  const adicionarRef = useRef(null);
+  const maisRef = useRef(null);
+  const anterior = useRef(quantidade);
+  useEffect(() => {
+    const antes = anterior.current;
+    anterior.current = quantidade;
+    const perdido = document.activeElement === document.body || document.activeElement == null;
+    if (!perdido) return;
+    if (antes === 0 && quantidade > 0) maisRef.current?.focus();
+    else if (antes > 0 && quantidade === 0) adicionarRef.current?.focus();
+  }, [quantidade]);
+
   return (
     <li
       className={`flex min-h-[72px] items-center gap-3.5 py-3 pl-4 pr-3 transition-colors ${
@@ -286,10 +302,11 @@ export function LinhaProduto({ produto, quantidade, aoAdicionar, aoRemover }) {
         <p className="mt-0.5 text-sm font-bold text-rico-red tabular-nums">{moeda(produto.preco)}</p>
       </div>
       {quantidade > 0 ? (
-        <Stepper quantidade={quantidade} aoMenos={aoRemover} aoMais={aoAdicionar} nome={produto.nome} />
+        <Stepper quantidade={quantidade} aoMenos={aoRemover} aoMais={aoAdicionar} nome={produto.nome} maisRef={maisRef} />
       ) : (
         <button
           type="button"
+          ref={adicionarRef}
           onClick={aoAdicionar}
           aria-label={`Adicionar ${produto.nome}`}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-rico-red text-white transition-[background-color,transform] hover:bg-vinho-profundo active:scale-95"

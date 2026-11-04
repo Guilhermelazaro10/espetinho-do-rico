@@ -57,3 +57,31 @@ describe('Topo do cardápio — horário de fechamento', async () => {
     expect(horaFechamento(undefined)).toBeNull();
   });
 });
+
+describe('Linha de produto — foco ao trocar + pelo controle de quantidade', async () => {
+  const { useState } = await import('react');
+  const { fireEvent } = await import('@testing-library/react');
+  const { LinhaProduto } = await import('./PedirPartes');
+  function Demo() {
+    const [qtd, setQtd] = useState(0);
+    return (
+      <ul>
+        <LinhaProduto
+          produto={{ id: 1, nome: 'Carne', preco: 700 }}
+          quantidade={qtd}
+          aoAdicionar={() => setQtd((q) => q + 1)}
+          aoRemover={() => setQtd((q) => q - 1)}
+        />
+      </ul>
+    );
+  }
+  it('o foco vai para o novo + e volta para Adicionar ao tirar o último', () => {
+    render(<Demo />);
+    const adicionar = screen.getByRole('button', { name: 'Adicionar Carne' });
+    adicionar.focus();
+    fireEvent.click(adicionar);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Mais um Carne' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tirar Carne da sacola' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Adicionar Carne' }));
+  });
+});
