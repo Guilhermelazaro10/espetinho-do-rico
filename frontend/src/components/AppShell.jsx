@@ -117,8 +117,8 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
         <header className="safe-area-top sticky top-0 z-20 border-b border-rico-wood/25 bg-rico-light/92 backdrop-blur">
           <div className="h-1 w-full bg-brasa-gradiente" />
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-7 sm:py-4">
-            <h1 className="font-display text-xl text-rico-dark sm:text-2xl">{titulo}</h1>
-            <div className="flex items-center gap-3">
+            <h1 className="min-w-0 whitespace-nowrap font-display text-xl text-rico-dark sm:text-2xl">{titulo}</h1>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-3">
               {acoes}
               <button
                 onClick={aoSair}

@@ -201,14 +201,14 @@ export default function Cardapio({ sessao, aoSair }) {
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-rico-wood/25 pt-3">
                 <button
                   onClick={() => editar(produto)}
-                  className="flex min-h-10 items-center gap-1.5 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95"
+                  className="flex min-h-11 items-center gap-1.5 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95"
                 >
                   <Edit3 size={14} /> Editar
                 </button>
                 {produto.ativo ? (
                   <button
                     onClick={() => desativar(produto)}
-                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-atencao-fundo px-3.5 py-2 text-xs font-bold text-atencao transition hover:bg-atencao-borda active:scale-95"
+                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-atencao-fundo px-3.5 py-2 text-xs font-bold text-atencao transition hover:bg-atencao-borda active:scale-95"
                     title="Marcar como esgotado (some do cardápio e dos garçons)"
                   >
                     <EyeOff size={14} /> Esgotou
@@ -216,7 +216,7 @@ export default function Cardapio({ sessao, aoSair }) {
                 ) : (
                   <button
                     onClick={() => reativar(produto)}
-                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-ok px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-ok-escuro active:scale-95"
+                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-ok px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-ok-escuro active:scale-95"
                     title="Voltar a vender"
                   >
                     <RotateCcw size={14} /> Disponibilizar

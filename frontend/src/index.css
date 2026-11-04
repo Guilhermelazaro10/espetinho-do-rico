@@ -239,6 +239,27 @@
     border-radius: 6px;
   }
 
+  /* Toque: abaixo de 1024px todo controle tem no mínimo 44x44px. Fica na
+     camada base para que um min-h-* explícito maior ainda vença; altura e
+     largura fixas menores (h-8, w-8) não vencem o min-height/min-width.
+     Links em linha ganham área com padding, sem mudar a fonte. */
+  @media (max-width: 1023.98px) {
+    button,
+    [role='button'],
+    select,
+    input:not([type='hidden']):not([type='checkbox']):not([type='radio']),
+    textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    a[href] {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
   /* Seleção de texto na cor da marca */
   ::selection {
     background: rgb(179 42 42 / 0.18);

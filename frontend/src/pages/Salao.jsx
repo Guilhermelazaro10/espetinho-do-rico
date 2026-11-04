@@ -103,7 +103,7 @@ export default function Salao({ sessao, aoSair }) {
       {gerente && (
         <button
           onClick={adicionarMesa}
-          className="flex min-h-10 items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0"
+          className="flex min-h-11 items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0"
         >
           <Plus size={15} /> Mesa
         </button>

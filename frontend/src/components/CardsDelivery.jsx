@@ -170,7 +170,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
         <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
         <div className="flex flex-wrap justify-end gap-2">
           {podeAvancar && (
-            <button onClick={() => onAvancar(pedido)} className="flex min-h-10 items-center gap-1 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95">
+            <button onClick={() => onAvancar(pedido)} className="flex min-h-11 items-center gap-1 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95">
               <CheckCircle2 size={14} /> Avançar
             </button>
           )}
@@ -184,13 +184,13 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
           </button>
           {gerente && pedido.status === 'entregue' && (
             <>
-              <button onClick={() => onPagar(pedido, 'pix')} className="flex min-h-10 items-center gap-1 rounded-lg bg-rico-red px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-vinho-profundo active:scale-95" title="Pagar com Pix">
+              <button onClick={() => onPagar(pedido, 'pix')} className="flex min-h-11 items-center gap-1 rounded-lg bg-rico-red px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-vinho-profundo active:scale-95" title="Pagar com Pix">
                 <QrCode size={14} /> Pix
               </button>
-              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex min-h-10 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar em dinheiro">
+              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex min-h-11 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar em dinheiro">
                 <Banknote size={14} /> Dinheiro
               </button>
-              <button onClick={() => onPagar(pedido, 'cartao')} className="flex min-h-10 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar no cartão">
+              <button onClick={() => onPagar(pedido, 'cartao')} className="flex min-h-11 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar no cartão">
                 <CreditCard size={14} /> Cartão
               </button>
             </>

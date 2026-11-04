@@ -69,9 +69,11 @@ export default function Financeiro({ sessao, aoSair }) {
       </button>
       <a
         href="#/caixa"
-        className="flex items-center gap-2 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-suave transition hover:bg-vinho-profundo"
+        aria-label="Caixa do turno"
+        className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg bg-rico-red px-3 text-rotulo font-semibold text-rico-light shadow-suave transition hover:bg-vinho-profundo"
       >
-        <LockKeyhole size={14} /> Caixa do turno
+        <LockKeyhole size={16} aria-hidden="true" />
+        <span className="hidden sm:inline">Caixa do turno</span>
       </a>
     </div>
   );

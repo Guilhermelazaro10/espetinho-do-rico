@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Check,
   Bike, Store, Plus, Minus, Trash2, Send, RefreshCw, CreditCard,
   Banknote, QrCode, ReceiptText, Loader2, BellRing, Search, Zap, CirclePause, CirclePlay,
 } from 'lucide-react';
@@ -440,7 +441,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                     <button
                       key={c}
                       onClick={() => setCatAtiva(c)}
-                      className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition active:scale-95 ${
+                      className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition active:scale-95 ${
                         c === catAtiva ? 'bg-rico-red text-rico-light shadow-suave' : 'bg-white text-carvao-claro ring-1 ring-rico-wood/25 hover:ring-rico-red/35'
                       }`}
                     >
@@ -560,13 +561,23 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 </div>
 
                 {rapida && (
-                  <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10">
+                  <label className="relative flex min-h-11 cursor-pointer items-start gap-3 rounded-lg bg-rico-light/8 p-3 ring-1 ring-rico-light/10 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-rico-wood">
+                    {/* O input nativo cobre a linha inteira (alvo de toque = a linha);
+                        a caixa visível só desenha o estado. */}
                     <input
                       type="checkbox"
                       checked={form.entregueNaHora}
                       onChange={(e) => alterarForm('entregueNaHora', e.target.checked)}
-                      className="mt-0.5 h-4 w-4 accent-rico-red"
+                      className="absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-lg opacity-0"
                     />
+                    <span
+                      aria-hidden="true"
+                      className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md ring-2 ${
+                        form.entregueNaHora ? 'bg-rico-red ring-rico-red text-white' : 'ring-rico-light/60'
+                      }`}
+                    >
+                      {form.entregueNaHora && <Check size={14} strokeWidth={3} />}
+                    </span>
                     <span className="text-xs font-semibold text-rico-light/80">
                       <strong className="block text-rico-light">Entregue na hora</strong>
                       Ex.: só bebida. Não imprime comanda nem vai pra chapa.
@@ -682,7 +693,7 @@ function Aba({ ativa, onClick, Icone, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex min-h-10 items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${
+      className={`flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${
         ativa ? 'bg-rico-red text-rico-light shadow-suave' : 'text-carvao-claro hover:bg-carvao/5'
       }`}
     >
