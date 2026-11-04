@@ -25,6 +25,15 @@ export function dataLoja(iso, opcoes = {}) {
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: FUSO_LOJA, ...opcoes });
 }
 
+// "AAAA-MM-DD" (dia já calculado no fuso da loja pelo servidor) -> "dd/mm".
+// Formata pelo texto, sem Date, para não deslocar o dia pelo fuso do aparelho.
+// comAno=true -> "dd/mm/aaaa". Nunca mostrar ISO na tela.
+export function diaMes(dia, comAno = false) {
+  if (!dia || typeof dia !== 'string') return '—';
+  const [a, m, d] = dia.slice(0, 10).split('-');
+  return comAno ? `${d}/${m}/${a}` : `${d}/${m}`;
+}
+
 // Minutos inteiros desde um instante (Cozinha usa pra cor de urgência).
 export function minutosDesde(iso, agora = Date.now()) {
   return Math.max(0, Math.round((agora - new Date(iso).getTime()) / 60000));

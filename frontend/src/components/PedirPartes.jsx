@@ -6,6 +6,7 @@ import {
 import { api, moeda } from '../lib/api';
 import { dataLoja } from '../lib/datas';
 import CampoBase from '../ui/Campo';
+import { plural } from '../lib/plural';
 
 /*
  * Partes do cardápio online (/cardapio): topo da loja, navegação inferior,
@@ -194,7 +195,7 @@ export function Sacola({ fechar, linhas, total, totalItens, mudarQtd, mudarObs }
       <button className="absolute inset-0 h-full w-full cursor-default" onClick={fechar} aria-label="Fechar" />
       <section className="relative max-h-[82dvh] w-full rounded-t-3xl bg-rico-light text-carvao shadow-media">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-3xl border-b border-rico-wood/25 bg-rico-light px-4 py-4">
-          <h2 className="font-display text-2xl text-rico-dark">{totalItens} {totalItens === 1 ? 'item' : 'itens'} · {moeda(total)}</h2>
+          <h2 className="font-display text-2xl text-rico-dark">{plural(totalItens, 'item', 'itens')} · {moeda(total)}</h2>
           <button onClick={fechar} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-carvao/8 active:scale-95" aria-label="Fechar">
             <X size={22} />
           </button>

@@ -8,15 +8,15 @@ import { baseUrl, ehNativo } from '../lib/servidor';
 import { tocarCampainha } from '../lib/som';
 
 const ITENS_NAV = [
-  { href: '#/', rotulo: 'Salao', Icone: LayoutGrid, gerente: false },
+  { href: '#/', rotulo: 'Salão', Icone: LayoutGrid, gerente: false },
   { href: '#/delivery', rotulo: 'Delivery', Icone: Bike, gerente: false },
   { href: '#/cozinha', rotulo: 'Cozinha', Icone: ChefHat, gerente: false },
-  { href: '#/garcom', rotulo: 'Garcom', Icone: Smartphone, gerente: false },
+  { href: '#/garcom', rotulo: 'Garçom', Icone: Smartphone, gerente: false },
   { href: '#/caixa', rotulo: 'Caixa', Icone: Wallet, gerente: true },
   { href: '#/financeiro', rotulo: 'Financeiro', Icone: TrendingUp, gerente: true },
   { href: '#/equipe', rotulo: 'Equipe', Icone: Users, gerente: true },
-  { href: '#/cardapio', rotulo: 'Cardapio', Icone: UtensilsCrossed, gerente: true },
-  { href: '#/impressora', rotulo: 'Impressao', Icone: Printer, gerente: true },
+  { href: '#/cardapio', rotulo: 'Cardápio', Icone: UtensilsCrossed, gerente: true },
+  { href: '#/impressora', rotulo: 'Impressão', Icone: Printer, gerente: true },
 ];
 
 function itensVisiveis(sessao) {
@@ -136,7 +136,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
 
       <nav
         className="safe-area-bottom-nav fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pt-2 shadow-media backdrop-blur lg:hidden"
-        aria-label="Navegacao principal"
+        aria-label="Navegação principal"
       >
         {itens.map(({ href, rotulo, Icone }) => {
           const ativa = rotaAtiva(href);

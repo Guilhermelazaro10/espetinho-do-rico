@@ -62,7 +62,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       setBairros(publico?.loja?.bairros ?? []);
       setDeliveryAtivo(publico?.loja?.delivery !== false);
     } catch (e) {
-      notificar.erro('Delivery indisponivel', e.message);
+      notificar.erro('Delivery indisponível', e.message);
     } finally {
       setCarregando(false);
     }
@@ -188,12 +188,12 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     };
     try {
       await api.pedidos.criar(corpo);
-      notificar.sucesso('Pedido enviado', `${aba === TIPOS_PEDIDO.DELIVERY ? 'Delivery' : 'Balcao'} ${moeda(total)}`);
+      notificar.sucesso('Pedido enviado', `${aba === TIPOS_PEDIDO.DELIVERY ? 'Delivery' : 'Balcão'} ${moeda(total)}`);
       setCarrinho([]);
       setForm(FORM_VAZIO);
       await recarregar();
     } catch (e) {
-      notificar.erro('Pedido nao enviado', e.message);
+      notificar.erro('Pedido não enviado', e.message);
     } finally {
       setEnviando(false);
     }
@@ -230,7 +230,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       setForm((atual) => ({ ...FORM_VAZIO, pagamento: atual.pagamento, entregueNaHora: atual.entregueNaHora }));
       await recarregar();
     } catch (e) {
-      notificar.erro('Venda nao registrada', e.message);
+      notificar.erro('Venda não registrada', e.message);
     } finally {
       setEnviando(false);
     }
@@ -253,7 +253,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       setDeliveryAtivo(novo);
       notificar.sucesso(novo ? 'Delivery reativado' : 'Delivery pausado', novo ? 'Cardápio online aceita entregas' : 'Cardápio online: só retirada');
     } catch (e) {
-      notificar.erro('Nao foi possivel alterar o delivery', e.message);
+      notificar.erro('Não foi possível alterar o delivery', e.message);
     } finally {
       setAlternandoDelivery(false);
     }
@@ -265,7 +265,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       await api.pedidos.atualizarStatus(pedido.id, proximo);
       await recarregar();
     } catch (e) {
-      notificar.erro('Status nao atualizado', e.message);
+      notificar.erro('Status não atualizado', e.message);
     }
   }
 
@@ -284,7 +284,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       await api.pedidos.imprimir(pedido.id);
       notificar.brasa('Comanda reimpressa', `#${pedido.id}`);
     } catch (e) {
-      notificar.erro('Nao foi possivel reimprimir', e.message);
+      notificar.erro('Não foi possível reimprimir', e.message);
     }
   }
 
@@ -313,14 +313,14 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       notificar.sucesso('Pedido aceito', `#${pedido.id} foi pra cozinha`);
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel aceitar', e.message);
+      notificar.erro('Não foi possível aceitar', e.message);
     }
   }
 
   async function recusarPedido(pedido) {
     const ok = await confirmar({
       titulo: `Recusar pedido #${pedido.id}?`,
-      mensagem: 'O pedido nao vai pra cozinha e o cliente vera como recusado.',
+      mensagem: 'O pedido não vai pra cozinha e o cliente verá como recusado.',
       confirmarRotulo: 'Recusar',
       perigo: true,
     });
@@ -330,7 +330,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
       notificar.sucesso(`Pedido #${pedido.id} recusado`);
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel recusar', e.message);
+      notificar.erro('Não foi possível recusar', e.message);
     }
   }
 
@@ -368,7 +368,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
   );
 
   return (
-    <AppShell titulo="Delivery e Balcao" acoes={acoes} sessao={sessao} aoSair={aoSair}>
+    <AppShell titulo="Delivery e Balcão" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20">
           <p className="text-rotulo font-semibold text-carvao-suave">Em andamento</p>
@@ -411,14 +411,14 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
           <div className="inline-flex flex-wrap rounded-xl bg-white p-1 shadow-suave ring-1 ring-rico-wood/30">
             {gerente && (
               <Aba ativa={rapida} onClick={() => setAba(ABA_RAPIDA)} Icone={Zap}>
-                Venda rapida
+                Venda rápida
               </Aba>
             )}
             <Aba ativa={aba === TIPOS_PEDIDO.DELIVERY} onClick={() => setAba(TIPOS_PEDIDO.DELIVERY)} Icone={Bike}>
               Delivery
             </Aba>
             <Aba ativa={aba === TIPOS_PEDIDO.BALCAO} onClick={() => setAba(TIPOS_PEDIDO.BALCAO)} Icone={Store}>
-              Balcao
+              Balcão
             </Aba>
           </div>
 
@@ -483,7 +483,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
 
             <aside className="rounded-xl bg-rico-dark p-4 text-rico-light shadow-media">
               <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
-                {rapida ? <Zap size={16} /> : <ReceiptText size={16} />} {rapida ? 'Venda rapida' : 'Novo pedido'}
+                {rapida ? <Zap size={16} /> : <ReceiptText size={16} />} {rapida ? 'Venda rápida' : 'Novo pedido'}
               </h2>
               <div className="mt-4 space-y-3">
                 {aba === TIPOS_PEDIDO.DELIVERY && (
@@ -500,7 +500,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 )}
                 {aba === TIPOS_PEDIDO.DELIVERY && (
                   <>
-                    <Input rotulo="Endereco" valor={form.clienteEndereco} onChange={(v) => alterarForm('clienteEndereco', v)} />
+                    <Input rotulo="Endereço" valor={form.clienteEndereco} onChange={(v) => alterarForm('clienteEndereco', v)} />
                     {bairros.length > 0 && (
                       <label className="block">
                         <span className="text-rotulo font-semibold text-rico-light/70">Bairro</span>

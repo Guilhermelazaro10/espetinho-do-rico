@@ -8,7 +8,14 @@ import { api } from '../lib/api';
 import { horaLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 
-const ROTULO_TIPO = { cupom: 'Cupom', pre_conta: 'Pré-conta', gaveta: 'Gaveta', teste: 'Teste' };
+// Mapa fixo: o tipo cru da API ("fechamento", "pre_conta") nunca aparece na tela.
+const ROTULO_TIPO = {
+  cupom: 'Cupom',
+  pre_conta: 'Pré-conta',
+  fechamento: 'Fechamento',
+  gaveta: 'Gaveta',
+  teste: 'Teste',
+};
 
 const STATUS = {
   pendente: { rotulo: 'Na fila', classe: 'bg-atencao-fundo text-atencao', Icone: Clock, girar: false },
@@ -172,7 +179,7 @@ export default function Impressora({ sessao, aoSair }) {
                   <li key={job.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <span className="font-bold text-carvao">#{job.id}</span>
-                      <span className="text-sm font-semibold text-carvao-claro">{ROTULO_TIPO[job.tipo] ?? job.tipo}</span>
+                      <span className="text-sm font-semibold text-carvao-claro">{ROTULO_TIPO[job.tipo] ?? 'Cupom'}</span>
                       <span className="text-xs font-semibold text-carvao-suave">{horaCurta(job.criadoEm)}</span>
                     </div>
                     <div className="flex items-center gap-2">

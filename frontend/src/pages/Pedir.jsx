@@ -8,6 +8,7 @@ import { api, moeda, paraCentavos } from '../lib/api';
 import {
   situacaoDe, VISUAL_SIT, TopoLoja, BottomNav, MeusPedidos, Perfil, Campo, Sacola,
 } from '../components/PedirPartes';
+import { plural } from '../lib/plural';
 
 /*
  * Cardápio online (público, sem login). Cliente monta o pedido e finaliza:
@@ -429,7 +430,7 @@ export default function Pedir() {
             )}
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold text-carvao-suave">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</p>
+                <p className="text-xs font-bold text-carvao-suave">{plural(totalItens, 'item', 'itens')}</p>
                 <p className="font-display text-2xl text-rico-dark">{moeda(totalFinal)}</p>
               </div>
               <button onClick={finalizar} disabled={enviando || carrinho.length === 0} className="flex min-h-[58px] flex-1 items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:opacity-40">
@@ -529,7 +530,7 @@ export default function Pedir() {
             <button type="button" onClick={() => setComandaAberta(true)} className="mb-2 flex w-full items-center justify-between gap-2 rounded-2xl bg-white px-3.5 py-2.5 text-left ring-1 ring-rico-wood/20 transition active:scale-[0.99]">
               <span className="flex items-center gap-2 text-sm font-bold text-carvao-suave">
                 <ShoppingCart size={18} className="text-rico-red" />
-                {totalItens} {totalItens === 1 ? 'item' : 'itens'} — toque p/ revisar
+                {plural(totalItens, 'item', 'itens')} — toque p/ revisar
               </span>
               <span className="flex shrink-0 items-center gap-1 text-base font-extrabold text-rico-red">
                 {moeda(subtotal)} <ChevronRight size={17} className="text-carvao/35" />

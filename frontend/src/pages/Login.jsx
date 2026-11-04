@@ -21,12 +21,12 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
       const { token, usuario, avisoPinCurto } = await api.auth.login(pin);
       salvarSessao({ token, usuario });
       if (avisoPinCurto) {
-        notificar.brasa('Troque seu PIN', 'Gerente agora usa PIN de 6 digitos. Troque em Equipe > Trocar meu PIN.');
+        notificar.brasa('Troque seu PIN', 'Gerente agora usa PIN de 6 dígitos. Troque em Equipe > Trocar meu PIN.');
       }
       if (String(usuario.papel).toUpperCase() === 'GARCOM') window.location.hash = '#/garcom';
       aoEntrar({ token, usuario });
     } catch (e) {
-      notificar.erro('Nao foi possivel entrar', e.message);
+      notificar.erro('Não foi possível entrar', e.message);
       setPin('');
     } finally {
       setEntrando(false);
@@ -74,7 +74,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
             <h1 className="mt-3 font-display text-2xl text-rico-light">Digite seu PIN</h1>
           </div>
 
-          <div className="mt-5 flex h-8 items-center justify-center gap-3" aria-label={`${pin.length} digitos digitados`}>
+          <div className="mt-5 flex h-8 items-center justify-center gap-3" aria-label={`${pin.length} dígitos digitados`}>
             {Array.from({ length: 6 }, (_, i) => (
               <span
                 key={i}

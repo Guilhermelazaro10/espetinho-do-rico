@@ -8,6 +8,7 @@ import { api, moeda } from '../lib/api';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { adicionarNaFila, listarFila, sincronizarFila } from '../lib/filaOffline';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
+import { plural } from '../lib/plural';
 
 const ICONES_CATEGORIA = { Espetinhos: Beef, Bebidas: Beer, Guarnições: UtensilsCrossed };
 
@@ -32,7 +33,7 @@ export default function Garcom({ aoSair }) {
       .then(setProdutos)
       .catch((e) => {
         setErroCardapio(true);
-        notificar.erro('Cardapio indisponivel', e.message);
+        notificar.erro('Cardápio indisponível', e.message);
       });
   }, []);
 
@@ -52,10 +53,10 @@ export default function Garcom({ aoSair }) {
     const resultado = await sincronizarFila((p) => api.pedidos.criar(p));
     setTamanhoFila(resultado.restantes);
     if (resultado.enviados > 0) {
-      notificar.sucesso(`${resultado.enviados} pedido(s) enviado(s)`, 'Fila sincronizada');
+      notificar.sucesso(plural(resultado.enviados, 'pedido enviado', 'pedidos enviados'), 'Fila sincronizada');
     }
     if (resultado.descartados > 0) {
-      notificar.erro(`${resultado.descartados} pedido(s) rejeitado(s)`, 'Confira com o caixa');
+      notificar.erro(plural(resultado.descartados, 'pedido rejeitado', 'pedidos rejeitados'), 'Confira com o caixa');
     }
   }, []);
 
@@ -87,18 +88,18 @@ export default function Garcom({ aoSair }) {
       const mesas = await api.mesas.listar();
       const alvo = mesas.find((m) => m.numero === Number(numero));
       if (!alvo) {
-        notificar.erro(`Mesa ${numero} nao existe`, 'Confira o numero e tente novamente');
+        notificar.erro(`Mesa ${numero} não existe`, 'Confira o número e tente novamente');
         return;
       }
       if (alvo.status === 'fechando') {
-        notificar.erro(`Mesa ${alvo.numero} aguardando conta`, 'Peca ao caixa para reabrir');
+        notificar.erro(`Mesa ${alvo.numero} aguardando conta`, 'Peça ao caixa para reabrir');
         return;
       }
       setMesa(alvo);
       setEtapa('cardapio');
       setComandaAberta(false);
     } catch (e) {
-      notificar.erro('Nao foi possivel abrir a mesa', e.message);
+      notificar.erro('Não foi possível abrir a mesa', e.message);
     } finally {
       setAbrindo(false);
     }
@@ -155,16 +156,16 @@ export default function Garcom({ aoSair }) {
     };
     try {
       await api.pedidos.criar(corpo);
-      notificar.sucesso(`Pedido da mesa ${mesa.numero} enviado`, `${totalItens} item(ns) - ${moeda(total)}`);
+      notificar.sucesso(`Pedido da mesa ${mesa.numero} enviado`, `${plural(totalItens, 'item', 'itens')} · ${moeda(total)}`);
       limparComanda();
     } catch (e) {
       if (e.offline) {
         adicionarNaFila(corpo);
         setTamanhoFila(listarFila().length);
-        notificar.brasa(`Pedido da mesa ${mesa.numero} na fila`, 'Sera enviado quando a rede voltar');
+        notificar.brasa(`Pedido da mesa ${mesa.numero} na fila`, 'Será enviado quando a rede voltar');
         limparComanda();
       } else {
-        notificar.erro('Pedido nao enviado', `${e.message} - os itens continuam na comanda`);
+        notificar.erro('Pedido não enviado', `${e.message} - os itens continuam na comanda`);
       }
     } finally {
       setEnviando(false);
@@ -194,7 +195,7 @@ export default function Garcom({ aoSair }) {
             <div className="min-w-0">
               <p className="truncate font-display text-lg leading-tight">Espetinho do Rico</p>
               <p className="text-rotulo font-semibold text-rico-wood">
-                {etapa === 'cardapio' && mesa ? `Mesa ${String(mesa.numero).padStart(2, '0')}` : 'Modo garcom'}
+                {etapa === 'cardapio' && mesa ? `Mesa ${String(mesa.numero).padStart(2, '0')}` : 'Modo garçom'}
               </p>
             </div>
           </div>
@@ -264,7 +265,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
           onClick={recarregarCardapio}
           className="mb-4 flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 border-brasa/40 px-4 py-3 text-sm font-extrabold text-brasa-clara active:scale-[0.98]"
         >
-          <RefreshCw size={18} /> Recarregar cardapio
+          <RefreshCw size={18} /> Recarregar cardápio
         </button>
       )}
 
@@ -443,7 +444,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
             <span className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
               <ShoppingCart size={18} className="text-rico-wood" />
               {totalItens > 0
-                ? `${totalItens} ${totalItens === 1 ? 'item' : 'itens'} — toque p/ revisar`
+                ? `${plural(totalItens, 'item', 'itens')} — toque p/ revisar`
                 : 'Comanda vazia'}
             </span>
             <span className="flex shrink-0 items-center gap-1 text-base font-extrabold text-rico-wood">
@@ -496,7 +497,7 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
                 Comanda
               </p>
               <h2 className="font-display text-2xl text-rico-dark">
-                {totalItens} {totalItens === 1 ? 'item' : 'itens'} - {moeda(total)}
+                {plural(totalItens, 'item', 'itens')} - {moeda(total)}
               </h2>
             </div>
             <button
@@ -535,12 +536,12 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
                 </div>
 
                 <label className="mt-3 block">
-                  <span className="sr-only">Observacao</span>
+                  <span className="sr-only">Observação</span>
                   <input
                     type="text"
                     value={linha.observacao}
                     onChange={(e) => acoes.mudarObservacao(i, e.target.value)}
-                    placeholder="Observacao: sem cebola, bem passado..."
+                    placeholder="Observação: sem cebola, bem passado..."
                     maxLength={120}
                     className="min-h-12 w-full rounded-2xl bg-creme px-4 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 placeholder:text-carvao/35 focus:ring-rico-red"
                   />

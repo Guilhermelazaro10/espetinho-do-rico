@@ -20,7 +20,7 @@ export default function Cardapio({ sessao, aoSair }) {
     try {
       setProdutos(await api.produtos.listar(true));
     } catch (e) {
-      notificar.erro('Cardapio indisponivel', e.message);
+      notificar.erro('Cardápio indisponível', e.message);
     } finally {
       setCarregando(false);
     }
@@ -78,26 +78,26 @@ export default function Cardapio({ sessao, aoSair }) {
   async function desativar(produto) {
     const ok = await confirmar({
       titulo: `Marcar ${produto.nome} como esgotado?`,
-      mensagem: 'Some na hora do cardapio online e da tela dos garcons. E so reativar quando voltar a ter.',
+      mensagem: 'Some na hora do cardápio online e da tela dos garçons. É só reativar quando voltar a ter.',
       confirmarRotulo: 'Esgotou',
     });
     if (!ok) return;
     try {
       await api.produtos.desativar(produto.id);
-      notificar.brasa('Marcado como esgotado', 'Sumiu do cardapio online e dos garcons');
+      notificar.brasa('Marcado como esgotado', 'Sumiu do cardápio online e dos garçons');
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel esgotar', e.message);
+      notificar.erro('Não foi possível esgotar', e.message);
     }
   }
 
   async function reativar(produto) {
     try {
       await api.produtos.reativar(produto.id);
-      notificar.sucesso('Disponivel de novo', produto.nome);
+      notificar.sucesso('Disponível de novo', produto.nome);
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel reativar', e.message);
+      notificar.erro('Não foi possível reativar', e.message);
     }
   }
 
@@ -114,7 +114,7 @@ export default function Cardapio({ sessao, aoSair }) {
       <button
         onClick={recarregar}
         className="rounded-lg bg-carvao p-2 text-rico-light transition hover:bg-carvao-claro"
-        aria-label="Atualizar cardapio"
+        aria-label="Atualizar cardápio"
         title="Atualizar"
       >
         <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
@@ -123,7 +123,7 @@ export default function Cardapio({ sessao, aoSair }) {
   );
 
   return (
-    <AppShell titulo="Cardapio" acoes={acoes} sessao={sessao} aoSair={aoSair}>
+    <AppShell titulo="Cardápio" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <section className="space-y-4">
           <form onSubmit={salvar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
@@ -147,7 +147,7 @@ export default function Cardapio({ sessao, aoSair }) {
                   ))}
                 </datalist>
               </label>
-              <Campo rotulo="Preco" valor={form.preco} onChange={(v) => alterar('preco', v)} required />
+              <Campo rotulo="Preço" valor={form.preco} onChange={(v) => alterar('preco', v)} required />
             </div>
             <div className="mt-4 flex gap-2">
               <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0">
@@ -194,7 +194,7 @@ export default function Cardapio({ sessao, aoSair }) {
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
                   produto.ativo ? 'bg-ok-fundo text-ok' : 'bg-atencao-fundo text-atencao'
                 }`}>
-                  {produto.ativo ? 'Disponivel' : 'Esgotado'}
+                  {produto.ativo ? 'Disponível' : 'Esgotado'}
                 </span>
               </div>
               <p className="mt-4 font-display text-3xl text-rico-red">{moeda(produto.preco)}</p>
@@ -209,7 +209,7 @@ export default function Cardapio({ sessao, aoSair }) {
                   <button
                     onClick={() => desativar(produto)}
                     className="flex min-h-10 items-center gap-1.5 rounded-lg bg-atencao-fundo px-3.5 py-2 text-xs font-bold text-atencao transition hover:bg-atencao-borda active:scale-95"
-                    title="Marcar como esgotado (some do cardapio e dos garcons)"
+                    title="Marcar como esgotado (some do cardápio e dos garçons)"
                   >
                     <EyeOff size={14} /> Esgotou
                   </button>

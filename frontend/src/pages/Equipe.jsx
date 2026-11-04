@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { PAPEIS, ehGerente } from '../lib/constantes';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
+import { plural } from '../lib/plural';
 
 export default function Equipe({ sessao, aoSair }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -27,7 +28,7 @@ export default function Equipe({ sessao, aoSair }) {
       setUsuarios(lista);
       setRede(redeAtual);
     } catch (e) {
-      notificar.erro('Equipe indisponivel', e.message);
+      notificar.erro('Equipe indisponível', e.message);
     } finally {
       setCarregando(false);
     }
@@ -50,15 +51,15 @@ export default function Equipe({ sessao, aoSair }) {
     e.preventDefault();
     const souGerente = ehGerente(sessao);
     if (souGerente ? !/^\d{6}$/.test(trocaPin.novo) : !/^\d{4,6}$/.test(trocaPin.novo)) {
-      notificar.erro('PIN invalido', souGerente ? 'PIN de gerente deve ter 6 digitos' : 'O novo PIN deve ter de 4 a 6 digitos');
+      notificar.erro('PIN inválido', souGerente ? 'PIN de gerente deve ter 6 dígitos' : 'O novo PIN deve ter de 4 a 6 dígitos');
       return;
     }
     try {
       await api.perfil.trocarPin({ pinAtual: trocaPin.atual, pinNovo: trocaPin.novo });
       setTrocaPin({ atual: '', novo: '' });
-      notificar.sucesso('PIN alterado', 'Use o novo PIN no proximo login');
+      notificar.sucesso('PIN alterado', 'Use o novo PIN no próximo login');
     } catch (erro) {
-      notificar.erro('Nao foi possivel trocar', erro.message);
+      notificar.erro('Não foi possível trocar', erro.message);
     }
   }
 
@@ -72,7 +73,7 @@ export default function Equipe({ sessao, aoSair }) {
       });
       setPinGerado(criado);
       setForm({ nome: '', papel: PAPEIS.GARCOM, tamanhoPin: 4 });
-      notificar.sucesso('Funcionario cadastrado', `PIN ${criado.pin}`);
+      notificar.sucesso('Funcionário cadastrado', `PIN ${criado.pin}`);
       await recarregar();
     } catch (erro) {
       notificar.erro('Cadastro recusado', erro.message);
@@ -85,21 +86,21 @@ export default function Equipe({ sessao, aoSair }) {
       setPinGerado({ ...usuario, pin: resposta.pin });
       notificar.brasa('Novo PIN gerado', `${usuario.nome}: ${resposta.pin}`);
     } catch (e) {
-      notificar.erro('PIN nao gerado', e.message);
+      notificar.erro('PIN não gerado', e.message);
     }
   }
 
   async function desligar(usuario) {
     const ok = await confirmar({
       titulo: `Desligar ${usuario.nome}?`,
-      mensagem: 'O PIN e revogado na hora. O historico do funcionario e preservado.',
+      mensagem: 'O PIN é revogado na hora. O histórico do funcionário é preservado.',
       confirmarRotulo: 'Desligar',
       perigo: true,
     });
     if (!ok) return;
     try {
       await api.usuarios.desligar(usuario.id);
-      notificar.sucesso('Funcionario desligado', usuario.nome);
+      notificar.sucesso('Funcionário desligado', usuario.nome);
       await recarregar();
     } catch (e) {
       notificar.erro('Desligamento recusado', e.message);
@@ -111,19 +112,19 @@ export default function Equipe({ sessao, aoSair }) {
     if (!link) return;
     try {
       await navigator.clipboard.writeText(link);
-      notificar.sucesso('Link copiado', 'Envie para os garcons pelo WhatsApp');
+      notificar.sucesso('Link copiado', 'Envie para os garçons pelo WhatsApp');
     } catch {
-      notificar.erro('Nao foi possivel copiar', link);
+      notificar.erro('Não foi possível copiar', link);
     }
   }
 
   async function compartilharLinkGarcom() {
     const link = rede?.urlPreferencialGarcom;
     if (!link) return;
-    const texto = `Acesso Garcom - Espetinho do Rico: ${link}`;
+    const texto = `Acesso Garçom - Espetinho do Rico: ${link}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Acesso Garcom', text: texto, url: link });
+        await navigator.share({ title: 'Acesso Garçom', text: texto, url: link });
         return;
       } catch {
         return;
@@ -157,7 +158,7 @@ export default function Equipe({ sessao, aoSair }) {
               </span>
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-bold text-rico-dark">
-                  Acesso dos garcons
+                  Acesso dos garçons
                 </h2>
                 <p className="mt-1 text-sm font-semibold text-carvao-suave">
                   Link atual para celulares na mesma rede Wi-Fi do caixa.
@@ -202,13 +203,13 @@ export default function Equipe({ sessao, aoSair }) {
               href={rede?.urlPreferencialGarcom ?? '#/garcom'}
               className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-rico-wood/14 text-sm font-bold text-rico-dark ring-1 ring-rico-wood/30"
             >
-              <ExternalLink size={16} /> Abrir modo garcom
+              <ExternalLink size={16} /> Abrir modo garçom
             </a>
           </div>
 
           <form onSubmit={cadastrar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
             <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
-              <Users size={16} /> Novo funcionario
+              <Users size={16} /> Novo funcionário
             </h2>
             <div className="mt-4 space-y-3">
               <label className="block">
@@ -227,21 +228,21 @@ export default function Equipe({ sessao, aoSair }) {
                   onChange={(e) => alterar('papel', e.target.value)}
                   className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
                 >
-                  <option value={PAPEIS.GARCOM}>Garcom</option>
+                  <option value={PAPEIS.GARCOM}>Garçom</option>
                   <option value={PAPEIS.GERENTE}>Gerente</option>
                 </select>
               </label>
               <label className="block">
-                <span className="text-rotulo font-semibold text-rico-light/70">Digitos do PIN</span>
+                <span className="text-rotulo font-semibold text-rico-light/70">Dígitos do PIN</span>
                 <select
                   value={form.tamanhoPin}
                   onChange={(e) => alterar('tamanhoPin', e.target.value)}
                   disabled={form.papel === PAPEIS.GERENTE}
                   className="mt-1 disabled:opacity-70 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
                 >
-                  <option value={4}>4 digitos</option>
-                  <option value={5}>5 digitos</option>
-                  <option value={6}>6 digitos</option>
+                  <option value={4}>4 dígitos</option>
+                  <option value={5}>5 dígitos</option>
+                  <option value={6}>6 dígitos</option>
                 </select>
               </label>
             </div>
@@ -292,9 +293,9 @@ export default function Equipe({ sessao, aoSair }) {
           <div className="flex items-center justify-between gap-3 border-b border-rico-wood/25 px-5 py-4">
             <div>
               <h2 className="text-sm font-bold text-rico-dark">
-                Garcons e gerentes
+                Garçons e gerentes
               </h2>
-              <p className="text-sm font-semibold text-carvao-suave">{ativos} ativo(s)</p>
+              <p className="text-sm font-semibold text-carvao-suave">{plural(ativos, 'ativo', 'ativos')}</p>
             </div>
             <span className="rounded-lg bg-rico-red/10 p-2 text-rico-red">
               <ShieldCheck size={20} />
@@ -308,7 +309,7 @@ export default function Equipe({ sessao, aoSair }) {
                   <th className="px-5 py-3">Nome</th>
                   <th className="px-5 py-3">Papel</th>
                   <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3 text-right">Acoes</th>
+                  <th className="px-5 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rico-wood/18">

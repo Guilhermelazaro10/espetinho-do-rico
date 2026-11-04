@@ -171,7 +171,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
         <div className="flex flex-wrap justify-end gap-2">
           {podeAvancar && (
             <button onClick={() => onAvancar(pedido)} className="flex min-h-10 items-center gap-1 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95">
-              <CheckCircle2 size={14} /> Avancar
+              <CheckCircle2 size={14} /> Avançar
             </button>
           )}
           <button
@@ -191,7 +191,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
                 <Banknote size={14} /> Dinheiro
               </button>
               <button onClick={() => onPagar(pedido, 'cartao')} className="flex min-h-10 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar no cartão">
-                <CreditCard size={14} /> Cartao
+                <CreditCard size={14} /> Cartão
               </button>
             </>
           )}

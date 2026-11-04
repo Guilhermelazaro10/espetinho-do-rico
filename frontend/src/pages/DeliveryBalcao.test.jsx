@@ -48,7 +48,7 @@ describe('Venda rápida', () => {
     api.pedidos.vendaRapida.mockResolvedValue({ id: 77, total: 2400, troco: 2600 });
     render(<DeliveryBalcao sessao={gerente} aoSair={() => {}} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /venda rapida/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /venda rápida/i }));
     expect(screen.queryByText('Cliente')).toBeNull(); // sem cadastro
 
     const produto = await screen.findByText('Espeto de Carne');
@@ -72,7 +72,7 @@ describe('Venda rápida', () => {
 
   it('não envia sem forma de pagamento', async () => {
     render(<DeliveryBalcao sessao={gerente} aoSair={() => {}} />);
-    fireEvent.click(await screen.findByRole('button', { name: /venda rapida/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /venda rápida/i }));
     fireEvent.click(await screen.findByText('Espeto de Carne'));
     fireEvent.click(screen.getByRole('button', { name: /receber/i }));
     expect(api.pedidos.vendaRapida).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe('Venda rápida', () => {
   it('garçom não vê a venda rápida nem o botão de pausar', async () => {
     render(<DeliveryBalcao sessao={garcom} aoSair={() => {}} />);
     await screen.findByText('Espeto de Carne');
-    expect(screen.queryByRole('button', { name: /venda rapida/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /venda rápida/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /pausar delivery/i })).toBeNull();
   });
 });

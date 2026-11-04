@@ -7,11 +7,12 @@ import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { dataHoraLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
+import { plural } from '../lib/plural';
 
 const FORMAS = [
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
   { id: 'pix', rotulo: 'Pix', Icone: QrCode },
-  { id: 'cartao', rotulo: 'Cartao', Icone: CreditCard },
+  { id: 'cartao', rotulo: 'Cartão', Icone: CreditCard },
 ];
 
 export default function CaixaTurno({ sessao, aoSair }) {
@@ -30,7 +31,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
     try {
       setDados(await api.caixa.atual());
     } catch (e) {
-      notificar.erro('Caixa indisponivel', e.message);
+      notificar.erro('Caixa indisponível', e.message);
     } finally {
       setCarregando(false);
     }
@@ -52,7 +53,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
       setUltimoFechamento(null);
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel abrir', e.message);
+      notificar.erro('Não foi possível abrir', e.message);
     } finally {
       setOcupado(false);
     }
@@ -62,7 +63,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
     if (ocupado) return;
     const valor = paraCentavos(mov.valor);
     if (valor <= 0 || mov.motivo.trim().length < 3) {
-      notificar.erro('Dados incompletos', 'Informe valor e motivo (min. 3 letras)');
+      notificar.erro('Dados incompletos', 'Informe valor e motivo (mínimo 3 letras)');
       return;
     }
     setOcupado(true);
@@ -88,14 +89,14 @@ export default function CaixaTurno({ sessao, aoSair }) {
       });
       const dif = resultado.resumo.diferenca;
       setUltimoFechamento(resultado.resumo);
-      if (dif === 0) notificar.sucesso('Caixa fechado — bateu certinho!', 'Sem diferenca');
+      if (dif === 0) notificar.sucesso('Caixa fechado — bateu certinho!', 'Sem diferença');
       else if (dif > 0) notificar.brasa('Caixa fechado — sobra', `+${moeda(dif)} na gaveta`);
       else notificar.erro('Caixa fechado — falta', `${moeda(dif)} faltando`);
       setContado('');
       setObs('');
       await recarregar();
     } catch (e) {
-      notificar.erro('Nao foi possivel fechar', e.message);
+      notificar.erro('Não foi possível fechar', e.message);
     } finally {
       setOcupado(false);
     }
@@ -158,7 +159,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                       <Icone size={15} className="text-rico-red" /> {rotulo}
                     </p>
                     <p className="mt-1 text-xl font-bold text-carvao">{moeda(forma?.valor)}</p>
-                    <p className="text-xs font-semibold text-carvao-suave">{forma?.lancamentos ?? 0} lancamento(s)</p>
+                    <p className="text-xs font-semibold text-carvao-suave">{plural(forma?.lancamentos ?? 0, 'lançamento', 'lançamentos')}</p>
                   </div>
                 );
               })}
@@ -233,7 +234,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                 <Scale size={16} /> Fechar caixa
               </h2>
               <p className="mt-1 text-xs font-semibold text-carvao-suave">
-                Conte a gaveta e informe o total (conferencia cega).
+                Conte a gaveta e informe o total (conferência cega).
               </p>
               <input
                 value={contado}
@@ -245,7 +246,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
               <input
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
-                placeholder="Observacao (opcional)"
+                placeholder="Observação (opcional)"
                 className="mt-2 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
               />
               <button
@@ -274,7 +275,7 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
             <Wallet size={26} />
           </span>
           <h1 className="mt-4 font-display text-2xl">Caixa fechado</h1>
-          <p className="mt-1 text-sm text-rico-light/60">Abra o caixa com o fundo de troco para comecar o turno.</p>
+          <p className="mt-1 text-sm text-rico-light/60">Abra o caixa com o fundo de troco para começar o turno.</p>
         </div>
 
         <label className="mt-6 block text-rotulo font-semibold text-rico-wood">
@@ -303,12 +304,12 @@ function ResultadoFechamento({ resumo }) {
   const cor = dif === 0 ? 'text-ok' : dif > 0 ? 'text-rico-wood' : 'text-rico-red';
   return (
     <div className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-media">
-      <h2 className="text-sm font-bold text-carvao-claro">Ultimo fechamento</h2>
+      <h2 className="text-sm font-bold text-carvao-claro">Último fechamento</h2>
       <dl className="mt-3 space-y-1.5 text-sm">
         <div className="flex justify-between"><dt className="text-carvao-suave">Esperado</dt><dd className="font-bold text-carvao">{moeda(resumo.esperadoDinheiro)}</dd></div>
         <div className="flex justify-between"><dt className="text-carvao-suave">Contado</dt><dd className="font-bold text-carvao">{moeda(resumo.valorContado)}</dd></div>
         <div className="flex justify-between border-t border-rico-wood/20 pt-2">
-          <dt className="font-bold text-carvao">Diferenca</dt>
+          <dt className="font-bold text-carvao">Diferença</dt>
           <dd className={`font-display text-2xl ${cor}`}>
             {dif > 0 ? '+' : ''}{moeda(dif)}
           </dd>

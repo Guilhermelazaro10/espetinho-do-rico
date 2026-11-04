@@ -5,24 +5,20 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda } from '../lib/api';
-import { dataHoraLoja } from '../lib/datas';
+import { dataHoraLoja, diaMes } from '../lib/datas';
 import { notificar } from '../ui/toast';
-
-// "YYYY-MM-DD" -> "DD/MM" (data já é do fuso da loja; formata sem Date pra não deslocar o dia).
-function diaMes(dia) {
-  return `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
-}
+import { plural } from '../lib/plural';
 
 const PERIODOS = [
   { id: 'dia', rotulo: 'Hoje' },
   { id: 'semana', rotulo: 'Semana' },
-  { id: 'mes', rotulo: 'Mes' },
+  { id: 'mes', rotulo: 'Mês' },
 ];
 
 const FORMAS = [
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
   { id: 'pix', rotulo: 'Pix', Icone: QrCode },
-  { id: 'cartao', rotulo: 'Cartao', Icone: CreditCard },
+  { id: 'cartao', rotulo: 'Cartão', Icone: CreditCard },
 ];
 
 export default function Financeiro({ sessao, aoSair }) {
@@ -42,7 +38,7 @@ export default function Financeiro({ sessao, aoSair }) {
       setDados(Object.fromEntries(entradas));
       setAuditoria(Array.isArray(trilha) ? trilha : []);
     } catch (e) {
-      notificar.erro('Financeiro indisponivel', e.message);
+      notificar.erro('Financeiro indisponível', e.message);
     } finally {
       setCarregando(false);
     }
@@ -85,17 +81,17 @@ export default function Financeiro({ sessao, aoSair }) {
       <div className="space-y-5">
         <section className="grid gap-4 md:grid-cols-3">
           <ResumoCard titulo="Faturamento do dia" valor={dia?.recebido.total} Icone={CalendarDays} detalhe={dia?.rotulo} />
-          <ResumoCard titulo="Ultimos 7 dias" valor={semana?.recebido.total} Icone={TrendingUp} detalhe={semana?.rotulo} />
-          <ResumoCard titulo="Mes atual" valor={mes?.recebido.total} Icone={Landmark} detalhe={mes?.rotulo} />
+          <ResumoCard titulo="Últimos 7 dias" valor={semana?.recebido.total} Icone={TrendingUp} detalhe={semana?.rotulo} />
+          <ResumoCard titulo="Mês atual" valor={mes?.recebido.total} Icone={Landmark} detalhe={mes?.rotulo} />
         </section>
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-5 shadow-media ring-1 ring-rico-wood/10">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-bold text-carvao-claro">
-                Evolucao semanal
+                Evolução semanal
               </h2>
-              <span className="text-xs font-bold text-carvao-suave">{semana?.de} ate {semana?.ate}</span>
+              <span className="text-xs font-bold text-carvao-suave">{semana && `${diaMes(semana.de)} a ${diaMes(semana.ate)}`}</span>
             </div>
             <div
               className="mt-6 flex h-64 items-end gap-3"
@@ -131,7 +127,7 @@ export default function Financeiro({ sessao, aoSair }) {
               </p>
               <dl className="mt-4 space-y-2 text-sm">
                 <Linha rotulo="Pedidos pagos" valor={dia?.pedidosPagos.quantidade ?? 0} />
-                <Linha rotulo="Ticket medio" valor={moeda(dia?.pedidosPagos.ticketMedio)} />
+                <Linha rotulo="Ticket médio" valor={moeda(dia?.pedidosPagos.ticketMedio)} />
                 <Linha rotulo="Comandas abertas" valor={dia?.comandasAbertasAgora ?? 0} />
                 <Linha rotulo="Cancelamentos" valor={dia?.cancelados.quantidade ?? 0} />
               </dl>
@@ -147,7 +143,7 @@ export default function Financeiro({ sessao, aoSair }) {
                     </p>
                     <p className="mt-1 text-xl font-bold text-carvao">{moeda(forma?.valor)}</p>
                     <p className="text-xs font-semibold text-carvao-suave">
-                      {forma?.lancamentos ?? 0} lancamento(s)
+                      {plural(forma?.lancamentos ?? 0, 'lançamento', 'lançamentos')}
                     </p>
                   </div>
                 );
@@ -195,7 +191,7 @@ export default function Financeiro({ sessao, aoSair }) {
                   <li key={g.nome} className="flex items-center justify-between gap-3 rounded-lg bg-rico-wood/8 px-3 py-2 text-sm">
                     <span className="min-w-0 truncate font-bold text-carvao">{g.nome}</span>
                     <span className="shrink-0 font-semibold text-carvao-claro">
-                      {g.pedidos} pedido(s) · {moeda(g.total)}
+                      {plural(g.pedidos, 'pedido', 'pedidos')} · {moeda(g.total)}
                       {g.taxaServico > 0 && (
                         <span className="ml-1 text-xs text-carvao-suave">
                           (+{moeda(g.taxaServico)} taxa)

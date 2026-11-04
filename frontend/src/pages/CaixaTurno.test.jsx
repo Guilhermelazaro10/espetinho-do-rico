@@ -123,7 +123,7 @@ describe('CaixaTurno — fechamento cego', () => {
     // falta na gaveta -> alerta de erro com o valor
     await waitFor(() => expect(notificar.erro).toHaveBeenCalled());
     // e o resumo do último fechamento mostra a diferença
-    await screen.findByText('Ultimo fechamento');
+    await screen.findByText('Último fechamento');
     expect(screen.getByText('Faltou na gaveta')).toBeTruthy();
   });
 
