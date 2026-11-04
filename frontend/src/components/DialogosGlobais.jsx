@@ -70,7 +70,7 @@ export default function DialogosGlobais() {
         aria-modal="true"
         aria-label={opcoes.titulo ?? 'Confirmação'}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-flutuante"
+        className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-media"
       >
         <div className="flex items-start gap-3 px-6 pt-6">
           <span
@@ -112,7 +112,7 @@ export default function DialogosGlobais() {
           </button>
           <button
             onClick={confirmar}
-            className={`flex-1 rounded-xl py-3 text-sm font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 ${
+            className={`flex-1 rounded-xl py-3 text-sm font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 ${
               perigo ? 'bg-rico-red hover:bg-vinho-profundo' : 'bg-rico-red hover:bg-vinho-profundo'
             }`}
           >

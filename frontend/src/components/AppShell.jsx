@@ -66,7 +66,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
               alt="Espetinho do Rico"
               className="mx-auto h-auto w-44 drop-shadow-[0_8px_18px_rgb(0_0_0/0.28)]"
             />
-            <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-rico-wood">
+            <p className="mt-2 text-center text-rotulo font-semibold text-rico-wood">
               Sistema PDV
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
                 href={href}
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition ${
                   ativa
-                    ? 'bg-rico-red text-rico-light shadow-brasa'
+                    ? 'bg-rico-red text-rico-light shadow-suave'
                     : 'text-rico-light/58 hover:bg-rico-light/8 hover:text-rico-light'
                 }`}
               >
@@ -97,7 +97,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
           <div className="flex items-center justify-between">
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{sessao?.usuario?.nome}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rico-wood">
+              <p className="text-rotulo font-semibold text-rico-wood">
                 {sessao?.usuario?.papel}
               </p>
             </div>
@@ -135,7 +135,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
       </div>
 
       <nav
-        className="safe-area-bottom-nav fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pt-2 shadow-flutuante backdrop-blur lg:hidden"
+        className="safe-area-bottom-nav fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-rico-wood/25 bg-rico-light/96 px-2 pt-2 shadow-media backdrop-blur lg:hidden"
         aria-label="Navegacao principal"
       >
         {itens.map(({ href, rotulo, Icone }) => {
@@ -144,7 +144,7 @@ export default function AppShell({ children, titulo, acoes = null, sessao, aoSai
             <a
               key={href}
               href={href}
-              className={`flex min-h-[62px] min-w-[74px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-[10px] font-extrabold transition active:scale-95 ${
+              className={`flex min-h-[62px] min-w-[74px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-xs font-extrabold transition active:scale-95 ${
                 ativa ? 'text-rico-red' : 'text-carvao-suave'
               }`}
             >

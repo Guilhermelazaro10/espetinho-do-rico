@@ -156,7 +156,7 @@ export default function Equipe({ sessao, aoSair }) {
                 <Smartphone size={22} />
               </span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-rico-dark">
+                <h2 className="text-sm font-bold text-rico-dark">
                   Acesso dos garcons
                 </h2>
                 <p className="mt-1 text-sm font-semibold text-carvao-suave">
@@ -166,7 +166,7 @@ export default function Equipe({ sessao, aoSair }) {
             </div>
 
             <div className="mt-4 rounded-xl bg-rico-dark p-3 text-rico-light">
-              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+              <p className="flex items-center gap-2 text-rotulo font-semibold text-rico-wood">
                 <Wifi size={14} /> Rede atual
               </p>
               <p className="mt-1 break-all text-sm font-bold">
@@ -184,7 +184,7 @@ export default function Equipe({ sessao, aoSair }) {
                 type="button"
                 onClick={copiarLinkGarcom}
                 disabled={!rede?.urlPreferencialGarcom}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-rico-red text-sm font-bold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40"
+                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-rico-red text-sm font-bold text-rico-light shadow-suave transition active:scale-[0.98] disabled:opacity-40"
               >
                 <Copy size={17} /> Copiar
               </button>
@@ -207,12 +207,12 @@ export default function Equipe({ sessao, aoSair }) {
           </div>
 
           <form onSubmit={cadastrar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
               <Users size={16} /> Novo funcionario
             </h2>
             <div className="mt-4 space-y-3">
               <label className="block">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Nome</span>
+                <span className="text-rotulo font-semibold text-rico-light/70">Nome</span>
                 <input
                   value={form.nome}
                   onChange={(e) => alterar('nome', e.target.value)}
@@ -221,7 +221,7 @@ export default function Equipe({ sessao, aoSair }) {
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Papel</span>
+                <span className="text-rotulo font-semibold text-rico-light/70">Papel</span>
                 <select
                   value={form.papel}
                   onChange={(e) => alterar('papel', e.target.value)}
@@ -232,7 +232,7 @@ export default function Equipe({ sessao, aoSair }) {
                 </select>
               </label>
               <label className="block">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Digitos do PIN</span>
+                <span className="text-rotulo font-semibold text-rico-light/70">Digitos do PIN</span>
                 <select
                   value={form.tamanhoPin}
                   onChange={(e) => alterar('tamanhoPin', e.target.value)}
@@ -245,13 +245,13 @@ export default function Equipe({ sessao, aoSair }) {
                 </select>
               </label>
             </div>
-            <button className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0">
+            <button className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0">
               <Plus size={17} /> Cadastrar
             </button>
           </form>
 
           <form onSubmit={trocarMeuPin} className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-suave ring-1 ring-rico-wood/10">
-            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-dark">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-dark">
               <KeyRound size={16} className="text-rico-red" /> Trocar meu PIN
             </h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -278,8 +278,8 @@ export default function Equipe({ sessao, aoSair }) {
           </form>
 
           {pinGerado && (
-            <div className="rounded-xl bg-brasa-gradiente p-5 text-white shadow-brasa">
-              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/75">
+            <div className="rounded-xl bg-brasa-gradiente p-5 text-white shadow-suave">
+              <p className="flex items-center gap-2 text-rotulo font-semibold text-white/75">
                 <KeyRound size={15} /> PIN gerado
               </p>
               <p className="mt-2 font-display text-5xl">{pinGerado.pin}</p>
@@ -291,7 +291,7 @@ export default function Equipe({ sessao, aoSair }) {
         <section className="rounded-xl bg-white/80 shadow-media ring-1 ring-rico-wood/25">
           <div className="flex items-center justify-between gap-3 border-b border-rico-wood/25 px-5 py-4">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-rico-dark">
+              <h2 className="text-sm font-bold text-rico-dark">
                 Garcons e gerentes
               </h2>
               <p className="text-sm font-semibold text-carvao-suave">{ativos} ativo(s)</p>
@@ -303,7 +303,7 @@ export default function Equipe({ sessao, aoSair }) {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left">
-              <thead className="bg-rico-wood/12 text-xs font-bold uppercase tracking-wider text-rico-dark">
+              <thead className="bg-rico-wood/12 text-rotulo font-semibold text-rico-dark">
                 <tr>
                   <th className="px-5 py-3">Nome</th>
                   <th className="px-5 py-3">Papel</th>
@@ -318,7 +318,7 @@ export default function Equipe({ sessao, aoSair }) {
                     <td className="px-5 py-4 text-sm font-semibold text-carvao-claro">{usuario.papel}</td>
                     <td className="px-5 py-4">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                        usuario.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-carvao/10 text-carvao-suave'
+                        usuario.ativo ? 'bg-ok-fundo text-ok' : 'bg-carvao/10 text-carvao-suave'
                       }`}>
                         {usuario.ativo ? 'Ativo' : 'Desligado'}
                       </span>

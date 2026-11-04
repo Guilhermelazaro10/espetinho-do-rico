@@ -28,9 +28,9 @@ export function situacaoDe(status, tipo) {
 }
 
 export const VISUAL_SIT = {
-  amber: { bg: 'bg-amber-100', tx: 'text-amber-600', Icone: Clock },
+  amber: { bg: 'bg-atencao-fundo', tx: 'text-atencao', Icone: Clock },
   sky: { bg: 'bg-sky-100', tx: 'text-sky-600', Icone: Loader2 },
-  emerald: { bg: 'bg-emerald-100', tx: 'text-emerald-600', Icone: CheckCircle2 },
+  emerald: { bg: 'bg-ok-fundo', tx: 'text-ok', Icone: CheckCircle2 },
   red: { bg: 'bg-rico-red/10', tx: 'text-rico-red', Icone: Ban },
 };
 
@@ -42,7 +42,7 @@ export function TopoLoja({ loja }) {
         <img src="/logo_clean.png" alt={loja?.nome} className="h-12 w-auto shrink-0" />
         <div className="min-w-0">
           <p className="truncate font-display text-xl leading-tight text-rico-dark">{loja?.nome}</p>
-          {loja?.endereco && <p className="truncate text-[11px] font-semibold text-carvao-suave">{loja.endereco}</p>}
+          {loja?.endereco && <p className="truncate text-xs font-semibold text-carvao-suave">{loja.endereco}</p>}
         </div>
       </div>
     </header>
@@ -61,14 +61,14 @@ export function BottomNav({ vista, setVista, qtdPedidos }) {
         <button
           key={id}
           onClick={() => setVista(id)}
-          className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-extrabold transition ${
+          className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-extrabold transition ${
             vista === id ? 'text-rico-red' : 'text-carvao-suave'
           }`}
         >
           <Icone size={22} strokeWidth={vista === id ? 2.7 : 2} />
           {rotulo}
           {badge > 0 && (
-            <span className="absolute right-1/4 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rico-red px-1 text-[9px] font-bold text-white">
+            <span className="absolute right-1/4 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rico-red px-1 text-xs font-bold text-white">
               {badge}
             </span>
           )}
@@ -107,7 +107,7 @@ export function MeusPedidos({ lista, onIrAoCardapio }) {
         <div className="rounded-2xl bg-white p-8 text-center ring-1 ring-rico-wood/15">
           <ClipboardList size={32} className="mx-auto text-carvao-suave" />
           <p className="mt-3 text-sm font-semibold text-carvao-suave">Você ainda não fez pedidos por aqui.</p>
-          <button onClick={onIrAoCardapio} className="mt-4 rounded-xl bg-rico-red px-5 py-2.5 font-extrabold text-rico-light shadow-brasa">
+          <button onClick={onIrAoCardapio} className="mt-4 rounded-xl bg-rico-red px-5 py-2.5 font-extrabold text-rico-light shadow-suave">
             Ver cardápio
           </button>
         </div>
@@ -164,7 +164,7 @@ export function Perfil({ form, set, aoSalvar }) {
       </div>
       <button
         onClick={aoSalvar}
-        className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-base font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98]"
+        className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition active:scale-[0.98]"
       >
         <CheckCircle2 size={18} /> Salvar
       </button>
@@ -176,7 +176,7 @@ export function Campo({ rotulo, valor, aoMudar, placeholder, inputMode, textarea
   const comum = 'mt-1 w-full rounded-2xl bg-white px-4 py-3 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/25 placeholder:text-carvao/35 focus:ring-rico-red';
   return (
     <label className="block">
-      <span className="text-xs font-bold uppercase tracking-wider text-carvao-suave">{rotulo}</span>
+      <span className="text-rotulo font-semibold text-carvao-suave">{rotulo}</span>
       {textarea ? (
         <textarea value={valor} onChange={(e) => aoMudar(e.target.value)} placeholder={placeholder} rows={2} maxLength={200} className={comum} />
       ) : (
@@ -190,8 +190,8 @@ export function Sacola({ fechar, linhas, total, totalItens, mudarQtd, mudarObs }
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/45" role="dialog" aria-modal="true">
       <button className="absolute inset-0 h-full w-full cursor-default" onClick={fechar} aria-label="Fechar" />
-      <section className="relative max-h-[82dvh] w-full rounded-t-[1.6rem] bg-rico-light text-carvao shadow-flutuante">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-[1.6rem] border-b border-rico-wood/25 bg-rico-light px-4 py-4">
+      <section className="relative max-h-[82dvh] w-full rounded-t-3xl bg-rico-light text-carvao shadow-media">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-3xl border-b border-rico-wood/25 bg-rico-light px-4 py-4">
           <h2 className="font-display text-2xl text-rico-dark">{totalItens} {totalItens === 1 ? 'item' : 'itens'} · {moeda(total)}</h2>
           <button onClick={fechar} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-carvao/8 active:scale-95" aria-label="Fechar">
             <X size={22} />
@@ -208,7 +208,7 @@ export function Sacola({ fechar, linhas, total, totalItens, mudarQtd, mudarObs }
                       {l.quantidade === 1 ? <Trash2 size={19} /> : <Minus size={19} />}
                     </button>
                     <span className="w-7 text-center text-xl font-extrabold">{l.quantidade}</span>
-                    <button onClick={() => mudarQtd(i, 1)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa active:scale-95" aria-label="Aumentar">
+                    <button onClick={() => mudarQtd(i, 1)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-suave active:scale-95" aria-label="Aumentar">
                       <Plus size={19} />
                     </button>
                   </div>

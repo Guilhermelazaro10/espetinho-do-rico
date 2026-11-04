@@ -34,7 +34,7 @@ export default function TecladoNumerico({ aoDigitar, aoApagar, aoLimpar, tema = 
           {tecla === 'apagar' ? (
             <Delete size={24} />
           ) : tecla === 'limpar' ? (
-            <span className="text-sm font-bold uppercase opacity-60">Limpar</span>
+            <span className="text-sm font-bold opacity-60">Limpar</span>
           ) : (
             tecla
           )}

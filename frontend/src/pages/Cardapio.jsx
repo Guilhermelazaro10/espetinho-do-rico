@@ -126,13 +126,13 @@ export default function Cardapio({ sessao, aoSair }) {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <section className="space-y-4">
           <form onSubmit={salvar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
               <UtensilsCrossed size={16} className="text-rico-wood" /> {form.id ? 'Editar produto' : 'Novo produto'}
             </h2>
             <div className="mt-4 space-y-3">
               <Campo rotulo="Nome" valor={form.nome} onChange={(v) => alterar('nome', v)} required />
               <label className="block">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Categoria</span>
+                <span className="text-rotulo font-semibold text-rico-light/70">Categoria</span>
                 <input
                   value={form.categoria}
                   onChange={(e) => alterar('categoria', e.target.value)}
@@ -149,7 +149,7 @@ export default function Cardapio({ sessao, aoSair }) {
               <Campo rotulo="Preco" valor={form.preco} onChange={(v) => alterar('preco', v)} required />
             </div>
             <div className="mt-4 flex gap-2">
-              <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0">
+              <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0">
                 {form.id ? <Save size={17} /> : <Plus size={17} />} Salvar
               </button>
               {form.id && (
@@ -191,7 +191,7 @@ export default function Cardapio({ sessao, aoSair }) {
                   <p className="text-sm font-semibold text-carvao-suave">{produto.categoria}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                  produto.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  produto.ativo ? 'bg-ok-fundo text-ok' : 'bg-atencao-fundo text-atencao'
                 }`}>
                   {produto.ativo ? 'Disponivel' : 'Esgotado'}
                 </span>
@@ -207,7 +207,7 @@ export default function Cardapio({ sessao, aoSair }) {
                 {produto.ativo ? (
                   <button
                     onClick={() => desativar(produto)}
-                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-amber-100 px-3.5 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-200 active:scale-95"
+                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-atencao-fundo px-3.5 py-2 text-xs font-bold text-atencao transition hover:bg-atencao-borda active:scale-95"
                     title="Marcar como esgotado (some do cardapio e dos garcons)"
                   >
                     <EyeOff size={14} /> Esgotou
@@ -215,7 +215,7 @@ export default function Cardapio({ sessao, aoSair }) {
                 ) : (
                   <button
                     onClick={() => reativar(produto)}
-                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-emerald-800 active:scale-95"
+                    className="flex min-h-10 items-center gap-1.5 rounded-lg bg-ok px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-ok-escuro active:scale-95"
                     title="Voltar a vender"
                   >
                     <RotateCcw size={14} /> Disponibilizar
@@ -233,7 +233,7 @@ export default function Cardapio({ sessao, aoSair }) {
 function Campo({ rotulo, valor, onChange, required = false }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">{rotulo}</span>
+      <span className="text-rotulo font-semibold text-rico-light/70">{rotulo}</span>
       <input
         value={valor}
         onChange={(e) => onChange(e.target.value)}

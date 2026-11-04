@@ -12,12 +12,12 @@ import { STATUS_MESA } from '../lib/constantes';
  */
 const ESTILOS = {
   [STATUS_MESA.LIVRE]: {
-    borda: 'border-rico-wood/45 hover:border-emerald-500/70',
+    borda: 'border-rico-wood/45 hover:border-ok/70',
     fundo: 'bg-white/85',
     Icone: Armchair,
-    icone: 'text-emerald-600',
+    icone: 'text-ok',
     rotulo: 'Livre',
-    chip: 'bg-emerald-100 text-emerald-700',
+    chip: 'bg-ok-fundo text-ok',
   },
   [STATUS_MESA.OCUPADA]: {
     borda: 'border-rico-red hover:border-rico-red',
@@ -71,7 +71,7 @@ export default function MesaCard({ mesa, total, desde, selecionada, aoClicar }) 
     >
       <div className="flex w-full items-center justify-between">
         <Icone size={20} className={estilo.icone} strokeWidth={2.25} />
-        <span className="rounded-full border border-rico-wood/35 bg-rico-light px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-rico-dark">
+        <span className="rounded-full border border-rico-wood/35 bg-rico-light px-2.5 py-1 text-xs font-extrabold text-rico-dark">
           {estilo.rotulo}
         </span>
       </div>
@@ -83,7 +83,7 @@ export default function MesaCard({ mesa, total, desde, selecionada, aoClicar }) 
         {/* Há quanto tempo a mesa está com a comanda aberta — mesa esperando
             demais salta aos olhos no mapa sem precisar abrir a conta. */}
         {ocupada && desde && (
-          <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-carvao-suave">
+          <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-carvao-suave">
             <Clock size={11} /> {desdeMin(desde)}
           </span>
         )}

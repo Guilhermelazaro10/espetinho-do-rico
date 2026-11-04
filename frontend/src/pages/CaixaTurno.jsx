@@ -130,16 +130,16 @@ export default function CaixaTurno({ sessao, aoSair }) {
           <section className="space-y-4">
             <div className="rounded-xl bg-carvao p-6 text-rico-light shadow-media">
               <div className="flex items-center justify-between">
-                <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.25em] text-rico-light/60">
+                <p className="flex items-center gap-2 text-rotulo font-semibold text-rico-light/60">
                   <Unlock size={14} /> Caixa aberto
                 </p>
-                <span className="text-xs font-semibold text-rico-light/50">
+                <span className="text-xs font-semibold text-rico-light/70">
                   desde {dataHoraLoja(caixa.abertoEm, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <p className="mt-1 text-xs font-semibold text-rico-light/45">por {caixa.abertoPor}</p>
 
-              <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+              <p className="mt-4 text-rotulo font-semibold text-rico-wood">
                 Esperado em dinheiro na gaveta
               </p>
               <p className="font-display text-5xl text-rico-wood">{moeda(resumo.esperadoDinheiro)}</p>
@@ -154,7 +154,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                 const forma = resumo.porForma?.[id];
                 return (
                   <div key={id} className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10">
-                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-carvao-suave">
+                    <p className="flex items-center gap-2 text-rotulo font-semibold text-carvao-suave">
                       <Icone size={15} className="text-rico-red" /> {rotulo}
                     </p>
                     <p className="mt-1 text-xl font-bold text-carvao">{moeda(forma?.valor)}</p>
@@ -167,7 +167,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
             {/* Movimentos do turno */}
             {caixa.movimentos?.length > 0 && (
               <div className="rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-carvao-suave">Movimentos</h3>
+                <h3 className="text-rotulo font-semibold text-carvao-suave">Movimentos</h3>
                 <ul className="mt-2 divide-y divide-rico-wood/15">
                   {caixa.movimentos.map((m) => (
                     <li key={m.id} className="flex items-center justify-between gap-3 py-2 text-sm">
@@ -175,11 +175,11 @@ export default function CaixaTurno({ sessao, aoSair }) {
                         {m.tipo === 'sangria' ? (
                           <ArrowDownCircle size={15} className="text-rico-red" />
                         ) : (
-                          <ArrowUpCircle size={15} className="text-emerald-600" />
+                          <ArrowUpCircle size={15} className="text-ok" />
                         )}
                         {m.motivo}
                       </span>
-                      <strong className={m.tipo === 'sangria' ? 'text-rico-red' : 'text-emerald-700'}>
+                      <strong className={m.tipo === 'sangria' ? 'text-rico-red' : 'text-ok'}>
                         {m.tipo === 'sangria' ? '−' : '+'}{moeda(m.valor)}
                       </strong>
                     </li>
@@ -192,14 +192,14 @@ export default function CaixaTurno({ sessao, aoSair }) {
           {/* Ações: sangria/suprimento e fechamento */}
           <aside className="space-y-4">
             <div className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-rico-light/70">Sangria / Suprimento</h2>
+              <h2 className="text-sm font-bold text-rico-light/70">Sangria / Suprimento</h2>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {['sangria', 'suprimento'].map((tipo) => (
                   <button
                     key={tipo}
                     onClick={() => setMov((m) => ({ ...m, tipo }))}
                     className={`rounded-lg py-2 text-sm font-bold capitalize transition ${
-                      mov.tipo === tipo ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-rico-light/10 text-rico-light/60'
+                      mov.tipo === tipo ? 'bg-rico-red text-rico-light shadow-suave' : 'bg-rico-light/10 text-rico-light/60'
                     }`}
                   >
                     {tipo}
@@ -229,7 +229,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
             </div>
 
             <div className="rounded-xl border-2 border-rico-red/30 bg-white/85 p-5 shadow-media">
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-red">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-rico-red">
                 <Scale size={16} /> Fechar caixa
               </h2>
               <p className="mt-1 text-xs font-semibold text-carvao-suave">
@@ -251,7 +251,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
               <button
                 onClick={fechar}
                 disabled={ocupado || contado.trim() === ''}
-                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {ocupado ? <Loader2 size={18} className="animate-spin" /> : <LockKeyhole size={17} />} Fechar caixa
               </button>
@@ -270,14 +270,14 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
 
       <div className="rounded-xl bg-carvao p-6 text-rico-light shadow-media">
         <div className="flex flex-col items-center text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rico-red shadow-suave">
             <Wallet size={26} />
           </span>
           <h1 className="mt-4 font-display text-2xl">Caixa fechado</h1>
           <p className="mt-1 text-sm text-rico-light/60">Abra o caixa com o fundo de troco para comecar o turno.</p>
         </div>
 
-        <label className="mt-6 block text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+        <label className="mt-6 block text-rotulo font-semibold text-rico-wood">
           Fundo de troco
         </label>
         <input
@@ -289,7 +289,7 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
         <button
           onClick={abrir}
           disabled={ocupado}
-          className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40"
+          className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40"
         >
           {ocupado ? <Loader2 size={20} className="animate-spin" /> : <Unlock size={19} />} Abrir caixa
         </button>
@@ -300,15 +300,15 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
 
 function ResultadoFechamento({ resumo }) {
   const dif = resumo.diferenca;
-  const cor = dif === 0 ? 'text-emerald-700' : dif > 0 ? 'text-rico-wood' : 'text-rico-red';
+  const cor = dif === 0 ? 'text-ok' : dif > 0 ? 'text-rico-wood' : 'text-rico-red';
   return (
     <div className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-media">
-      <h2 className="text-sm font-bold uppercase tracking-wider text-carvao-claro">Ultimo fechamento</h2>
+      <h2 className="text-sm font-bold text-carvao-claro">Ultimo fechamento</h2>
       <dl className="mt-3 space-y-1.5 text-sm">
         <div className="flex justify-between"><dt className="text-carvao-suave">Esperado</dt><dd className="font-bold text-carvao">{moeda(resumo.esperadoDinheiro)}</dd></div>
         <div className="flex justify-between"><dt className="text-carvao-suave">Contado</dt><dd className="font-bold text-carvao">{moeda(resumo.valorContado)}</dd></div>
         <div className="flex justify-between border-t border-rico-wood/20 pt-2">
-          <dt className="font-bold uppercase tracking-wide text-carvao">Diferenca</dt>
+          <dt className="font-bold text-carvao">Diferenca</dt>
           <dd className={`font-display text-2xl ${cor}`}>
             {dif > 0 ? '+' : ''}{moeda(dif)}
           </dd>

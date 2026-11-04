@@ -60,7 +60,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgb(63_43_29/0.22)_40%,rgb(63_43_29/0.72)_100%)]" />
 
       <main className="relative z-10 w-full max-w-sm">
-        <section className="rounded-xl border border-rico-wood/45 bg-rico-dark/72 p-6 shadow-flutuante backdrop-blur-md">
+        <section className="rounded-xl border border-rico-wood/45 bg-rico-dark/72 p-6 shadow-media backdrop-blur-md">
           <img
             src="/logo_clean.png"
             alt="Espetinho do Rico"
@@ -68,7 +68,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
           />
 
           <div className="mt-6 text-center">
-            <p className="inline-flex items-center gap-2 rounded-full border border-rico-wood/40 bg-rico-light/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-rico-wood">
+            <p className="inline-flex items-center gap-2 rounded-full border border-rico-wood/40 bg-rico-light/10 px-3 py-1 text-xs font-bold text-rico-wood">
               <ShieldCheck size={13} /> Acesso ao PDV
             </p>
             <h1 className="mt-3 font-display text-2xl text-rico-light">Digite seu PIN</h1>
@@ -80,7 +80,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
                 key={i}
                 className={`h-3.5 rounded-full transition-all duration-200 ${
                   i < pin.length
-                    ? 'w-8 bg-rico-red shadow-brasa'
+                    ? 'w-8 bg-rico-red shadow-suave'
                     : i < 4
                       ? 'w-3.5 bg-rico-light/20'
                       : 'w-3.5 bg-rico-light/10'
@@ -101,7 +101,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
           <button
             onClick={entrar}
             disabled={pin.length < 4 || entrando}
-            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-brasa transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {entrando ? (
               <>
@@ -118,7 +118,7 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
         {aoTrocarServidor && (
           <button
             onClick={aoTrocarServidor}
-            className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-rico-wood/35 px-3 py-1.5 text-[11px] font-bold text-rico-light/60 transition hover:bg-rico-light/10 hover:text-rico-light"
+            className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-rico-wood/35 px-3 py-1.5 text-xs font-bold text-rico-light/60 transition hover:bg-rico-light/10 hover:text-rico-light"
           >
             <ServerCog size={13} /> Trocar servidor
           </button>

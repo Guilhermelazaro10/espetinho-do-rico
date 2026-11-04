@@ -54,7 +54,7 @@ export default function Cozinha() {
         <div className="flex min-w-0 items-center gap-2">
           <ChefHat size={18} className="text-brasa-clara" />
           <span className="truncate font-display text-lg leading-none">Espetinho do Rico</span>
-          <span className="rounded-full bg-brasa-gradiente px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          <span className="rounded-full bg-brasa-gradiente px-2 py-0.5 text-xs font-bold text-white">
             Cozinha
           </span>
         </div>
@@ -73,7 +73,7 @@ export default function Cozinha() {
           pedidos={naFila}
           rotuloAcao="Iniciar preparo"
           IconeAcao={Flame}
-          corBotao="bg-brasa-gradiente text-white shadow-brasa"
+          corBotao="bg-brasa-gradiente text-white shadow-suave"
           aoAgir={avancar}
         />
         <Coluna
@@ -100,7 +100,7 @@ export function tituloPedido(pedido) {
 function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgir }) {
   return (
     <section>
-      <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-rico-light/50">
+      <h2 className="mb-3 text-rotulo font-semibold text-rico-light/70">
         {titulo}
       </h2>
       {pedidos.length === 0 ? (
@@ -135,7 +135,7 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
                       <span className="font-bold text-brasa-clara">{item.quantidade}×</span>{' '}
                       <span className="font-semibold">{item.produto.nome}</span>
                       {item.observacao && (
-                        <p className="ml-5 flex items-center gap-1 text-[13px] font-bold uppercase tracking-wide text-brasa-clara">
+                        <p className="ml-5 flex items-center gap-1 text-rotulo font-bold text-brasa-clara">
                           <AlertTriangle size={13} className="shrink-0" /> {item.observacao}
                         </p>
                       )}

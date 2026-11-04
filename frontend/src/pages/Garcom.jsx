@@ -187,13 +187,13 @@ export default function Garcom({ aoSair }) {
                 <ArrowLeft size={22} />
               </button>
             ) : (
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-suave">
                 <Flame size={22} />
               </span>
             )}
             <div className="min-w-0">
               <p className="truncate font-display text-lg leading-tight">Espetinho do Rico</p>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-rico-wood">
+              <p className="text-rotulo font-semibold text-rico-wood">
                 {etapa === 'cardapio' && mesa ? `Mesa ${String(mesa.numero).padStart(2, '0')}` : 'Modo garcom'}
               </p>
             </div>
@@ -203,7 +203,7 @@ export default function Garcom({ aoSair }) {
             {tamanhoFila > 0 && (
               <button
                 onClick={sincronizar}
-                className="flex h-11 items-center gap-1.5 rounded-2xl bg-brasa-gradiente px-3 text-xs font-extrabold text-white shadow-brasa active:scale-95"
+                className="flex h-11 items-center gap-1.5 rounded-2xl bg-brasa-gradiente px-3 text-xs font-extrabold text-white shadow-suave active:scale-95"
                 aria-label={`${tamanhoFila} pedidos na fila offline`}
               >
                 <CloudOff size={17} /> {tamanhoFila}
@@ -268,8 +268,8 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
         </button>
       )}
 
-      <div className="rounded-[1.35rem] border border-rico-light/10 bg-rico-light/[0.06] p-4 shadow-flutuante">
-        <p className="text-center text-xs font-extrabold uppercase tracking-[0.28em] text-rico-light/50">
+      <div className="rounded-3xl border border-rico-light/10 bg-rico-light/[0.06] p-4 shadow-media">
+        <p className="text-center text-rotulo font-semibold text-rico-light/70">
           Digite a mesa
         </p>
 
@@ -290,7 +290,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
               {tecla === 'apagar' ? (
                 <Delete size={26} />
               ) : tecla === 'limpar' ? (
-                <span className="text-sm font-extrabold uppercase text-rico-light/65">Limpar</span>
+                <span className="text-sm font-extrabold text-rico-light/65">Limpar</span>
               ) : (
                 tecla
               )}
@@ -301,7 +301,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
         <button
           onClick={abrirMesa}
           disabled={!numero || abrindo}
-          className="mt-5 flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+          className="mt-5 flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
         >
           {abrindo ? (
             <>
@@ -343,10 +343,10 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
   return (
     <>
       <main ref={listaRef} className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 pb-44 pt-4">
-        <section className="rounded-[1.35rem] bg-rico-red p-4 shadow-brasa">
+        <section className="rounded-3xl bg-rico-red p-4 shadow-suave">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.24em] text-rico-light/65">
+              <p className="text-rotulo font-semibold text-rico-light/65">
                 Atendendo agora
               </p>
               <h1 className="font-display text-4xl leading-none">
@@ -369,7 +369,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar item"
-            className="min-w-0 flex-1 bg-transparent text-base font-bold text-rico-light outline-none placeholder:text-rico-light/35"
+            className="min-w-0 flex-1 bg-transparent text-base font-bold text-rico-light outline-none placeholder:text-rico-light/70"
           />
           {busca && (
             <button onClick={() => setBusca('')} className="rounded-xl p-2 text-rico-light/60 active:bg-rico-light/10" aria-label="Limpar busca">
@@ -388,7 +388,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
                 onClick={() => aoMudarCategoria(nome)}
                 className={`flex min-h-16 min-w-[128px] items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold transition active:scale-95 ${
                   ativa
-                    ? 'bg-brasa-gradiente text-white shadow-brasa'
+                    ? 'bg-brasa-gradiente text-white shadow-suave'
                     : 'bg-rico-light/8 text-rico-light/72 ring-1 ring-rico-light/10'
                 }`}
               >
@@ -412,7 +412,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
                   <span data-nome-produto className="block text-base font-extrabold text-rico-light">{produto.nome}</span>
                   <span className="mt-1 block text-sm font-bold text-rico-wood">{moeda(produto.preco)}</span>
                 </span>
-                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
+                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rico-red shadow-suave">
                   <Plus size={24} strokeWidth={2.7} />
                   {qtd > 0 && (
                     <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rico-wood px-1 text-xs font-extrabold text-rico-dark ring-2 ring-carvao">
@@ -454,7 +454,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
           <button
             onClick={acoes.enviarPedido}
             disabled={linhas.length === 0 || enviando}
-            className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+            className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {enviando ? (
               <>
@@ -488,11 +488,11 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/45" role="dialog" aria-modal="true">
       <button className="absolute inset-0 h-full w-full cursor-default" onClick={fechar} aria-label="Fechar comanda" />
-      <section className="relative max-h-[82dvh] w-full rounded-t-[1.6rem] bg-rico-light text-carvao shadow-flutuante">
-        <header className="sticky top-0 z-10 rounded-t-[1.6rem] border-b border-rico-wood/25 bg-rico-light px-4 py-4">
+      <section className="relative max-h-[82dvh] w-full rounded-t-3xl bg-rico-light text-carvao shadow-media">
+        <header className="sticky top-0 z-10 rounded-t-3xl border-b border-rico-wood/25 bg-rico-light px-4 py-4">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-carvao-suave">
+              <p className="text-rotulo font-semibold text-carvao-suave">
                 Comanda
               </p>
               <h2 className="font-display text-2xl text-rico-dark">
@@ -526,7 +526,7 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
                     <span className="w-8 text-center text-xl font-extrabold">{linha.quantidade}</span>
                     <button
                       onClick={() => acoes.mudarQuantidade(i, 1)}
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa active:scale-95"
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-suave active:scale-95"
                       aria-label="Aumentar"
                     >
                       <Plus size={20} />

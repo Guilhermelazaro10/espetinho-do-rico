@@ -11,9 +11,9 @@ import { notificar } from '../ui/toast';
 const ROTULO_TIPO = { cupom: 'Cupom', pre_conta: 'Pré-conta', gaveta: 'Gaveta', teste: 'Teste' };
 
 const STATUS = {
-  pendente: { rotulo: 'Na fila', classe: 'bg-amber-100 text-amber-700', Icone: Clock, girar: false },
+  pendente: { rotulo: 'Na fila', classe: 'bg-atencao-fundo text-atencao', Icone: Clock, girar: false },
   processando: { rotulo: 'Imprimindo', classe: 'bg-sky-100 text-sky-700', Icone: Loader2, girar: true },
-  impresso: { rotulo: 'Impresso', classe: 'bg-emerald-100 text-emerald-700', Icone: CheckCircle2, girar: false },
+  impresso: { rotulo: 'Impresso', classe: 'bg-ok-fundo text-ok', Icone: CheckCircle2, girar: false },
   erro: { rotulo: 'Erro', classe: 'bg-rico-red/10 text-rico-red', Icone: AlertTriangle, girar: false },
 };
 
@@ -32,7 +32,7 @@ function Cartao({ rotulo, valor, classe, Icone }) {
   return (
     <div className="rounded-xl bg-white/80 p-4 shadow-suave ring-1 ring-rico-wood/20">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">{rotulo}</span>
+        <span className="text-rotulo font-semibold text-carvao-suave">{rotulo}</span>
         <span className={`rounded-lg p-1.5 ${classe}`}><Icone size={16} /></span>
       </div>
       <p className="mt-1 font-display text-3xl text-rico-dark">{valor ?? 0}</p>
@@ -105,14 +105,14 @@ export default function Impressora({ sessao, aoSair }) {
         {/* Status do agente */}
         <section
           className={`rounded-xl p-5 shadow-media ring-1 ${
-            online ? 'bg-emerald-50 ring-emerald-200' : 'bg-rico-red/5 ring-rico-red/25'
+            online ? 'bg-ok-fundo ring-ok-borda' : 'bg-rico-red/5 ring-rico-red/25'
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <span
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-suave ${
-                  online ? 'bg-emerald-500' : 'bg-rico-red'
+                  online ? 'bg-ok' : 'bg-rico-red'
                 }`}
               >
                 {online ? <Wifi size={24} /> : <WifiOff size={24} />}
@@ -129,7 +129,7 @@ export default function Impressora({ sessao, aoSair }) {
             <button
               onClick={imprimirTeste}
               disabled={testando}
-              className="flex items-center gap-2 rounded-xl bg-rico-red px-4 py-3 text-sm font-extrabold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-rico-red px-4 py-3 text-sm font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
             >
               {testando ? <Loader2 size={18} className="animate-spin" /> : <FlaskConical size={18} />}
               Imprimir teste
@@ -157,7 +157,7 @@ export default function Impressora({ sessao, aoSair }) {
         <section className="rounded-xl bg-white/80 shadow-media ring-1 ring-rico-wood/25">
           <div className="flex items-center gap-2 border-b border-rico-wood/25 px-5 py-4">
             <Printer size={18} className="text-rico-red" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-rico-dark">Últimos cupons</h2>
+            <h2 className="text-sm font-bold text-rico-dark">Últimos cupons</h2>
           </div>
 
           {recentes.length === 0 ? (

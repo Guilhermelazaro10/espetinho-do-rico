@@ -10,12 +10,12 @@ import { CheckCircle2, XCircle, Flame, Info, X } from 'lucide-react';
 const TIPOS = {
   sucesso: {
     Icone: CheckCircle2,
-    icone: 'text-emerald-400',
-    barra: 'bg-emerald-500',
+    icone: 'text-ok-claro',
+    barra: 'bg-ok',
   },
   erro: {
     Icone: XCircle,
-    icone: 'text-red-400',
+    icone: 'text-erro-claro',
     barra: 'bg-rico-red-claro',
   },
   info: {
@@ -36,7 +36,7 @@ function ToastCard({ t, tipo, titulo, mensagem }) {
     <div
       className={`${t.visible ? 'animate-toast-in' : 'animate-toast-out'}
         pointer-events-auto flex w-80 overflow-hidden rounded-xl bg-carvao
-        shadow-flutuante ring-1 ring-rico-light/10`}
+        shadow-media ring-1 ring-rico-light/10`}
     >
       <div className={`w-1.5 shrink-0 ${barra}`} />
       <div className="flex flex-1 items-start gap-3 px-4 py-3.5">
@@ -44,7 +44,7 @@ function ToastCard({ t, tipo, titulo, mensagem }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-rico-light">{titulo}</p>
           {mensagem && (
-            <p className="mt-0.5 text-[13px] leading-snug text-rico-light/70">{mensagem}</p>
+            <p className="mt-0.5 text-rotulo leading-snug text-rico-light/70">{mensagem}</p>
           )}
         </div>
         <button

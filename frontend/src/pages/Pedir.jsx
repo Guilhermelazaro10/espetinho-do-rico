@@ -247,7 +247,7 @@ export default function Pedir() {
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-rico-light px-6 text-center">
         <AlertTriangle size={36} className="text-rico-red" />
         <p className="font-bold text-carvao">Não foi possível carregar o cardápio.</p>
-        <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-rico-red px-5 py-3 font-extrabold text-rico-light shadow-brasa">
+        <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-rico-red px-5 py-3 font-extrabold text-rico-light shadow-suave">
           <RefreshCw size={18} /> Tentar de novo
         </button>
       </div>
@@ -264,7 +264,7 @@ export default function Pedir() {
     const Icone = vis.Icone;
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-rico-light px-6 text-center">
-        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-carvao-suave">Pedido #{pedidoFeito.id}</p>
+        <p className="text-rotulo font-semibold text-carvao-suave">Pedido #{pedidoFeito.id}</p>
         <span className={`flex h-20 w-20 items-center justify-center rounded-full ${vis.bg} ${vis.tx}`}>
           <Icone size={42} className={s?.cor === 'sky' ? 'animate-spin' : ''} />
         </span>
@@ -284,7 +284,7 @@ export default function Pedir() {
     const wpp = linkWhatsApp();
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-rico-light px-6 text-center">
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-ok-fundo text-ok">
           <CheckCircle2 size={44} />
         </span>
         <div>
@@ -294,7 +294,7 @@ export default function Pedir() {
         {wpp ? (
           <>
             <p className="max-w-xs text-sm font-semibold text-carvao-suave">Toque abaixo para mandar a confirmação no WhatsApp da loja:</p>
-            <a href={wpp} target="_blank" rel="noopener noreferrer" className="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-4 text-lg font-extrabold text-white shadow-brasa active:scale-[0.98]">
+            <a href={wpp} target="_blank" rel="noopener noreferrer" className="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-ok px-5 py-4 text-lg font-extrabold text-white shadow-suave active:scale-[0.98]">
               <MessageCircle size={22} /> Enviar no WhatsApp
             </a>
           </>
@@ -335,9 +335,9 @@ export default function Pedir() {
 
         <main className="mx-auto w-full max-w-md px-4 py-5">
           {fechada && loja?.proximaAbertura && (
-            <div className="mb-4 flex items-start gap-2 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">
-              <Clock size={18} className="mt-0.5 shrink-0 text-amber-600" />
-              <p className="text-sm font-semibold text-amber-800">
+            <div className="mb-4 flex items-start gap-2 rounded-2xl bg-atencao-fundo p-3 ring-1 ring-atencao-borda">
+              <Clock size={18} className="mt-0.5 shrink-0 text-atencao" />
+              <p className="text-sm font-semibold text-atencao">
                 Loja fechada agora. Seu pedido será <strong>agendado para {loja.proximaAbertura}</strong>.
               </p>
             </div>
@@ -356,13 +356,13 @@ export default function Pedir() {
                   className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-4 py-4 font-extrabold transition disabled:cursor-not-allowed disabled:opacity-45 ${tipo === id ? 'border-rico-red bg-rico-red/8 text-rico-red' : 'border-rico-wood/25 bg-white text-carvao-suave'}`}
                 >
                   <Icone size={24} /> {rotulo}
-                  {indisponivel && <span className="text-[11px] font-bold uppercase tracking-wide">Pausado hoje</span>}
+                  {indisponivel && <span className="text-rotulo font-semibold">Pausado hoje</span>}
                 </button>
               );
             })}
           </div>
           {deliveryPausado && (
-            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800 ring-1 ring-amber-200">
+            <p className="mt-3 rounded-2xl bg-atencao-fundo p-3 text-sm font-semibold text-atencao ring-1 ring-atencao-borda">
               Hoje estamos atendendo só <strong>retirada no local</strong>. Faça seu pedido e busque aqui.
             </p>
           )}
@@ -373,7 +373,7 @@ export default function Pedir() {
               <div>
                 <p className="text-sm font-extrabold text-carvao">Retire na loja</p>
                 <p className="text-sm font-semibold text-carvao-suave">{loja.endereco}</p>
-                <p className="mt-1 text-xs font-bold text-emerald-700">Retirada · grátis</p>
+                <p className="mt-1 text-xs font-bold text-ok">Retirada · grátis</p>
               </div>
             </div>
           )}
@@ -386,7 +386,7 @@ export default function Pedir() {
             )}
             {tipo === 'DELIVERY' && bairros.length > 0 && (
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-wider text-carvao-suave">Bairro</span>
+                <span className="text-rotulo font-semibold text-carvao-suave">Bairro</span>
                 <select value={form.bairro} onChange={(e) => set('bairro', e.target.value)} className="mt-1 w-full rounded-2xl bg-white px-4 py-3 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/25 focus:ring-rico-red">
                   <option value="">Selecione o bairro</option>
                   {bairros.map((b) => (
@@ -399,7 +399,7 @@ export default function Pedir() {
 
           {/* forma de pagamento */}
           <div className="mt-5">
-            <span className="text-xs font-bold uppercase tracking-wider text-carvao-suave">Forma de pagamento</span>
+            <span className="text-rotulo font-semibold text-carvao-suave">Forma de pagamento</span>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {PAGAMENTOS.map(({ id, rotulo, Icone }) => (
                 <button key={id} onClick={() => set('pagamento', id)} className={`flex flex-col items-center gap-1 rounded-2xl border-2 px-2 py-3 text-sm font-extrabold transition ${form.pagamento === id ? 'border-rico-red bg-rico-red/8 text-rico-red' : 'border-rico-wood/25 bg-white text-carvao-suave'}`}>
@@ -432,7 +432,7 @@ export default function Pedir() {
                 <p className="text-xs font-bold text-carvao-suave">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</p>
                 <p className="font-display text-2xl text-rico-dark">{moeda(totalFinal)}</p>
               </div>
-              <button onClick={finalizar} disabled={enviando || carrinho.length === 0} className="flex min-h-[58px] flex-1 items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40">
+              <button onClick={finalizar} disabled={enviando || carrinho.length === 0} className="flex min-h-[58px] flex-1 items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:opacity-40">
                 {enviando ? <><Loader2 size={22} className="animate-spin" /> Enviando</> : (fechada ? 'Agendar pedido' : 'Confirmar pedido')}
               </button>
             </div>
@@ -489,7 +489,7 @@ export default function Pedir() {
 
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           {categorias.map((c) => (
-            <button key={c.nome} onClick={() => setCategoria(c.nome)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${c.nome === categoria ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-white text-carvao-suave ring-1 ring-rico-wood/25'}`}>
+            <button key={c.nome} onClick={() => setCategoria(c.nome)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${c.nome === categoria ? 'bg-rico-red text-rico-light shadow-suave' : 'bg-white text-carvao-suave ring-1 ring-rico-wood/25'}`}>
               {c.nome}
             </button>
           ))}
@@ -505,7 +505,7 @@ export default function Pedir() {
                     <span data-nome-produto className="block text-base font-extrabold text-carvao">{produto.nome}</span>
                     <span className="mt-0.5 block text-sm font-bold text-rico-red">{moeda(produto.preco)}</span>
                   </span>
-                  <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-brasa">
+                  <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rico-red text-rico-light shadow-suave">
                     <Plus size={22} strokeWidth={2.7} />
                     {qtd > 0 && (
                       <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rico-wood px-1 text-xs font-extrabold text-rico-dark ring-2 ring-rico-light">
@@ -535,7 +535,7 @@ export default function Pedir() {
                 {moeda(subtotal)} <ChevronRight size={17} className="text-carvao/35" />
               </span>
             </button>
-            <button onClick={() => setEtapa('checkout')} disabled={fechada && !loja?.proximaAbertura} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-brasa transition active:scale-[0.98] disabled:opacity-40">
+            <button onClick={() => setEtapa('checkout')} disabled={fechada && !loja?.proximaAbertura} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:opacity-40">
               {fechada ? (loja?.proximaAbertura ? 'Agendar pedido' : 'Loja fechada no momento') : 'Avançar para a entrega'}
             </button>
           </div>

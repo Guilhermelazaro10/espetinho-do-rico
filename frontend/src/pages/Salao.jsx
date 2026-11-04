@@ -88,7 +88,7 @@ export default function Salao({ sessao, aoSair }) {
       {/* No celular a legenda encolhe para bolinha+número, mas nunca some */}
       <div className="flex items-center gap-2.5 text-xs font-bold text-carvao-claro sm:gap-4">
         <span className="flex items-center gap-1.5" title="Mesas livres">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-ok" />
           <span className="hidden sm:inline">Livres ·</span> {resumo.livres}
         </span>
         <span className="flex items-center gap-1.5" title="Mesas ocupadas">
@@ -103,7 +103,7 @@ export default function Salao({ sessao, aoSair }) {
       {gerente && (
         <button
           onClick={adicionarMesa}
-          className="flex min-h-10 items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0"
+          className="flex min-h-10 items-center gap-1.5 rounded-lg bg-rico-red px-3 py-2 text-xs font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0"
         >
           <Plus size={15} /> Mesa
         </button>

@@ -34,7 +34,7 @@ function ContatoCliente({ pedido }) {
           href={linkWhats(pedido.clienteTelefone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-ok underline-offset-2 hover:underline"
         >
           <Phone size={11} /> {pedido.clienteTelefone}
         </a>
@@ -57,7 +57,7 @@ function LinhaPagamentoPretendido({ pedido, className }) {
   if (!pedido.pagamentoPretendido) return null;
   if (pedido.pagoAntecipado) {
     return (
-      <p className={`${className} inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700`}>
+      <p className={`${className} inline-flex items-center gap-1 rounded-full bg-ok-fundo px-2 py-0.5 text-ok`}>
         <CheckCircle2 size={12} /> Pago no {ROTULO_PAGAMENTO[pedido.formaPagamento] ?? pedido.formaPagamento}
       </p>
     );
@@ -75,7 +75,7 @@ function LinhaPagamentoPretendido({ pedido, className }) {
 
 export function PendenteCard({ pedido, onAceitar, onRecusar }) {
   return (
-    <article className="animate-chegada-online rounded-xl border border-emerald-200 bg-white p-3 shadow-suave">
+    <article className="animate-chegada-online rounded-xl border border-ok-borda bg-white p-3 shadow-suave">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-display text-lg text-carvao">
@@ -87,7 +87,7 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
         <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
       </div>
       {pedido.agendadoPara && (
-        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-extrabold text-amber-700">
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-atencao-fundo px-2.5 py-1 text-xs font-extrabold text-atencao">
           <Clock size={12} /> Agendado: {pedido.agendadoPara}
         </p>
       )}
@@ -103,7 +103,7 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           onClick={() => onAceitar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white shadow-suave transition hover:bg-emerald-800 active:scale-[0.98]"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-ok px-3 py-2.5 text-sm font-bold text-white shadow-suave transition hover:bg-ok-escuro active:scale-[0.98]"
         >
           <CheckCircle2 size={16} /> Aceitar
         </button>
@@ -127,7 +127,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
           <p className="font-display text-xl text-carvao">
             #{pedido.id}
             {pedido.origem === 'online' && (
-              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">
+              <span className="ml-2 rounded-full bg-ok-fundo px-2 py-0.5 align-middle text-xs font-extrabold text-ok">
                 Online
               </span>
             )}
@@ -140,7 +140,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
           </p>
           <ContatoCliente pedido={pedido} />
           {pedido.agendadoPara && (
-            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-atencao-fundo px-2 py-0.5 text-xs font-extrabold text-atencao">
               <Clock size={12} /> Agendado: {pedido.agendadoPara}
             </p>
           )}
@@ -149,7 +149,7 @@ export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCance
           <span className="rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">
             {STATUS_ROTULO[pedido.status] ?? pedido.status}
           </span>
-          <span className="flex items-center gap-1 text-[11px] font-semibold text-carvao-suave">
+          <span className="flex items-center gap-1 text-xs font-semibold text-carvao-suave">
             <Clock size={11} /> {desdeMin(pedido.criadoEm, agora)}
           </span>
         </div>

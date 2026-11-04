@@ -88,7 +88,7 @@ export default function ConfigServidor({ aoConectar }) {
         <ToasterGlobal />
         <span className="relative flex h-20 w-20 items-center justify-center">
           <span className="absolute inset-0 animate-ping rounded-full bg-rico-red/30" />
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-rico-red shadow-brasa">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-rico-red shadow-suave">
             <Radar size={34} className="text-rico-light" />
           </span>
         </span>
@@ -102,7 +102,7 @@ export default function ConfigServidor({ aoConectar }) {
                 style={{ width: `${pct(progresso)}%` }}
               />
             </div>
-            <p className="mt-1.5 text-center text-[11px] text-rico-light/40">
+            <p className="mt-1.5 text-center text-xs text-rico-light/40">
               {progresso.feitos} de {progresso.total} endereços
             </p>
           </div>
@@ -117,9 +117,9 @@ export default function ConfigServidor({ aoConectar }) {
       <ToasterGlobal />
 
       <main className="relative z-10 w-full max-w-sm">
-        <section className="rounded-2xl border border-rico-wood/45 bg-rico-dark/70 p-6 shadow-flutuante backdrop-blur-md">
+        <section className="rounded-2xl border border-rico-wood/45 bg-rico-dark/70 p-6 shadow-media backdrop-blur-md">
           <div className="flex flex-col items-center text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rico-red shadow-brasa">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rico-red shadow-suave">
               <ServerCog size={26} className="text-rico-light" />
             </span>
             <h1 className="mt-4 font-display text-2xl text-rico-light">Conectar ao PDV</h1>
@@ -145,13 +145,13 @@ export default function ConfigServidor({ aoConectar }) {
             )}
           </button>
 
-          <div className="my-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-rico-light/35">
+          <div className="my-4 flex items-center gap-3 text-rotulo font-semibold text-rico-light/70">
             <span className="h-px flex-1 bg-rico-wood/25" /> ou manual <span className="h-px flex-1 bg-rico-wood/25" />
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+              <label className="text-rotulo font-semibold text-rico-wood">
                 IP do servidor
               </label>
               <input
@@ -165,7 +165,7 @@ export default function ConfigServidor({ aoConectar }) {
             </div>
 
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-rico-wood">
+              <label className="text-rotulo font-semibold text-rico-wood">
                 Porta
               </label>
               <input
@@ -182,7 +182,7 @@ export default function ConfigServidor({ aoConectar }) {
           <button
             onClick={conectarManual}
             disabled={!ip.trim() || testando || varrendo}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-brasa transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {testando ? (
               <>
@@ -195,7 +195,7 @@ export default function ConfigServidor({ aoConectar }) {
             )}
           </button>
 
-          <div className="mt-5 flex items-start gap-2 rounded-xl border border-rico-wood/25 bg-rico-light/5 px-3 py-2.5 text-[12px] leading-relaxed text-rico-light/60">
+          <div className="mt-5 flex items-start gap-2 rounded-xl border border-rico-wood/25 bg-rico-light/5 px-3 py-2.5 text-xs leading-relaxed text-rico-light/60">
             <Info size={15} className="mt-0.5 shrink-0 text-rico-wood" />
             <span>
               No desktop, veja o IPv4 com <b>ipconfig</b> (algo como{' '}

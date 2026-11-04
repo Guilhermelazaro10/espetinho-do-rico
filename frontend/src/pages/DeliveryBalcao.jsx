@@ -350,7 +350,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
           className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition disabled:opacity-50 ${
             deliveryAtivo
               ? 'bg-white text-carvao ring-1 ring-rico-wood/35 hover:ring-rico-red/40'
-              : 'bg-amber-500 text-white shadow-suave hover:bg-amber-600'
+              : 'bg-atencao text-white shadow-suave hover:bg-atencao-escuro'
           }`}
         >
           {deliveryAtivo ? <CirclePause size={14} /> : <CirclePlay size={14} />}
@@ -370,23 +370,23 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
     <AppShell titulo="Delivery e Balcao" acoes={acoes} sessao={sessao} aoSair={aoSair}>
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Em andamento</p>
+          <p className="text-rotulo font-semibold text-carvao-suave">Em andamento</p>
           <p className="font-display text-2xl text-rico-dark">{pedidos.length}</p>
         </div>
-        <div className={`rounded-xl px-4 py-3 shadow-suave ring-1 ${pendentes.length ? 'bg-emerald-50 ring-emerald-200' : 'bg-white/80 ring-rico-wood/20'}`}>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Novos online</p>
+        <div className={`rounded-xl px-4 py-3 shadow-suave ring-1 ${pendentes.length ? 'bg-ok-fundo ring-ok-borda' : 'bg-white/80 ring-rico-wood/20'}`}>
+          <p className="text-rotulo font-semibold text-carvao-suave">Novos online</p>
           <p className="font-display text-2xl text-rico-dark">{pendentes.length}</p>
         </div>
         <div className="col-span-2 rounded-xl bg-white/80 px-4 py-3 shadow-suave ring-1 ring-rico-wood/20 sm:col-span-1">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">Em aberto</p>
+          <p className="text-rotulo font-semibold text-carvao-suave">Em aberto</p>
           <p className="font-display text-2xl text-rico-dark">{moeda(totalAberto)}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-5">
           {pendentes.length > 0 && (
-            <section className="rounded-xl border-2 border-emerald-300 bg-emerald-50/80 p-4 shadow-media">
-              <h2 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-emerald-700">
+            <section className="rounded-xl border-2 border-ok-borda bg-ok-fundo/80 p-4 shadow-media">
+              <h2 className="flex items-center gap-2 text-sm font-extrabold text-ok">
                 <BellRing size={16} /> Novos pedidos online ({pendentes.length})
               </h2>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -398,9 +398,9 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
           )}
 
           {!deliveryAtivo && (
-            <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
-              <CirclePause size={18} className="mt-0.5 shrink-0 text-amber-600" />
-              <p className="text-sm font-semibold text-amber-800">
+            <div className="flex items-start gap-2 rounded-xl bg-atencao-fundo px-4 py-3 ring-1 ring-atencao-borda">
+              <CirclePause size={18} className="mt-0.5 shrink-0 text-atencao" />
+              <p className="text-sm font-semibold text-atencao">
                 <strong>Delivery pausado.</strong> O cardápio online está aceitando só retirada.
                 {gerente ? ' Use o botão no topo para reativar.' : ''}
               </p>
@@ -440,7 +440,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                       key={c}
                       onClick={() => setCatAtiva(c)}
                       className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition active:scale-95 ${
-                        c === catAtiva ? 'bg-rico-red text-rico-light shadow-brasa' : 'bg-white text-carvao-claro ring-1 ring-rico-wood/25 hover:ring-rico-red/35'
+                        c === catAtiva ? 'bg-rico-red text-rico-light shadow-suave' : 'bg-white text-carvao-claro ring-1 ring-rico-wood/25 hover:ring-rico-red/35'
                       }`}
                     >
                       {c}
@@ -481,7 +481,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
             </section>
 
             <aside className="rounded-xl bg-rico-dark p-4 text-rico-light shadow-media">
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rico-light/70">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
                 {rapida ? <Zap size={16} /> : <ReceiptText size={16} />} {rapida ? 'Venda rapida' : 'Novo pedido'}
               </h2>
               <div className="mt-4 space-y-3">
@@ -502,7 +502,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                     <Input rotulo="Endereco" valor={form.clienteEndereco} onChange={(v) => alterarForm('clienteEndereco', v)} />
                     {bairros.length > 0 && (
                       <label className="block">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Bairro</span>
+                        <span className="text-rotulo font-semibold text-rico-light/70">Bairro</span>
                         <select
                           value={form.bairro}
                           onChange={(e) => selecionarBairro(e.target.value)}
@@ -520,7 +520,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 )}
 
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">Pagamento</span>
+                  <span className="text-rotulo font-semibold text-rico-light/70">Pagamento</span>
                   <div className="mt-1 grid grid-cols-3 gap-1.5">
                     {PAGAMENTOS.map(({ id, rotulo, Icone }) => (
                       <button
@@ -621,14 +621,14 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
                 {rapida && troco != null && troco > 0 && (
                   <div className="mt-1 flex justify-between text-lg font-bold">
                     <span>Troco</span>
-                    <span className="text-emerald-300">{moeda(troco)}</span>
+                    <span className="text-ok-claro">{moeda(troco)}</span>
                   </div>
                 )}
               </div>
               <button
                 onClick={criarPedido}
                 disabled={enviando}
-                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-brasa transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {enviando ? (
                   <>
@@ -649,7 +649,7 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
         </section>
 
         <section>
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-carvao-suave">
+          <h2 className="mb-3 text-rotulo font-semibold text-carvao-suave">
             Em andamento
           </h2>
           <div className="space-y-3">
@@ -682,7 +682,7 @@ function Aba({ ativa, onClick, Icone, children }) {
     <button
       onClick={onClick}
       className={`flex min-h-10 items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${
-        ativa ? 'bg-rico-red text-rico-light shadow-brasa' : 'text-carvao-claro hover:bg-carvao/5'
+        ativa ? 'bg-rico-red text-rico-light shadow-suave' : 'text-carvao-claro hover:bg-carvao/5'
       }`}
     >
       <Icone size={16} /> {children}
@@ -693,14 +693,14 @@ function Aba({ ativa, onClick, Icone, children }) {
 function Input({ rotulo, valor, onChange, onBlur, dica }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-rico-light/50">{rotulo}</span>
+      <span className="text-rotulo font-semibold text-rico-light/70">{rotulo}</span>
       <input
         value={valor}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
       />
-      {dica && <span className="mt-0.5 block text-[10px] font-semibold text-rico-light/40">{dica}</span>}
+      {dica && <span className="mt-0.5 block text-xs font-semibold text-rico-light/40">{dica}</span>}
     </label>
   );
 }

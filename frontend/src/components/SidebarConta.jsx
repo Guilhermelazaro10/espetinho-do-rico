@@ -241,7 +241,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
         aria-label={mesa ? `Conta da mesa ${mesa.numero}` : 'Conta da mesa'}
         tabIndex={-1}
         className={`fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col bg-rico-light
-          shadow-flutuante outline-none transition-transform duration-300
+          shadow-media outline-none transition-transform duration-300
           ${aberta ? 'translate-x-0' : 'translate-x-full'}`}
         aria-hidden={!aberta}
       >
@@ -250,7 +250,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
             <header className="bg-rico-red px-6 py-5 text-rico-light">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-rico-light/70">
+                  <p className="flex items-center gap-1.5 text-rotulo font-semibold text-rico-light/70">
                     {mesa.status === STATUS_MESA.AGUARDANDO_PAGAMENTO ? (
                       <>
                         <Clock size={12} className="shrink-0" /> Aguardando pagamento
@@ -279,7 +279,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                 <p className="py-10 text-center text-sm text-carvao-suave">Carregando conta…</p>
               ) : comandas.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
-                  <Armchair size={44} className="text-emerald-500/40" />
+                  <Armchair size={44} className="text-ok/40" />
                   <p className="mt-3 font-bold text-carvao-claro">Mesa livre</p>
                   <p className="mt-1 text-sm text-carvao-suave">Nenhum consumo registrado.</p>
                   {gerente && mesa.status === STATUS_MESA.LIVRE && (
@@ -296,7 +296,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                   {comandas.map((pedido) => (
                     <section key={pedido.id} className="rounded-xl border border-rico-wood/25 bg-white/75 p-4 shadow-suave">
                       <div className="mb-2 flex items-center justify-between">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-carvao-suave">
+                        <h3 className="flex items-center gap-1.5 text-rotulo font-semibold text-carvao-suave">
                           <Receipt size={13} /> Comanda #{pedido.id}
                           <span className="font-normal normal-case">
                             ·{' '}
@@ -331,7 +331,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
 
                       {cancelandoId === pedido.id && (
                         <div className="mb-3 rounded-xl border border-rico-red/30 bg-rico-red/5 p-3">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-rico-red">
+                          <label className="text-rotulo font-semibold text-rico-red">
                             Motivo do cancelamento
                           </label>
                           <input
@@ -402,7 +402,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                                 {item.quantidade > 1 && (
                                   <button
                                     onClick={() => removerItem(pedido.id, item, 1)}
-                                    className="rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
+                                    className="rounded-md bg-atencao-fundo px-2 py-1 text-xs font-bold text-atencao transition hover:bg-atencao-borda"
                                     title="Remover só 1 unidade"
                                   >
                                     −1
@@ -433,13 +433,13 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
 
                   {/* Pagamentos parciais já registrados */}
                   {conta.pagamentosParciais.length > 0 && (
-                    <section className="rounded-xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
-                      <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                    <section className="rounded-xl bg-ok-fundo p-3 ring-1 ring-ok-borda">
+                      <h3 className="flex items-center gap-1.5 text-rotulo font-semibold text-ok">
                         <CircleDollarSign size={13} /> Pagamentos parciais
                       </h3>
                       <ul className="mt-1.5 space-y-1">
                         {conta.pagamentosParciais.map((p) => (
-                          <li key={p.id} className="flex justify-between text-[13px] font-semibold text-emerald-800">
+                          <li key={p.id} className="flex justify-between text-rotulo font-semibold text-ok">
                             <span className="capitalize">{p.forma}</span>
                             <span>{moeda(p.valor)}</span>
                           </li>
@@ -457,7 +457,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                 {/* Seletor de destino da transferência (mesa inteira ou item) */}
                 {transferindo !== null && (
                   <div className="mb-3 rounded-xl border border-sky-300 bg-sky-50 p-3">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-sky-700">
+                    <label className="text-rotulo font-semibold text-sky-700">
                       {transferindo === 'mesa'
                         ? 'Transferir a conta inteira para:'
                         : 'Transferir o item para:'}
@@ -535,7 +535,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                       <button
                         onClick={alternarTaxa}
                         disabled={!gerente}
-                        className={`flex items-center gap-2 rounded-lg px-2 py-1 text-[13px]
+                        className={`flex items-center gap-2 rounded-lg px-2 py-1 text-rotulo
                           font-bold transition disabled:cursor-not-allowed ${
                             conta.taxaAtiva
                               ? 'bg-madeira-gradiente text-rico-dark shadow-suave'
@@ -549,14 +549,14 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                     <dd className="font-semibold">{conta.taxaAtiva ? moeda(conta.taxa) : '—'}</dd>
                   </div>
                   {conta.pago > 0 && (
-                    <div className="flex justify-between text-emerald-700">
+                    <div className="flex justify-between text-ok">
                       <dt className="font-semibold">Pago parcialmente</dt>
                       <dd className="font-semibold">− {moeda(conta.pago)}</dd>
                     </div>
                   )}
                   <div className="mt-3 rounded-xl border border-rico-wood/35 bg-white px-4 py-3 shadow-suave">
                     <div className="flex items-baseline justify-between">
-                      <dt className="font-bold uppercase tracking-wide text-carvao">Saldo devedor</dt>
+                      <dt className="font-bold text-carvao">Saldo devedor</dt>
                       <dd className="font-display text-3xl text-rico-red">{moeda(saldo)}</dd>
                     </div>
                   </div>
@@ -576,7 +576,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                           className={`flex flex-col items-center gap-1 rounded-xl border py-3
                             text-sm font-bold transition active:scale-[0.97] ${
                               forma === id
-                                ? 'border-rico-red bg-rico-red text-rico-light shadow-brasa'
+                                ? 'border-rico-red bg-rico-red text-rico-light shadow-suave'
                                 : 'border-rico-wood/65 bg-white text-carvao-claro hover:border-rico-red/45'
                             }`}
                         >
@@ -588,7 +588,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
 
                     {forma && (
                       <div className="mt-3 rounded-xl bg-white p-3 shadow-suave ring-1 ring-rico-wood/30">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">
+                        <label className="text-rotulo font-semibold text-carvao-suave">
                           Valor recebido em {FORMAS.find((f) => f.id === forma).rotulo}
                         </label>
                         <div className="mt-1 flex items-center gap-3">
@@ -604,7 +604,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                           />
                         </div>
                         <p
-                          className={`mt-1 text-[13px] font-bold ${
+                          className={`mt-1 text-rotulo font-bold ${
                             valorInvalido ? 'text-rico-red' : 'text-carvao-suave'
                           }`}
                         >
@@ -618,7 +618,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                         </p>
                         {/* Dividir igualmente: preenche o valor com a parte de cada um */}
                         <div className="mt-2 flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-carvao-suave">
+                          <span className="text-rotulo font-semibold text-carvao-suave">
                             Dividir:
                           </span>
                           {[2, 3, 4].map((n) => (
@@ -641,7 +641,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                       onClick={lancarPagamento}
                       disabled={!forma || valorCentavos <= 0 || valorInvalido || processando}
                       className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl
-                        bg-rico-red py-3.5 text-base font-bold text-rico-light shadow-brasa transition
+                        bg-rico-red py-3.5 text-base font-bold text-rico-light shadow-suave transition
                         hover:bg-vinho-profundo active:scale-[0.99]
                         disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                     >
@@ -657,7 +657,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                     </button>
                   </>
                 ) : (
-                  <p className="mt-3 rounded-xl bg-carvao/5 px-3 py-2.5 text-center text-[13px] font-semibold text-carvao-suave">
+                  <p className="mt-3 rounded-xl bg-carvao/5 px-3 py-2.5 text-center text-rotulo font-semibold text-carvao-suave">
                     Pagamento é processado pelo gerente no caixa
                   </p>
                 )}
