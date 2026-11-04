@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { api, moeda } from '../lib/api';
 import { dataLoja } from '../lib/datas';
+import CampoBase from '../ui/Campo';
 
 /*
  * Partes do cardápio online (/cardapio): topo da loja, navegação inferior,
@@ -172,17 +173,18 @@ export function Perfil({ form, set, aoSalvar }) {
   );
 }
 
-export function Campo({ rotulo, valor, aoMudar, placeholder, inputMode, textarea }) {
-  const comum = 'mt-1 w-full rounded-2xl bg-white px-4 py-3 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/25 placeholder:text-carvao/35 focus:ring-rico-red';
+export function Campo({ rotulo, valor, aoMudar, placeholder, inputMode, textarea, ...resto }) {
   return (
-    <label className="block">
-      <span className="text-rotulo font-semibold text-carvao-suave">{rotulo}</span>
-      {textarea ? (
-        <textarea value={valor} onChange={(e) => aoMudar(e.target.value)} placeholder={placeholder} rows={2} maxLength={200} className={comum} />
-      ) : (
-        <input value={valor} onChange={(e) => aoMudar(e.target.value)} placeholder={placeholder} inputMode={inputMode} maxLength={80} className={comum} />
-      )}
-    </label>
+    <CampoBase
+      rotulo={rotulo}
+      como={textarea ? 'textarea' : 'input'}
+      value={valor}
+      onChange={(e) => aoMudar(e.target.value)}
+      placeholder={placeholder}
+      inputMode={inputMode}
+      maxLength={textarea ? 200 : 80}
+      {...resto}
+    />
   );
 }
 

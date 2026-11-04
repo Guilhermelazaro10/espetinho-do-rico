@@ -10,6 +10,7 @@ import { ehGerente, TIPOS_PEDIDO } from '../lib/constantes';
 import { notificar } from '../ui/toast';
 import { pedirTexto, confirmar } from '../lib/dialogos';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
+import CampoBase from '../ui/Campo';
 
 const FORM_VAZIO = {
   clienteNome: '', clienteTelefone: '', clienteEndereco: '', bairro: '',
@@ -690,17 +691,16 @@ function Aba({ ativa, onClick, Icone, children }) {
   );
 }
 
-function Input({ rotulo, valor, onChange, onBlur, dica }) {
+function Input({ rotulo, valor, onChange, onBlur, dica, ...resto }) {
   return (
-    <label className="block">
-      <span className="text-rotulo font-semibold text-rico-light/70">{rotulo}</span>
-      <input
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
-      />
-      {dica && <span className="mt-0.5 block text-xs font-semibold text-rico-light/40">{dica}</span>}
-    </label>
+    <CampoBase
+      tom="escuro"
+      rotulo={rotulo}
+      value={valor}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+      dica={dica}
+      {...resto}
+    />
   );
 }

@@ -98,6 +98,34 @@
     card-entrada 0.55s cubic-bezier(0.22, 1, 0.36, 1),
     pulso-novo 1.3s ease-out 0.4s 1;
 
+  /* Sheet: resposta a uma ação (abrir). Ease-out exponencial, curto. */
+  --animate-sheet-sobe: sheet-sobe 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sheet-lateral: sheet-lateral 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sheet-centro: sheet-centro 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fundo-entra: fundo-entra 0.2s ease-out;
+
+  @keyframes sheet-sobe {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes sheet-lateral {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheet-centro {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes fundo-entra {
+    from {
+      opacity: 0;
+    }
+  }
+
   @keyframes card-entrada {
     0% {
       opacity: 0;

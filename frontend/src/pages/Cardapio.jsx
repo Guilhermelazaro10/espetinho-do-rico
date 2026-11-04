@@ -4,6 +4,7 @@ import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
+import CampoBase from '../ui/Campo';
 
 const FORM_INICIAL = { id: null, nome: '', categoria: '', preco: '' };
 
@@ -232,14 +233,6 @@ export default function Cardapio({ sessao, aoSair }) {
 
 function Campo({ rotulo, valor, onChange, required = false }) {
   return (
-    <label className="block">
-      <span className="text-rotulo font-semibold text-rico-light/70">{rotulo}</span>
-      <input
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
-      />
-    </label>
+    <CampoBase tom="escuro" rotulo={rotulo} value={valor} onChange={(e) => onChange(e.target.value)} required={required} />
   );
 }
