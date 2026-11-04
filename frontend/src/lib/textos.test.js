@@ -25,3 +25,16 @@ describe('diaMes', () => {
     expect(diaMes('2026-01-05T03:00:00.000Z')).toBe('05/01');
   });
 });
+
+describe('moedaCurta (rótulo de gráfico)', async () => {
+  const { moedaCurta } = await import('./api');
+  it('abaixo de mil mostra reais inteiros', () => {
+    expect(moedaCurta(85000)).toBe('R$ 850');
+    expect(moedaCurta(0)).toBe('R$ 0');
+  });
+  it('de mil em diante usa "mil" com uma casa até 10 mil', () => {
+    expect(moedaCurta(120000)).toBe('R$ 1,2 mil');
+    expect(moedaCurta(100000)).toBe('R$ 1 mil');
+    expect(moedaCurta(1549000)).toBe('R$ 15 mil');
+  });
+});

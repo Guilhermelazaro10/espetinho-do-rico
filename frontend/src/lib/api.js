@@ -139,6 +139,16 @@ export function moeda(centavos) {
   );
 }
 
+// Formato curto para rótulo de gráfico: "R$ 850", "R$ 1,2 mil", "R$ 15 mil".
+// Só exibição (arredonda); conta de dinheiro continua em centavos inteiros.
+export function moedaCurta(centavos) {
+  const reais = (centavos ?? 0) / 100;
+  if (Math.abs(reais) < 1000) return `R$ ${Math.round(reais)}`;
+  const mil = reais / 1000;
+  const casas = Math.abs(mil) < 10 ? 1 : 0;
+  return `R$ ${mil.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas })} mil`;
+}
+
 // Converte texto em reais ("12,50") para centavos inteiros (1250)
 export function paraCentavos(texto) {
   const numero = Number(String(texto).replace(/\./g, '').replace(',', '.'));

@@ -9,6 +9,7 @@ import { dataHoraLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 import { plural } from '../lib/plural';
 import AcaoTopo from '../ui/AcaoTopo';
+import Campo from '../ui/Campo';
 
 const FORMAS = [
   { id: 'dinheiro', rotulo: 'Dinheiro', Icone: Banknote },
@@ -123,20 +124,23 @@ export default function CaixaTurno({ sessao, aoSair }) {
           <section className="space-y-4">
             <div className="rounded-xl bg-carvao p-6 text-rico-light shadow-media">
               <div className="flex items-center justify-between">
-                <p className="flex items-center gap-2 text-rotulo font-semibold text-rico-light/60">
+                <p className="flex items-center gap-2 text-rotulo font-semibold text-rico-light/80">
                   <Unlock size={14} /> Caixa aberto
                 </p>
                 <span className="text-xs font-semibold text-rico-light/70">
                   desde {dataHoraLoja(caixa.abertoEm, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-semibold text-rico-light/45">por {caixa.abertoPor}</p>
+              <p className="mt-1 text-xs font-semibold text-rico-light/75">
+                {/* O servidor grava "Nome (GERENTE)": só a exibição vira sentence case */}
+                por {String(caixa.abertoPor ?? '').replace('(GERENTE)', '(Gerente)').replace('(GARCOM)', '(Garçom)')}
+              </p>
 
               <p className="mt-4 text-rotulo font-semibold text-rico-wood">
                 Esperado em dinheiro na gaveta
               </p>
-              <p className="font-display text-5xl text-rico-wood">{moeda(resumo.esperadoDinheiro)}</p>
-              <p className="mt-1 text-xs text-rico-light/45">
+              <p className="break-words font-display text-4xl text-rico-wood tabular-nums sm:text-5xl">{moeda(resumo.esperadoDinheiro)}</p>
+              <p className="mt-1 text-xs text-rico-light/75 tabular-nums">
                 Fundo {moeda(caixa.fundoAbertura)} + dinheiro {moeda(resumo.recebidoDinheiro)} + suprimentos{' '}
                 {moeda(resumo.suprimentos)} − sangrias {moeda(resumo.sangrias)}
               </p>
@@ -150,7 +154,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                     <p className="flex items-center gap-2 text-rotulo font-semibold text-carvao-suave">
                       <Icone size={15} className="text-rico-red" /> {rotulo}
                     </p>
-                    <p className="mt-1 text-xl font-bold text-carvao">{moeda(forma?.valor)}</p>
+                    <p className="mt-1 text-xl font-bold text-carvao tabular-nums">{moeda(forma?.valor)}</p>
                     <p className="text-xs font-semibold text-carvao-suave">{plural(forma?.lancamentos ?? 0, 'lançamento', 'lançamentos')}</p>
                   </div>
                 );
@@ -172,7 +176,7 @@ export default function CaixaTurno({ sessao, aoSair }) {
                         )}
                         {m.motivo}
                       </span>
-                      <strong className={m.tipo === 'sangria' ? 'text-rico-red' : 'text-ok'}>
+                      <strong className={`shrink-0 tabular-nums ${m.tipo === 'sangria' ? 'text-rico-red' : 'text-ok'}`}>
                         {m.tipo === 'sangria' ? '−' : '+'}{moeda(m.valor)}
                       </strong>
                     </li>
@@ -185,69 +189,85 @@ export default function CaixaTurno({ sessao, aoSair }) {
           {/* Ações: sangria/suprimento e fechamento */}
           <aside className="space-y-4">
             <div className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-              <h2 className="text-sm font-bold text-rico-light/70">Sangria / Suprimento</h2>
+              <h2 className="text-sm font-bold text-rico-light/80">Sangria / Suprimento</h2>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {['sangria', 'suprimento'].map((tipo) => (
                   <button
                     key={tipo}
                     onClick={() => setMov((m) => ({ ...m, tipo }))}
-                    className={`rounded-lg py-2 text-sm font-bold capitalize transition ${
-                      mov.tipo === tipo ? 'bg-rico-red text-rico-light shadow-suave' : 'bg-rico-light/10 text-rico-light/60'
+                    aria-pressed={mov.tipo === tipo}
+                    className={`min-h-11 rounded-lg text-sm font-semibold transition-colors ${
+                      mov.tipo === tipo ? 'bg-rico-red text-white' : 'bg-rico-light/10 text-rico-light/80 hover:bg-rico-light/16'
                     }`}
                   >
-                    {tipo}
+                    {tipo === 'sangria' ? 'Sangria (−)' : 'Suprimento (+)'}
                   </button>
                 ))}
               </div>
-              <input
-                value={mov.valor}
-                onChange={(e) => setMov((m) => ({ ...m, valor: e.target.value }))}
-                placeholder="Valor (R$)"
-                inputMode="decimal"
-                className="mt-3 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-              />
-              <input
-                value={mov.motivo}
-                onChange={(e) => setMov((m) => ({ ...m, motivo: e.target.value }))}
-                placeholder="Motivo"
-                className="mt-2 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-              />
+              <div className="mt-3 space-y-3">
+                <Campo
+                  tom="escuro"
+                  rotulo="Valor (R$)"
+                  placeholder="ex.: 50,00"
+                  inputMode="decimal"
+                  value={mov.valor}
+                  onChange={(e) => setMov((m) => ({ ...m, valor: e.target.value }))}
+                />
+                <Campo
+                  tom="escuro"
+                  rotulo="Motivo"
+                  placeholder="ex.: troco para o banco"
+                  value={mov.motivo}
+                  onChange={(e) => setMov((m) => ({ ...m, motivo: e.target.value }))}
+                />
+              </div>
               <button
+                type="button"
                 onClick={registrarMovimento}
                 disabled={ocupado}
-                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-rico-light/12 font-bold text-rico-light transition hover:bg-rico-light/20 disabled:opacity-40"
+                className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-creme font-semibold text-carvao transition-colors hover:bg-white disabled:bg-rico-light/12 disabled:text-rico-light/75"
               >
                 Registrar
               </button>
             </div>
 
-            <div className="rounded-xl border-2 border-rico-red/30 bg-white/85 p-5 shadow-media">
+            <div className="rounded-2xl border border-rico-wood/30 bg-white p-5 shadow-suave">
               <h2 className="flex items-center gap-2 text-sm font-bold text-rico-red">
                 <Scale size={16} /> Fechar caixa
               </h2>
-              <p className="mt-1 text-xs font-semibold text-carvao-suave">
+              <p className="mt-1 text-rotulo text-carvao-suave">
                 Conte a gaveta e informe o total (conferência cega).
               </p>
-              <input
-                value={contado}
-                onChange={(e) => setContado(e.target.value)}
-                placeholder="Valor contado (R$)"
-                inputMode="decimal"
-                className="mt-3 w-full rounded-lg bg-rico-light px-3 py-3 text-lg font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-              />
-              <input
-                value={obs}
-                onChange={(e) => setObs(e.target.value)}
-                placeholder="Observação (opcional)"
-                className="mt-2 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-              />
+              <div className="mt-3 space-y-3">
+                <Campo
+                  rotulo="Valor contado (R$)"
+                  placeholder="ex.: 327,50"
+                  inputMode="decimal"
+                  value={contado}
+                  onChange={(e) => setContado(e.target.value)}
+                />
+                <Campo rotulo="Observação (opcional)" value={obs} onChange={(e) => setObs(e.target.value)} />
+              </div>
               <button
+                type="button"
                 onClick={fechar}
                 disabled={ocupado || contado.trim() === ''}
-                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-describedby={contado.trim() === '' ? 'dica-fechar' : undefined}
+                className="mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-lg bg-rico-red font-semibold text-white transition-colors hover:bg-vinho-profundo disabled:cursor-not-allowed disabled:bg-creme-escuro disabled:text-carvao-suave"
               >
-                {ocupado ? <Loader2 size={18} className="animate-spin" /> : <LockKeyhole size={17} />} Fechar caixa
+                {ocupado ? (
+                  <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <LockKeyhole size={18} aria-hidden="true" />
+                )}{' '}
+                Fechar caixa
               </button>
+              {/* Desabilitado nunca fica mudo: diz o que falta */}
+              {contado.trim() === '' && (
+                <p id="dica-fechar" className="mt-2 text-center text-rotulo font-medium text-carvao-suave">
+                  Informe o valor contado para fechar.
+                </p>
+              )}
             </div>
           </aside>
         </div>
@@ -267,7 +287,7 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
             <Wallet size={26} />
           </span>
           <h1 className="mt-4 font-display text-2xl">Caixa fechado</h1>
-          <p className="mt-1 text-sm text-rico-light/60">Abra o caixa com o fundo de troco para começar o turno.</p>
+          <p className="mt-1 text-sm text-rico-light/80">Abra o caixa com o fundo de troco para começar o turno.</p>
         </div>
 
         <label className="mt-6 block text-rotulo font-semibold text-rico-wood">
@@ -282,7 +302,7 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
         <button
           onClick={abrir}
           disabled={ocupado}
-          className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40"
+          className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-lg bg-rico-red font-semibold text-white transition-colors hover:bg-vinho-profundo disabled:bg-rico-light/12 disabled:text-rico-light/75"
         >
           {ocupado ? <Loader2 size={20} className="animate-spin" /> : <Unlock size={19} />} Abrir caixa
         </button>
@@ -293,7 +313,7 @@ function CaixaFechado({ fundo, setFundo, abrir, ocupado, ultimoFechamento }) {
 
 function ResultadoFechamento({ resumo }) {
   const dif = resumo.diferenca;
-  const cor = dif === 0 ? 'text-ok' : dif > 0 ? 'text-rico-wood' : 'text-rico-red';
+  const cor = dif === 0 ? 'text-ok' : dif > 0 ? 'text-atencao' : 'text-rico-red'; // sobra em âmbar: rico-wood no branco mede 2.2:1
   return (
     <div className="rounded-xl border border-rico-wood/25 bg-white/85 p-5 shadow-media">
       <h2 className="text-sm font-bold text-carvao-claro">Último fechamento</h2>

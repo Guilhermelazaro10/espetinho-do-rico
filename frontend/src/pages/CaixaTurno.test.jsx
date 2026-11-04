@@ -73,8 +73,8 @@ describe('CaixaTurno — sangria e suprimento', () => {
     render(<CaixaTurno sessao={sessao} aoSair={() => {}} />);
     await screen.findByText('Caixa aberto');
 
-    fireEvent.change(screen.getByPlaceholderText('Valor (R$)'), { target: { value: '50,00' } });
-    fireEvent.change(screen.getByPlaceholderText('Motivo'), { target: { value: 'troco pro banco' } });
+    fireEvent.change(screen.getByLabelText('Valor (R$)'), { target: { value: '50,00' } });
+    fireEvent.change(screen.getByLabelText('Motivo'), { target: { value: 'troco pro banco' } });
     fireEvent.click(screen.getByRole('button', { name: /registrar/i }));
 
     await waitFor(() =>
@@ -92,7 +92,7 @@ describe('CaixaTurno — sangria e suprimento', () => {
     render(<CaixaTurno sessao={sessao} aoSair={() => {}} />);
     await screen.findByText('Caixa aberto');
 
-    fireEvent.change(screen.getByPlaceholderText('Valor (R$)'), { target: { value: '50,00' } });
+    fireEvent.change(screen.getByLabelText('Valor (R$)'), { target: { value: '50,00' } });
     fireEvent.click(screen.getByRole('button', { name: /registrar/i }));
 
     await waitFor(() => expect(notificar.erro).toHaveBeenCalled());
@@ -112,7 +112,7 @@ describe('CaixaTurno — fechamento cego', () => {
     render(<CaixaTurno sessao={sessao} aoSair={() => {}} />);
     await screen.findByText('Caixa aberto');
 
-    fireEvent.change(screen.getByPlaceholderText('Valor contado (R$)'), {
+    fireEvent.change(screen.getByLabelText('Valor contado (R$)'), {
       target: { value: '310,00' },
     });
     fireEvent.click(screen.getByRole('button', { name: /fechar caixa/i }));
@@ -134,5 +134,8 @@ describe('CaixaTurno — fechamento cego', () => {
     await screen.findByText('Caixa aberto');
 
     expect(screen.getByRole('button', { name: /fechar caixa/i }).disabled).toBe(true);
+    // Desabilitado diz o motivo, ligado ao botão por aria-describedby
+    const dica = screen.getByText('Informe o valor contado para fechar.');
+    expect(screen.getByRole('button', { name: /fechar caixa/i }).getAttribute('aria-describedby')).toBe(dica.id);
   });
 });
