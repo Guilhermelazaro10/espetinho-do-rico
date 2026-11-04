@@ -43,8 +43,11 @@ export default function Cozinha() {
     }
   }
 
-  const naFila = pedidos.filter((p) => p.status === 'aberto');
-  const naChapa = pedidos.filter((p) => p.status === 'em_preparo');
+  // A chapa trabalha por ordem de chegada: o mais antigo primeiro. A API
+  // devolve do mais novo para o mais antigo (criadoEm desc), por isso reordena.
+  const porChegada = (a, b) => new Date(a.criadoEm) - new Date(b.criadoEm);
+  const naFila = pedidos.filter((p) => p.status === 'aberto').sort(porChegada);
+  const naChapa = pedidos.filter((p) => p.status === 'em_preparo').sort(porChegada);
 
   return (
     <div className="min-h-dvh bg-carvao text-rico-light">
