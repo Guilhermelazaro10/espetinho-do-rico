@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { minutosDesde } from '../lib/datas';
 import { notificar, ToasterGlobal } from '../ui/toast';
 import { useAtualizacaoAoVivo } from '../hooks/useAtualizacaoAoVivo';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 /*
  * KDS — tela da chapa (cozinha). Dark mode, cards grandes, leitura à distância.
@@ -49,34 +50,39 @@ export default function Cozinha() {
   const naFila = pedidos.filter((p) => p.status === 'aberto').sort(porChegada);
   const naChapa = pedidos.filter((p) => p.status === 'em_preparo').sort(porChegada);
 
+  // 1280px+: três colunas — fila, na chapa e o transbordo da fila (a fila longa
+  // continua na terceira coluna em vez de empurrar a tela para baixo).
+  const tresColunas = useMediaQuery('(min-width: 1280px)');
+  const metade = Math.ceil(naFila.length / 2);
+  const filaPrincipal = tresColunas && naFila.length > 1 ? naFila.slice(0, metade) : naFila;
+  const filaTransbordo = tresColunas && naFila.length > 1 ? naFila.slice(metade) : [];
+
   return (
     <div className="min-h-dvh bg-carvao text-rico-light">
       <ToasterGlobal />
 
-      <header className="safe-area-header-top sticky top-0 z-20 flex items-center justify-between border-b border-creme/10 bg-carvao/95 px-4 pb-3 backdrop-blur">
+      <header className="safe-area-header-top sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-creme/10 bg-carvao px-4 pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <ChefHat size={18} className="text-brasa-clara" />
-          <span className="truncate font-display text-lg leading-none">Espetinho do Rico</span>
-          <span className="rounded-full bg-brasa-gradiente px-2 py-0.5 text-xs font-bold text-white">
-            Cozinha
-          </span>
+          <ChefHat size={20} className="shrink-0 text-brasa-clara" aria-hidden="true" />
+          <h1 className="truncate font-display text-lg leading-none">Espetinho do Rico</h1>
+          <span className="shrink-0 rounded-full bg-rico-red px-2.5 py-0.5 text-xs font-bold text-white">Cozinha</span>
         </div>
         <a
           href="#/"
-          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-rico-light/65 transition hover:bg-rico-light/10 hover:text-rico-light active:scale-95"
+          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-rico-light/80 transition-colors hover:bg-rico-light/10 hover:text-rico-light"
         >
-          <ArrowLeft size={14} /> Caixa
+          <ArrowLeft size={16} aria-hidden="true" /> Caixa
         </a>
       </header>
 
-      <main className="safe-area-kds-bottom mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-2">
+      <main className="safe-area-kds-bottom mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-2 xl:max-w-[1440px] xl:grid-cols-3 xl:p-6">
         <Coluna
           titulo={`Na fila · ${naFila.length}`}
           vazio="Nenhum pedido aguardando"
-          pedidos={naFila}
+          pedidos={filaPrincipal}
           rotuloAcao="Iniciar preparo"
           IconeAcao={Flame}
-          corBotao="bg-brasa-gradiente text-white shadow-suave"
+          corBotao="bg-rico-red text-white hover:bg-vinho-profundo"
           aoAgir={avancar}
         />
         <Coluna
@@ -85,9 +91,20 @@ export default function Cozinha() {
           pedidos={naChapa}
           rotuloAcao="Marcar entregue"
           IconeAcao={CheckCheck}
-          corBotao="bg-rico-red text-rico-light"
+          corBotao="bg-creme text-carvao hover:bg-white"
           aoAgir={avancar}
         />
+        {tresColunas && (
+          <Coluna
+            titulo="Na fila · continuação"
+            vazio="A fila cabe na primeira coluna"
+            pedidos={filaTransbordo}
+            rotuloAcao="Iniciar preparo"
+            IconeAcao={Flame}
+            corBotao="bg-rico-red text-white hover:bg-vinho-profundo"
+            aoAgir={avancar}
+          />
+        )}
       </main>
     </div>
   );
@@ -102,12 +119,10 @@ export function tituloPedido(pedido) {
 
 function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgir }) {
   return (
-    <section>
-      <h2 className="mb-3 text-rotulo font-semibold text-rico-light/70">
-        {titulo}
-      </h2>
+    <section aria-label={titulo}>
+      <h2 className="mb-3 text-sm font-semibold text-rico-light/80 tabular-nums">{titulo}</h2>
       {pedidos.length === 0 ? (
-        <p className="rounded-xl bg-rico-light/5 px-4 py-8 text-center text-sm text-rico-light/40 ring-1 ring-rico-light/10">
+        <p className="rounded-2xl bg-rico-light/5 px-4 py-8 text-center text-sm text-rico-light/70 ring-1 ring-rico-light/10">
           {vazio}
         </p>
       ) : (
@@ -115,42 +130,48 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
           {pedidos.map((pedido) => {
             const minutos = minutosDesde(pedido.criadoEm);
             return (
-              <li key={pedido.id} className="animate-card-entrada rounded-xl bg-rico-light/5 p-4 ring-1 ring-rico-light/10">
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-2xl">
-                    {tituloPedido(pedido)}
-                  </span>
+              <li key={pedido.id} className="animate-card-entrada rounded-2xl bg-rico-light/6 p-4 ring-1 ring-rico-light/10 md:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="min-w-0 font-display text-2xl leading-tight">{tituloPedido(pedido)}</h3>
+                  {/* Tempo de espera: nunca quebra linha */}
                   <span
-                    className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+                    className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-bold tabular-nums ${
                       minutos >= 15
-                        ? 'bg-rico-red text-rico-light'
+                        ? 'bg-rico-red text-white'
                         : minutos >= 8
-                          ? 'bg-brasa-gradiente text-white'
-                          : 'bg-rico-light/10 text-rico-light/60'
+                          ? 'bg-atencao text-white'
+                          : 'bg-rico-light/12 text-rico-light/85'
                     }`}
                   >
-                    <Timer size={12} /> {minutos} min
+                    <Timer size={14} aria-hidden="true" /> {minutos} min
                   </span>
                 </div>
-                <ul className="mt-3 space-y-1.5">
+                {pedido.pagoAntecipado && (
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-ok-claro/18 px-2.5 py-1 text-xs font-bold text-ok-claro">
+                    <CheckCheck size={13} aria-hidden="true" /> Pago · venda rápida
+                  </span>
+                )}
+                <ul className="mt-3 space-y-2">
                   {pedido.itens.map((item) => (
-                    <li key={item.id} className="text-sm">
-                      <span className="font-bold text-brasa-clara">{item.quantidade}×</span>{' '}
+                    <li key={item.id} className="text-base leading-snug md:text-xl">
+                      <span className="mr-1.5 inline-block min-w-[2ch] rounded-md bg-brasa-clara/18 px-1.5 font-extrabold text-brasa-clara tabular-nums">
+                        {item.quantidade}×
+                      </span>
                       <span className="font-semibold">{item.produto.nome}</span>
                       {item.observacao && (
-                        <p className="ml-5 flex items-center gap-1 text-rotulo font-bold text-brasa-clara">
-                          <AlertTriangle size={13} className="shrink-0" /> {item.observacao}
+                        <p className="mt-1 flex items-start gap-1.5 rounded-lg bg-atencao/25 px-2 py-1 text-base font-bold text-brasa-clara md:text-xl">
+                          <AlertTriangle size={18} className="mt-0.5 shrink-0" aria-hidden="true" /> {item.observacao}
                         </p>
                       )}
                     </li>
                   ))}
                 </ul>
                 <button
+                  type="button"
                   onClick={() => aoAgir(pedido)}
-                  className={`mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl
-                    text-sm font-bold transition active:scale-[0.98] ${corBotao}`}
+                  className={`mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl text-base font-bold transition-colors ${corBotao}`}
                 >
-                  <IconeAcao size={18} /> {rotuloAcao}
+                  <IconeAcao size={20} aria-hidden="true" /> {rotuloAcao}
                 </button>
               </li>
             );

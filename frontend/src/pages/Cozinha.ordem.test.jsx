@@ -43,3 +43,15 @@ describe('Cozinha — ordem das colunas', () => {
     expect(titulos(chapa)).toEqual(['Chapa antiga', 'Chapa nova']);
   });
 });
+
+describe('Cozinha — venda rápida', () => {
+  it('pedido pago antecipado mostra o selo "Pago · venda rápida"', async () => {
+    api.pedidos.listarAbertos.mockResolvedValue([
+      { ...pedido(40, 'aberto', 2, 'Balcão pago'), pagoAntecipado: true },
+      pedido(41, 'aberto', 1, 'A pagar'),
+    ]);
+    render(<Cozinha />);
+    expect(await screen.findByText('Pago · venda rápida')).toBeTruthy();
+    expect(screen.getAllByText('Pago · venda rápida')).toHaveLength(1);
+  });
+});
