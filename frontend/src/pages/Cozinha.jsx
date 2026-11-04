@@ -75,7 +75,7 @@ export default function Cozinha() {
         </a>
       </header>
 
-      <main className="safe-area-kds-bottom mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-2 xl:max-w-[1440px] xl:grid-cols-3 xl:p-6">
+      <main className="safe-area-kds-bottom mx-auto grid max-w-6xl grid-cols-1 gap-6 p-4 md:grid-cols-2 xl:max-w-[1440px] xl:grid-cols-3 xl:p-6">
         <Coluna
           titulo={`Na fila · ${naFila.length}`}
           vazio="Nenhum pedido aguardando"
@@ -119,7 +119,7 @@ export function tituloPedido(pedido) {
 
 function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgir }) {
   return (
-    <section aria-label={titulo}>
+    <section aria-label={titulo} className="min-w-0">
       <h2 className="mb-3 text-sm font-semibold text-rico-light/80 tabular-nums">{titulo}</h2>
       {pedidos.length === 0 ? (
         <p className="rounded-2xl bg-rico-light/5 px-4 py-8 text-center text-sm text-rico-light/70 ring-1 ring-rico-light/10">
@@ -132,7 +132,7 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
             return (
               <li key={pedido.id} className="animate-card-entrada rounded-2xl bg-rico-light/6 p-4 ring-1 ring-rico-light/10 md:p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 font-display text-2xl leading-tight">{tituloPedido(pedido)}</h3>
+                  <h3 className="min-w-0 break-words font-display text-2xl leading-tight">{tituloPedido(pedido)}</h3>
                   {/* Tempo de espera: nunca quebra linha */}
                   <span
                     className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-bold tabular-nums ${
@@ -153,7 +153,7 @@ function Coluna({ titulo, vazio, pedidos, rotuloAcao, IconeAcao, corBotao, aoAgi
                 )}
                 <ul className="mt-3 space-y-2">
                   {pedido.itens.map((item) => (
-                    <li key={item.id} className="text-base leading-snug md:text-xl">
+                    <li key={item.id} className="break-words text-base leading-snug md:text-xl">
                       <span className="mr-1.5 inline-block min-w-[2ch] rounded-md bg-brasa-clara/18 px-1.5 font-extrabold text-brasa-clara tabular-nums">
                         {item.quantidade}×
                       </span>
