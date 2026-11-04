@@ -52,7 +52,7 @@ const NOME_LONGO = 'Maria Aparecida dos Santos Albuquerque Figueiredo';
 const ENDERECO_LONGO =
   'Rua Coronel Francisco Albuquerque de Vasconcelos, 1234, casa dos fundos, portão azul, ao lado da igreja';
 
-await tentar('mesa 8 aguardando pagamento (o cenario-demo usa um status inválido)', async () => {
+await tentar('mesa 8 aguardando pagamento (garante o estado mesmo sem o cenario-demo)', async () => {
   const mesas = await chamar('GET', '/api/mesas');
   const mesa8 = mesas.find((m) => m.numero === 8);
   await chamar('PATCH', `/api/mesas/${mesa8.id}/status`, { status: 'AGUARDANDO_PAGAMENTO' });

@@ -17,7 +17,7 @@ const TONS = {
 };
 
 const BASE_CONTROLE =
-  'w-full min-h-11 rounded-lg bg-white px-3 text-sm font-medium text-carvao ring-1 ring-inset ring-rico-wood/45 outline-none transition-shadow focus:ring-2 focus:ring-rico-red disabled:bg-creme-escuro disabled:text-carvao-claro';
+  'w-full min-h-11 rounded-lg bg-white px-3 text-sm font-medium text-carvao ring-1 ring-inset ring-rico-wood/45 outline-none transition-shadow focus:ring-2 focus:ring-rico-red disabled:bg-creme-escuro disabled:text-carvao-suave';
 
 export default function Campo({
   rotulo,

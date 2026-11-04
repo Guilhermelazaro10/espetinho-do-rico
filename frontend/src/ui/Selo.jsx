@@ -3,7 +3,7 @@ const TONS = {
   ok: 'bg-ok-fundo text-ok',
   atencao: 'bg-atencao-fundo text-atencao',
   erro: 'bg-erro-fundo text-erro',
-  neutro: 'bg-creme-escuro text-carvao-claro',
+  neutro: 'bg-creme-escuro text-carvao-suave',
   escuro: 'bg-carvao text-rico-light',
 };
 

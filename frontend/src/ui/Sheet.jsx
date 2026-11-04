@@ -87,7 +87,7 @@ export default function Sheet({ aberto, aoFechar, titulo, subtitulo, rodape, lad
             type="button"
             onClick={aoFechar}
             aria-label="Fechar"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-carvao-claro hover:bg-carvao/6"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-carvao-suave hover:bg-carvao/6"
           >
             <X size={22} aria-hidden="true" />
           </button>

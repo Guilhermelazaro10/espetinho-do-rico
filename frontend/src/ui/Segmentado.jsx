@@ -49,7 +49,7 @@ export default function Segmentado({ opcoes, valor, aoMudar, rotulo, className =
               className={`flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-2 text-sm font-semibold whitespace-nowrap transition-colors ${
                 ativo
                   ? 'bg-white text-carvao shadow-suave ring-1 ring-rico-wood/35'
-                  : 'text-carvao-claro hover:bg-white/60'
+                  : 'text-carvao-suave hover:bg-white/60'
               }`}
             >
               {Icone && <Icone size={18} aria-hidden="true" className="shrink-0" />}

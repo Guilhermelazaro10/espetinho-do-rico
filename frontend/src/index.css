@@ -21,9 +21,12 @@
   /* Texto Primário / Fundo Dark — Marrom Carvão */
   --color-carvao: #3f2b1d;
   --color-carvao-claro: #6d4f37;
-  /* Suave: 4.86:1 sobre o creme (WCAG AA até em texto pequeno). O tom antigo
-     #9a8068 media 3.62:1 e reprovava nos rótulos/horários miúdos. */
-  --color-carvao-suave: #856b52;
+  /* Suave: passa 4.5:1 em todas as superfícies claras — 5.64:1 no creme,
+     4.84:1 no creme-escuro, 5.78:1 no branco. (#856b52 dava 4.17:1 no
+     creme-escuro; o antigo #9a8068 dava 3.62:1 no creme.) */
+  --color-carvao-suave: #7a614a;
+  /* Carvão profundo: SÓ o topo de marca do cardápio do cliente. */
+  --color-carvao-profundo: #2a1d14;
 
   /* Destaque / Status — Brasa (degradê laranja) */
   --color-brasa: #d4a96e;
@@ -220,7 +223,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Placeholder no tom suave (4.86:1 sobre o creme, 4.97:1 sobre branco).
+  /* Placeholder no tom suave (5.64:1 sobre o creme, 5.78:1 sobre branco).
      O padrão do navegador ficava claro demais. */
   ::placeholder {
     color: var(--color-carvao-suave);

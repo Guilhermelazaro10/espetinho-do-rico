@@ -16,10 +16,10 @@ const TAMANHOS = {
   lg: 'min-h-13 px-5 text-base gap-2.5 rounded-lg',
 };
 
-// Desabilitado legível: carvao-claro sobre creme-escuro mede 6.4:1. Opacidade
+// Desabilitado legível: carvao-suave sobre creme-escuro mede 4.84:1. Opacidade
 // baixa (o padrão comum) deixava o texto ilegível e sem explicar o porquê.
 const DESABILITADO =
-  'disabled:bg-creme-escuro disabled:text-carvao-claro disabled:ring-0 disabled:shadow-none disabled:cursor-not-allowed';
+  'disabled:bg-creme-escuro disabled:text-carvao-suave disabled:ring-0 disabled:shadow-none disabled:cursor-not-allowed';
 
 export default function Botao({
   variante = 'primario',

@@ -56,7 +56,7 @@ async function main() {
       { produtoId: 4, quantidade: 6 },
     ],
   });
-  await chamar('PATCH', `/api/mesas/${idDaMesa(8)}/status`, { status: 'fechando' });
+  await chamar('PATCH', `/api/mesas/${idDaMesa(8)}/status`, { status: 'AGUARDANDO_PAGAMENTO' });
 
   console.log('Cenário pronto: mesas 2 e 5 ocupadas, mesa 8 aguardando conta.');
 }
