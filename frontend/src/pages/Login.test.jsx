@@ -44,3 +44,21 @@ describe('Login — aviso de PIN curto do gerente', () => {
     expect(notificar.brasa).not.toHaveBeenCalled();
   });
 });
+
+describe('Login — PIN errado', () => {
+  it('mostra "PIN não reconhecido" junto do campo e zera os dígitos', async () => {
+    api.auth.login.mockRejectedValue(new Error('PIN não reconhecido'));
+    render(<Login aoEntrar={vi.fn()} />);
+    digitarPin('1234');
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toBe('PIN não reconhecido');
+    expect(alerta.parentElement.className).toContain('animate-tremer');
+    expect(screen.getByText('0 dígitos digitados')).toBeTruthy();
+  });
+
+  it('os pontos acompanham a quantidade digitada, sem casas fixas', () => {
+    render(<Login aoEntrar={vi.fn()} />);
+    for (const d of '12345') fireEvent.click(screen.getByRole('button', { name: d }));
+    expect(screen.getByText('5 dígitos digitados')).toBeTruthy();
+  });
+});

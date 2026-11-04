@@ -132,7 +132,7 @@ export default function ConfigServidor({ aoConectar }) {
           <button
             onClick={buscaAmpla}
             disabled={varrendo || testando}
-            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-rico-wood/45 bg-rico-light/5 text-sm font-bold text-rico-light transition hover:bg-rico-light/10 disabled:opacity-50"
+            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-rico-wood/45 bg-rico-light/5 text-sm font-bold text-rico-light transition hover:bg-rico-light/10 disabled:cursor-not-allowed disabled:bg-rico-light/10 disabled:text-rico-light/75 disabled:shadow-none"
           >
             {varrendo ? (
               <>
@@ -160,7 +160,7 @@ export default function ConfigServidor({ aoConectar }) {
                 value={ip}
                 onChange={(e) => setIp(e.target.value)}
                 placeholder="192.168.0.10"
-                className="mt-1 w-full rounded-xl border border-rico-wood/35 bg-rico-light/8 px-4 py-3 text-lg font-bold text-rico-light outline-none placeholder:text-rico-light/25 focus:border-rico-red"
+                className="mt-1 w-full rounded-xl border border-rico-wood/35 bg-rico-light/8 px-4 py-3 text-lg font-bold text-rico-light outline-none placeholder:text-rico-light/70 focus:border-rico-red"
               />
             </div>
 
@@ -174,7 +174,7 @@ export default function ConfigServidor({ aoConectar }) {
                 value={porta}
                 onChange={(e) => setPorta(e.target.value.replace(/\D/g, ''))}
                 placeholder="3001"
-                className="mt-1 w-full rounded-xl border border-rico-wood/35 bg-rico-light/8 px-4 py-3 text-lg font-bold text-rico-light outline-none placeholder:text-rico-light/25 focus:border-rico-red"
+                className="mt-1 w-full rounded-xl border border-rico-wood/35 bg-rico-light/8 px-4 py-3 text-lg font-bold text-rico-light outline-none placeholder:text-rico-light/70 focus:border-rico-red"
               />
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function ConfigServidor({ aoConectar }) {
           <button
             onClick={conectarManual}
             disabled={!ip.trim() || testando || varrendo}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:cursor-not-allowed disabled:bg-rico-light/10 disabled:text-rico-light/75 disabled:shadow-none"
           >
             {testando ? (
               <>

@@ -8,10 +8,24 @@ import { notificar, ToasterGlobal } from '../ui/toast';
 export default function Login({ aoEntrar, aoTrocarServidor }) {
   const [pin, setPin] = useState('');
   const [entrando, setEntrando] = useState(false);
+  const [erro, setErro] = useState('');
+  // Muda a cada erro para remontar o campo e tocar a tremida de novo
+  const [tentativaErrada, setTentativaErrada] = useState(0);
 
   function digitar(tecla) {
     if (entrando) return;
+    setErro('');
     setPin((p) => (p + tecla).slice(0, 6));
+  }
+
+  function apagar() {
+    setErro('');
+    setPin((p) => p.slice(0, -1));
+  }
+
+  function limpar() {
+    setErro('');
+    setPin('');
   }
 
   async function entrar() {
@@ -26,7 +40,10 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
       if (String(usuario.papel).toUpperCase() === 'GARCOM') window.location.hash = '#/garcom';
       aoEntrar({ token, usuario });
     } catch (e) {
-      notificar.erro('Não foi possível entrar', e.message);
+      // O servidor responde "PIN não reconhecido" (401); bloqueio e falta de
+      // rede trazem a própria mensagem. O erro aparece junto do campo.
+      setErro(e.message || 'PIN não reconhecido');
+      setTentativaErrada((n) => n + 1);
       setPin('');
     } finally {
       setEntrando(false);
@@ -40,10 +57,10 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
         digitar(evento.key);
       } else if (evento.key === 'Backspace') {
         evento.preventDefault();
-        setPin((p) => p.slice(0, -1));
+        apagar();
       } else if (evento.key === 'Escape') {
         evento.preventDefault();
-        setPin('');
+        limpar();
       } else if (evento.key === 'Enter') {
         evento.preventDefault();
         entrar();
@@ -55,61 +72,73 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
   }, [pin, entrando]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-login-rico px-5 py-8 text-rico-light">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-carvao-profundo px-4 py-8 text-creme">
       <ToasterGlobal />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgb(63_43_29/0.22)_40%,rgb(63_43_29/0.72)_100%)]" />
+      {/* Fundo carvão com um brilho de brasa sutil atrás do logo — sem foto
+          desfocada competindo com o teclado. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-[18%] h-[420px] w-[520px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(226_110_46/0.32),rgb(179_42_42/0.14)_55%,transparent)]"
+      />
 
       <main className="relative z-10 w-full max-w-sm">
-        <section className="rounded-xl border border-rico-wood/45 bg-rico-dark/72 p-6 shadow-media backdrop-blur-md">
+        <section className="rounded-3xl border border-creme/10 bg-carvao p-6 shadow-media">
           <img
             src="/logo_clean.png"
             alt="Espetinho do Rico"
-            className="mx-auto h-auto w-64 max-w-full drop-shadow-[0_12px_26px_rgb(0_0_0/0.35)]"
+            width="845"
+            height="466"
+            className="mx-auto h-auto w-52 max-w-full"
           />
 
-          <div className="mt-6 text-center">
-            <p className="inline-flex items-center gap-2 rounded-full border border-rico-wood/40 bg-rico-light/10 px-3 py-1 text-xs font-bold text-rico-wood">
-              <ShieldCheck size={13} /> Acesso ao PDV
+          <div className="mt-5 text-center">
+            <p className="inline-flex items-center gap-2 rounded-full border border-rico-wood/40 px-3 py-1 text-xs font-bold text-brasa-clara">
+              <ShieldCheck size={14} aria-hidden="true" /> Acesso ao PDV
             </p>
-            <h1 className="mt-3 font-display text-2xl text-rico-light">Digite seu PIN</h1>
+            <h1 className="mt-3 font-display text-2xl text-creme">Digite seu PIN</h1>
           </div>
 
-          <div className="mt-5 flex h-8 items-center justify-center gap-3" aria-label={`${pin.length} dígitos digitados`}>
-            {Array.from({ length: 6 }, (_, i) => (
-              <span
-                key={i}
-                className={`h-3.5 rounded-full transition-all duration-200 ${
-                  i < pin.length
-                    ? 'w-8 bg-rico-red shadow-suave'
-                    : i < 4
-                      ? 'w-3.5 bg-rico-light/20'
-                      : 'w-3.5 bg-rico-light/10'
-                }`}
-              />
-            ))}
+          {/* Pontos: um por dígito digitado, sem fixar 4 ou 6 casas */}
+          <div
+            key={tentativaErrada}
+            className={`mt-5 flex min-h-11 flex-col items-center justify-center ${erro ? 'animate-tremer' : ''}`}
+          >
+            <div className="flex h-5 items-center justify-center gap-2.5" aria-hidden="true">
+              {pin.length === 0 ? (
+                <span className="text-rotulo font-medium text-creme/70">Toque nos números</span>
+              ) : (
+                Array.from({ length: pin.length }, (_, i) => (
+                  <span key={i} className="h-3.5 w-3.5 rounded-full bg-brasa-clara" />
+                ))
+              )}
+            </div>
+            <p className="sr-only" aria-live="polite">
+              {pin.length === 1 ? '1 dígito digitado' : `${pin.length} dígitos digitados`}
+            </p>
+            {erro && (
+              <p role="alert" className="mt-2 text-sm font-semibold text-erro-claro">
+                {erro}
+              </p>
+            )}
           </div>
 
-          <div className="mt-5">
-            <TecladoNumerico
-              tema="premium"
-              aoDigitar={digitar}
-              aoApagar={() => setPin((p) => p.slice(0, -1))}
-              aoLimpar={() => setPin('')}
-            />
+          <div className="mt-4">
+            <TecladoNumerico tema="premium" aoDigitar={digitar} aoApagar={apagar} aoLimpar={limpar} />
           </div>
 
           <button
+            type="button"
             onClick={entrar}
             disabled={pin.length < 4 || entrando}
-            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 hover:bg-vinho-profundo active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-rico-red text-base font-bold text-white transition-colors hover:bg-vinho-profundo disabled:cursor-not-allowed disabled:bg-creme/10 disabled:text-creme/75"
           >
             {entrando ? (
               <>
-                <Loader2 size={21} className="animate-spin" /> Entrando
+                <Loader2 size={20} className="animate-spin" aria-hidden="true" /> Entrando
               </>
             ) : (
               <>
-                <LogIn size={19} /> Entrar
+                <LogIn size={19} aria-hidden="true" /> Entrar
               </>
             )}
           </button>
@@ -117,10 +146,11 @@ export default function Login({ aoEntrar, aoTrocarServidor }) {
 
         {aoTrocarServidor && (
           <button
+            type="button"
             onClick={aoTrocarServidor}
-            className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-rico-wood/35 px-3 py-1.5 text-xs font-bold text-rico-light/60 transition hover:bg-rico-light/10 hover:text-rico-light"
+            className="mx-auto mt-3 flex min-h-11 items-center gap-1.5 rounded-full border border-rico-wood/35 px-4 text-sm font-semibold text-creme/80 transition-colors hover:bg-creme/10 hover:text-creme"
           >
-            <ServerCog size={13} /> Trocar servidor
+            <ServerCog size={15} aria-hidden="true" /> Trocar servidor
           </button>
         )}
       </main>

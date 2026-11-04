@@ -107,6 +107,25 @@
   --animate-sheet-centro: sheet-centro 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-fundo-entra: fundo-entra 0.2s ease-out;
 
+  /* PIN errado: tremida curta e amortecida (resposta à ação, não decoração).
+     Com prefers-reduced-motion a regra global encurta para ~0. */
+  --animate-tremer: tremer 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+
+  @keyframes tremer {
+    20% {
+      transform: translateX(-6px);
+    }
+    40% {
+      transform: translateX(5px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(2px);
+    }
+  }
+
   @keyframes sheet-sobe {
     from {
       transform: translateY(100%);
@@ -193,14 +212,6 @@
 
 @utility bg-madeira-gradiente {
   background-image: linear-gradient(135deg, #d4a96e, #f0d1a1);
-}
-
-@utility bg-login-rico {
-  background-image:
-    linear-gradient(180deg, rgb(63 43 29 / 0.5), rgb(63 43 29 / 0.82)),
-    url('/logo_full.png');
-  background-size: cover;
-  background-position: center;
 }
 
 @utility safe-area-top {

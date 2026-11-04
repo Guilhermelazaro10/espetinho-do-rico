@@ -32,9 +32,9 @@ export default function TecladoNumerico({ aoDigitar, aoApagar, aoLimpar, tema = 
           aria-label={tecla === 'apagar' ? 'Apagar' : tecla === 'limpar' ? 'Limpar' : tecla}
         >
           {tecla === 'apagar' ? (
-            <Delete size={24} />
+            <Delete size={24} aria-hidden="true" />
           ) : tecla === 'limpar' ? (
-            <span className="text-sm font-bold opacity-60">Limpar</span>
+            <span className="text-sm font-bold text-current/80">Limpar</span>
           ) : (
             tecla
           )}
