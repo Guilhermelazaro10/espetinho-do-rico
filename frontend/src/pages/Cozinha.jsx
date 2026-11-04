@@ -64,7 +64,7 @@ export default function Cozinha() {
       <header className="safe-area-header-top sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-creme/10 bg-carvao px-4 pb-3">
         <div className="flex min-w-0 items-center gap-2">
           <ChefHat size={20} className="shrink-0 text-brasa-clara" aria-hidden="true" />
-          <h1 className="truncate font-display text-lg leading-none">Espetinho do Rico</h1>
+          <h1 className="font-display text-lg leading-none"><span className="sr-only sm:not-sr-only">Espetinho do Rico</span></h1>
           <span className="shrink-0 rounded-full bg-rico-red px-2.5 py-0.5 text-xs font-bold text-white">Cozinha</span>
         </div>
         <a
