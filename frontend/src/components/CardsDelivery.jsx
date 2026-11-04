@@ -1,42 +1,48 @@
 import {
-  Ban, Banknote, CheckCircle2, Clock, CreditCard, MapPin, Phone, Printer, QrCode,
+  Ban, Banknote, BellRing, CheckCircle2, Clock, CreditCard, MapPin, Phone, Printer, QrCode,
 } from 'lucide-react';
 import { moeda } from '../lib/api';
 import { desdeMin } from '../lib/datas';
 import { TIPOS_PEDIDO } from '../lib/constantes';
+import Selo from '../ui/Selo';
 
 /*
  * Cards da tela Delivery/Balcão:
- *  - PendenteCard: pedido online aguardando Aceitar/Recusar.
+ *  - FaixaPendente: pedido online aguardando Aceitar/Recusar.
  *  - PedidoCard: pedido em andamento (avançar, pagar, cancelar, reimprimir).
  */
 
-const STATUS_ROTULO = {
-  aberto: 'Aberto',
-  em_preparo: 'Em preparo',
-  entregue: 'Entregue',
-  pago: 'Pago',
-  cancelado: 'Cancelado',
+const STATUS = {
+  aberto: { rotulo: 'Aberto', tom: 'neutro' },
+  em_preparo: { rotulo: 'Em preparo', tom: 'atencao' },
+  entregue: { rotulo: 'Entregue', tom: 'ok' },
+  pago: { rotulo: 'Pago', tom: 'ok' },
+  cancelado: { rotulo: 'Cancelado', tom: 'erro' },
 };
 
 const ROTULO_PAGAMENTO = { pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' };
+
+export const rotuloTipo = (pedido) =>
+  pedido.pagoAntecipado ? 'Venda rápida' : pedido.tipo === TIPOS_PEDIDO.DELIVERY ? 'Entrega' : 'Balcão';
 
 // Telefone -> link de WhatsApp (DDI 55) / endereço -> Google Maps.
 export const linkWhats = (tel) => `https://wa.me/55${String(tel || '').replace(/\D/g, '')}`;
 export const linkMapa = (end) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(end || '')}`;
 
+// Links com área de toque de 44px por padding — a fonte não cresce.
 function ContatoCliente({ pedido }) {
+  if (!pedido.clienteTelefone && !pedido.clienteEndereco) return null;
   return (
-    <>
+    <div className="-my-1 flex flex-col items-start">
       {pedido.clienteTelefone && (
         <a
           href={linkWhats(pedido.clienteTelefone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-ok underline-offset-2 hover:underline"
+          className="inline-flex min-h-11 items-center gap-1.5 text-rotulo font-semibold text-ok underline-offset-4 hover:underline lg:min-h-8"
         >
-          <Phone size={11} /> {pedido.clienteTelefone}
+          <Phone size={14} aria-hidden="true" /> {pedido.clienteTelefone}
         </a>
       )}
       {pedido.clienteEndereco && (
@@ -44,74 +50,77 @@ function ContatoCliente({ pedido }) {
           href={linkMapa(pedido.clienteEndereco)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 flex items-start gap-1 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline"
+          className="inline-flex min-h-11 items-start gap-1.5 py-2.5 text-rotulo font-semibold text-carvao-claro underline underline-offset-4 decoration-rico-wood/60 hover:decoration-carvao lg:min-h-8 lg:py-1"
         >
-          <MapPin size={11} className="mt-0.5 shrink-0" /> {pedido.clienteEndereco}
+          <MapPin size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-rico-red" />
+          <span className="min-w-0 break-words">{pedido.clienteEndereco}</span>
         </a>
       )}
-    </>
+    </div>
   );
 }
 
-function LinhaPagamentoPretendido({ pedido, className }) {
+function textoPagamento(pedido) {
   if (!pedido.pagamentoPretendido) return null;
-  if (pedido.pagoAntecipado) {
-    return (
-      <p className={`${className} inline-flex items-center gap-1 rounded-full bg-ok-fundo px-2 py-0.5 text-ok`}>
-        <CheckCircle2 size={12} /> Pago no {ROTULO_PAGAMENTO[pedido.formaPagamento] ?? pedido.formaPagamento}
-      </p>
-    );
-  }
   const rotulo = ROTULO_PAGAMENTO[pedido.pagamentoPretendido] ?? pedido.pagamentoPretendido;
-  return (
-    <p className={className}>
-      Pagamento: {rotulo}
-      {pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0
-        ? ` · troco p/ ${moeda(pedido.trocoPara)}`
-        : ''}
-    </p>
-  );
+  const troco =
+    pedido.pagamentoPretendido === 'dinheiro' && pedido.trocoPara > 0 ? ` · troco p/ ${moeda(pedido.trocoPara)}` : '';
+  return `${rotulo}${troco}`;
 }
 
-export function PendenteCard({ pedido, onAceitar, onRecusar }) {
+function resumoItens(pedido) {
+  return (pedido.itens ?? []).map((it) => `${it.quantidade}x ${it.produto?.nome ?? ''}`).join(', ');
+}
+
+// Pedido online pendente: uma faixa, não uma caixa. Aceitar e Recusar sempre
+// à mão, com 44px.
+export function FaixaPendente({ pedido, onAceitar, onRecusar }) {
+  const entrega = pedido.tipo === TIPOS_PEDIDO.DELIVERY;
+  const pagamento = textoPagamento(pedido);
   return (
-    <article className="animate-chegada-online rounded-xl border border-ok-borda bg-white p-3 shadow-suave">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-display text-lg text-carvao">
-            #{pedido.id} · {pedido.tipo === TIPOS_PEDIDO.DELIVERY ? 'Entrega' : 'Retirada'}
+    <article className="animate-chegada-online flex flex-col gap-3 rounded-xl border border-ok-borda bg-ok-fundo p-3 pl-4 sm:flex-row sm:items-center">
+      <BellRing size={20} aria-hidden="true" className="hidden shrink-0 text-ok sm:block" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-ok-escuro">
+          Novo pedido online #{pedido.id} · {pedido.clienteNome}
+        </p>
+        <p className="mt-0.5 text-rotulo font-medium text-ok-escuro/90 tabular-nums">
+          {entrega ? 'Entrega' : 'Retirada'} · {moeda(pedido.total)}
+          {pagamento ? ` · ${pagamento}` : ''}
+        </p>
+        {/* Resumo corrido dos itens (não é a lista de produtos): 2 linhas no celular */}
+        <p className="mt-1 line-clamp-2 text-rotulo text-carvao sm:line-clamp-none">{resumoItens(pedido)}</p>
+        {pedido.itens?.some((it) => it.observacao) && (
+          <p className="hidden text-rotulo italic text-carvao-suave sm:block">
+            {pedido.itens
+              .filter((it) => it.observacao)
+              .map((it) => `${it.produto?.nome}: ${it.observacao}`)
+              .join(' · ')}
           </p>
-          <p className="truncate text-sm font-bold text-carvao-claro">{pedido.clienteNome}</p>
+        )}
+        {pedido.agendadoPara && (
+          <Selo tom="atencao" icone={Clock} className="mt-1.5">
+            Agendado: {pedido.agendadoPara}
+          </Selo>
+        )}
+        <div className="hidden sm:block">
           <ContatoCliente pedido={pedido} />
         </div>
-        <strong className="shrink-0 text-rico-red">{moeda(pedido.total)}</strong>
       </div>
-      {pedido.agendadoPara && (
-        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-atencao-fundo px-2.5 py-1 text-xs font-extrabold text-atencao">
-          <Clock size={12} /> Agendado: {pedido.agendadoPara}
-        </p>
-      )}
-      <ul className="mt-2 space-y-0.5 text-sm text-carvao-claro">
-        {pedido.itens?.map((it) => (
-          <li key={it.id} data-nome-produto>
-            {it.quantidade}x {it.produto?.nome}
-            {it.observacao && <em className="text-carvao-suave"> — {it.observacao}</em>}
-          </li>
-        ))}
-      </ul>
-      <LinhaPagamentoPretendido pedido={pedido} className="mt-1 text-xs font-bold text-carvao" />
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
         <button
-          onClick={() => onAceitar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-ok px-3 py-2.5 text-sm font-bold text-white shadow-suave transition hover:bg-ok-escuro active:scale-[0.98]"
+          type="button"
+          onClick={() => onRecusar(pedido)}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-rico-red ring-1 ring-inset ring-rico-red/40 transition-colors hover:bg-erro-fundo"
         >
-          <CheckCircle2 size={16} /> Aceitar
+          <Ban size={16} aria-hidden="true" /> Recusar
         </button>
         <button
-          onClick={() => onRecusar(pedido)}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-rico-red ring-1 ring-rico-red/40 transition active:scale-[0.98]"
+          type="button"
+          onClick={() => onAceitar(pedido)}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ok px-4 text-sm font-semibold text-white transition-colors hover:bg-ok-escuro"
         >
-          <Ban size={16} /> Recusar
+          <CheckCircle2 size={16} aria-hidden="true" /> Aceitar
         </button>
       </div>
     </article>
@@ -120,88 +129,121 @@ export function PendenteCard({ pedido, onAceitar, onRecusar }) {
 
 export function PedidoCard({ pedido, gerente, agora, onAvancar, onPagar, onCancelar, onReimprimir }) {
   const podeAvancar = ['aberto', 'em_preparo'].includes(pedido.status);
+  const podePagar = gerente && pedido.status === 'entregue';
+  const status = STATUS[pedido.status] ?? { rotulo: pedido.status, tom: 'neutro' };
+  const pagamento = textoPagamento(pedido);
+  const icone = 'grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors';
   return (
-    <article className="animate-card-entrada rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media">
+    <article className="animate-card-entrada rounded-2xl border border-rico-wood/30 bg-white p-4 shadow-suave">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-display text-xl text-carvao">
-            #{pedido.id}
-            {pedido.origem === 'online' && (
-              <span className="ml-2 rounded-full bg-ok-fundo px-2 py-0.5 align-middle text-xs font-extrabold text-ok">
-                Online
-              </span>
-            )}
-          </p>
-          <p className="truncate text-sm font-bold text-carvao-claro">
-            {pedido.clienteNome ?? (pedido.pagoAntecipado ? 'Venda rápida' : '')}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="font-display text-xl leading-none text-carvao">#{pedido.id}</p>
+            <Selo tom="neutro">{rotuloTipo(pedido)}</Selo>
+            {pedido.origem === 'online' && <Selo tom="ok">Online</Selo>}
+          </div>
+          <p className="mt-1.5 text-sm font-semibold text-carvao">
+            {pedido.clienteNome ?? (pedido.pagoAntecipado ? 'Venda rápida' : 'Sem nome')}
             {pedido.criadoPor && pedido.criadoPor !== 'Online' && (
-              <span className="font-semibold text-carvao-suave"> · por {pedido.criadoPor}</span>
+              <span className="font-normal text-carvao-suave"> · por {pedido.criadoPor}</span>
             )}
           </p>
-          <ContatoCliente pedido={pedido} />
-          {pedido.agendadoPara && (
-            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-atencao-fundo px-2 py-0.5 text-xs font-extrabold text-atencao">
-              <Clock size={12} /> Agendado: {pedido.agendadoPara}
-            </p>
-          )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="rounded-full bg-carvao/8 px-2.5 py-1 text-xs font-bold text-carvao-claro">
-            {STATUS_ROTULO[pedido.status] ?? pedido.status}
-          </span>
-          <span className="flex items-center gap-1 text-xs font-semibold text-carvao-suave">
-            <Clock size={11} /> {desdeMin(pedido.criadoEm, agora)}
+          <Selo tom={status.tom}>{status.rotulo}</Selo>
+          <span className="flex items-center gap-1 text-xs font-medium text-carvao-suave">
+            <Clock size={12} aria-hidden="true" /> {desdeMin(pedido.criadoEm, agora)}
           </span>
         </div>
       </div>
-      <ul className="mt-3 space-y-1 text-sm text-carvao-claro">
+
+      <ContatoCliente pedido={pedido} />
+      {pedido.agendadoPara && (
+        <Selo tom="atencao" icone={Clock} className="mt-2">
+          Agendado: {pedido.agendadoPara}
+        </Selo>
+      )}
+
+      <ul className="mt-3 space-y-1 text-sm text-carvao">
         {pedido.itens?.map((item) => (
           <li key={item.id} className="flex justify-between gap-3">
-            <span data-nome-produto className="min-w-0 truncate">
-              {item.quantidade}x {item.produto?.nome}
-              {item.observacao && <em className="text-carvao-suave"> — {item.observacao}</em>}
+            <span data-nome-produto className="min-w-0">
+              <span className="font-semibold tabular-nums">{item.quantidade}x</span> {item.produto?.nome}
+              {item.observacao && <em className="block text-rotulo text-carvao-suave">{item.observacao}</em>}
             </span>
-            <strong>{moeda(item.precoUnitario * item.quantidade)}</strong>
+            <span className="shrink-0 tabular-nums">{moeda(item.precoUnitario * item.quantidade)}</span>
           </li>
         ))}
       </ul>
-      <LinhaPagamentoPretendido pedido={pedido} className="mt-2 text-xs font-bold text-carvao" />
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-carvao/10 pt-3">
-        <strong className="text-lg text-rico-red">{moeda(pedido.total)}</strong>
-        <div className="flex flex-wrap justify-end gap-2">
+
+      {pedido.pagoAntecipado ? (
+        <Selo tom="ok" icone={CheckCircle2} className="mt-2">
+          Pago no {ROTULO_PAGAMENTO[pedido.formaPagamento] ?? pedido.formaPagamento}
+        </Selo>
+      ) : (
+        pagamento && <p className="mt-2 text-rotulo font-semibold text-carvao-claro">Pagamento: {pagamento}</p>
+      )}
+
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-creme-escuro pt-3">
+        <strong className="text-lg text-carvao tabular-nums">{moeda(pedido.total)}</strong>
+        <div className="flex items-center gap-1">
           {podeAvancar && (
-            <button onClick={() => onAvancar(pedido)} className="flex min-h-11 items-center gap-1 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95">
-              <CheckCircle2 size={14} /> Avançar
+            <button
+              type="button"
+              onClick={() => onAvancar(pedido)}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-carvao px-4 text-sm font-semibold text-creme transition-colors hover:bg-carvao-claro"
+            >
+              <CheckCircle2 size={16} aria-hidden="true" /> Avançar
             </button>
           )}
           <button
+            type="button"
             onClick={() => onReimprimir(pedido)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-carvao-claro transition hover:bg-carvao/10 hover:text-carvao"
-            aria-label="Reimprimir comanda"
-            title="Reimprimir"
+            className={`${icone} text-carvao-claro hover:bg-carvao/6 hover:text-carvao`}
+            aria-label={`Reimprimir comanda do pedido #${pedido.id}`}
+            title="Reimprimir comanda"
           >
-            <Printer size={16} />
+            <Printer size={18} aria-hidden="true" />
           </button>
-          {gerente && pedido.status === 'entregue' && (
-            <>
-              <button onClick={() => onPagar(pedido, 'pix')} className="flex min-h-11 items-center gap-1 rounded-lg bg-rico-red px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-vinho-profundo active:scale-95" title="Pagar com Pix">
-                <QrCode size={14} /> Pix
-              </button>
-              <button onClick={() => onPagar(pedido, 'dinheiro')} className="flex min-h-11 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar em dinheiro">
-                <Banknote size={14} /> Dinheiro
-              </button>
-              <button onClick={() => onPagar(pedido, 'cartao')} className="flex min-h-11 items-center gap-1 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-carvao ring-1 ring-rico-wood/35 transition hover:ring-rico-red/40 active:scale-95" title="Pagar no cartão">
-                <CreditCard size={14} /> Cartão
-              </button>
-            </>
-          )}
           {gerente && (
-            <button onClick={() => onCancelar(pedido)} className="flex h-10 w-10 items-center justify-center rounded-lg text-rico-red transition hover:bg-rico-red/10" aria-label="Cancelar">
-              <Ban size={16} />
+            <button
+              type="button"
+              onClick={() => onCancelar(pedido)}
+              className={`${icone} text-rico-red hover:bg-erro-fundo`}
+              aria-label={`Cancelar pedido #${pedido.id}`}
+              title="Cancelar pedido"
+            >
+              <Ban size={18} aria-hidden="true" />
             </button>
           )}
         </div>
       </div>
+
+      {podePagar && (
+        <div className="mt-2 grid grid-cols-3 gap-2" role="group" aria-label={`Receber pedido #${pedido.id}`}>
+          <button
+            type="button"
+            onClick={() => onPagar(pedido, 'pix')}
+            className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg bg-rico-red px-2 text-sm font-semibold text-white hover:bg-vinho-profundo"
+          >
+            <QrCode size={16} aria-hidden="true" /> Pix
+          </button>
+          <button
+            type="button"
+            onClick={() => onPagar(pedido, 'dinheiro')}
+            className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg bg-white px-2 text-sm font-semibold text-carvao ring-1 ring-inset ring-rico-wood/45 hover:bg-creme-escuro"
+          >
+            <Banknote size={16} aria-hidden="true" /> Dinheiro
+          </button>
+          <button
+            type="button"
+            onClick={() => onPagar(pedido, 'cartao')}
+            className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg bg-white px-2 text-sm font-semibold text-carvao ring-1 ring-inset ring-rico-wood/45 hover:bg-creme-escuro"
+          >
+            <CreditCard size={16} aria-hidden="true" /> Cartão
+          </button>
+        </div>
+      )}
     </article>
   );
 }

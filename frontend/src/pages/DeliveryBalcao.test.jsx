@@ -106,3 +106,22 @@ describe('Pausar delivery', () => {
     expect(api.loja.definirDelivery).not.toHaveBeenCalled();
   });
 });
+
+describe('Em andamento no segmentado', () => {
+  it('mostra a contagem e, ao escolher, lista os pedidos abertos', async () => {
+    api.pedidos.listarAbertos.mockImplementation(async (tipo) =>
+      tipo === 'DELIVERY'
+        ? [{ id: 9, tipo: 'DELIVERY', status: 'aberto', total: 3100, clienteNome: 'Ana', criadoEm: new Date().toISOString(), itens: [] }]
+        : []
+    );
+    render(<DeliveryBalcao sessao={gerente} aoSair={() => {}} />);
+    const opcao = await screen.findByRole('button', { name: /em andamento/i });
+    await waitFor(() => expect(opcao.textContent).toContain('1'));
+    expect(await screen.findByText('Espeto de Carne')).toBeTruthy();
+    fireEvent.click(opcao);
+    // Os produtos dão lugar à fila (a coluna de 1536px+ também existe no DOM do jsdom)
+    await waitFor(() => expect(screen.queryByText('Espeto de Carne')).toBeNull());
+    expect(screen.getAllByText('#9').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Ana').length).toBeGreaterThan(0);
+  });
+});
