@@ -45,3 +45,15 @@ describe('Meus pedidos — acompanhamento por código', () => {
     expect(screen.getByText(/status indispon/i)).toBeTruthy();
   });
 });
+
+describe('Topo do cardápio — horário de fechamento', async () => {
+  const { horaFechamento } = await import('./PedirPartes');
+  it('extrai o fechamento do horário que o servidor manda', () => {
+    expect(horaFechamento('Ter a Sáb, 17:00 às 02:00')).toBe('02:00');
+    expect(horaFechamento('17:00 às 23:30')).toBe('23:30');
+  });
+  it('sem horário configurado não inventa', () => {
+    expect(horaFechamento('')).toBeNull();
+    expect(horaFechamento(undefined)).toBeNull();
+  });
+});

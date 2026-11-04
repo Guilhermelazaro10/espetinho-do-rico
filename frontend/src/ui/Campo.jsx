@@ -17,7 +17,7 @@ const TONS = {
 };
 
 const BASE_CONTROLE =
-  'w-full min-h-11 rounded-lg bg-white px-3 text-sm font-medium text-carvao ring-1 ring-inset ring-rico-wood/45 outline-none transition-shadow focus:ring-2 focus:ring-rico-red disabled:bg-creme-escuro disabled:text-carvao-suave';
+  'w-full min-h-11 rounded-lg bg-white px-3 text-sm font-medium text-carvao ring-inset outline-none transition-shadow focus:ring-2 focus:ring-rico-red disabled:bg-creme-escuro disabled:text-carvao-suave';
 
 export default function Campo({
   rotulo,
@@ -36,7 +36,9 @@ export default function Campo({
   const idErro = erro ? `${idCampo}-erro` : null;
   const t = TONS[tom];
   const descricao = [idErro, idDica].filter(Boolean).join(' ') || undefined;
-  const borda = erro ? 'ring-2 ring-rico-red' : '';
+  // Uma cor de anel só por vez: se as duas classes coexistem, quem vence é a
+  // ordem no CSS, não a do className (o erro sumia em campo sem foco).
+  const borda = erro ? 'ring-2 ring-rico-red' : 'ring-1 ring-rico-wood/45';
 
   const props = {
     id: idCampo,

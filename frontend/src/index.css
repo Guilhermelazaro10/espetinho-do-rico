@@ -178,6 +178,14 @@
   color: var(--color-carvao-suave);
 }
 
+/* Fila com rolagem lateral intencional (chips): sem barra visível */
+@utility sem-barra {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Utilitário do degradê oficial de destaque */
 @utility bg-brasa-gradiente {
   background-image: linear-gradient(135deg, #b32a2a, #d4a96e);
