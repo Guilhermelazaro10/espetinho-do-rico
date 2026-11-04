@@ -97,7 +97,7 @@ describe('Sheet', () => {
     );
   }
 
-  it('abre como diálogo modal, foca o conteúdo, fecha no Esc e devolve o foco', () => {
+  it('abre como diálogo modal, foca o painel, fecha no Esc e devolve o foco', () => {
     render(<Demo />);
     const abrir = screen.getByRole('button', { name: 'Abrir sacola' });
     abrir.focus();
@@ -105,7 +105,7 @@ describe('Sheet', () => {
 
     const dialogo = screen.getByRole('dialog', { name: 'Sua sacola' });
     expect(dialogo.getAttribute('aria-modal')).toBe('true');
-    expect(document.activeElement).toBe(screen.getByLabelText('Observação'));
+    expect(document.activeElement).toBe(dialogo); // o painel, nunca um controle destrutivo
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();

@@ -307,7 +307,12 @@ export default function Pedir() {
 
   const set = (campo, v) => {
     setForm((f) => ({ ...f, [campo]: v }));
-    setErros((e) => (e[campo] ? { ...e, [campo]: undefined } : e));
+    if (erros[campo]) {
+      const resto = { ...erros, [campo]: undefined };
+      setErros(resto);
+      // Corrigiu o último campo apontado: a mensagem geral também sai
+      if (!Object.values(resto).some(Boolean)) setErroCheckout('');
+    }
   };
 
   function abrirCheckout() {

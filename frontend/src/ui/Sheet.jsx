@@ -30,11 +30,10 @@ export default function Sheet({ aberto, aoFechar, titulo, subtitulo, rodape, lad
     const overflowAntes = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    // Foco inicial: primeiro campo/botão do conteúdo (o X fica por último na
-    // ordem de leitura do cabeçalho), senão o próprio painel.
-    const conteudo = painel.current?.querySelector('[data-sheet-conteudo]');
-    const alvo = conteudo?.querySelector(FOCAVEIS) ?? painel.current;
-    alvo?.focus({ preventScroll: true });
+    // Foco inicial no próprio painel: o leitor de tela anuncia o título e o
+    // Tab segue para o conteúdo. Focar o primeiro controle era perigoso — na
+    // sacola ele é a lixeira, e um Enter sem querer tirava o item.
+    painel.current?.focus({ preventScroll: true });
 
     const aoTeclar = (e) => {
       if (e.key === 'Escape') {

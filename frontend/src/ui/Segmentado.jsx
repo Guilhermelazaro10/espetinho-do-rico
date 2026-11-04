@@ -67,7 +67,7 @@ export default function Segmentado({ opcoes, valor, aoMudar, rotulo, className =
             >
               {Icone && (nivel === 'completo' || nivel === 'icone') && <Icone size={18} aria-hidden="true" className="shrink-0" />}
               {(nivel === 'completo' || nivel === 'semIcone') && <span className="truncate">{r}</span>}
-              {nivel === 'curto' && <span className="truncate">{curto ?? r}</span>}
+              {nivel === 'curto' && <span className="truncate text-rotulo">{curto ?? r}</span>}
               {contador > 0 && (
                 <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-rico-red px-1.5 text-xs font-bold text-white tabular-nums">
                   {contador}
@@ -83,12 +83,18 @@ export default function Segmentado({ opcoes, valor, aoMudar, rotulo, className =
   );
 }
 
-// Régua invisível: mesmo conteúdo de cada item, em largura natural
+// Régua invisível: mesmo conteúdo de cada item, em largura natural.
+// O rótulo curto é medido em 13px, o mesmo tamanho em que ele aparece.
 function Regua({ ref, opcoes, campo }) {
   return (
     <div ref={ref} aria-hidden="true" className="invisible absolute left-0 top-0 flex h-0 overflow-hidden">
       {opcoes.map((o) => (
-        <span key={o.valor} className="flex shrink-0 items-center gap-2 px-2 text-sm font-semibold whitespace-nowrap">
+        <span
+          key={o.valor}
+          className={`flex shrink-0 items-center gap-2 px-2 font-semibold whitespace-nowrap ${
+            campo === 'curto' ? 'text-rotulo' : 'text-sm'
+          }`}
+        >
           {campo === 'rotulo' && o.icone && <span className="w-[18px]" />}
           {o[campo] ?? o.rotulo}
           {o.contador > 0 && <span className="min-w-5 px-1.5 text-xs">{o.contador}</span>}
