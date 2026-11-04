@@ -125,3 +125,23 @@ describe('Em andamento no segmentado', () => {
     expect(screen.getAllByText('Ana').length).toBeGreaterThan(0);
   });
 });
+
+describe('Fila de Delivery/Balcão', () => {
+  it('pede só DELIVERY e BALCAO e nunca mostra pedido de mesa', async () => {
+    api.pedidos.listarAbertos.mockImplementation(async (tipo) =>
+      tipo === 'BALCAO'
+        ? [
+            { id: 21, tipo: 'BALCAO', status: 'aberto', total: 900, clienteNome: 'Balcão Ok', criadoEm: new Date().toISOString(), itens: [] },
+            // Se a API um dia devolver mesa por engano, a tela não mostra
+            { id: 22, tipo: 'MESA', status: 'aberto', total: 900, clienteNome: 'Mesa Intrusa', criadoEm: new Date().toISOString(), itens: [] },
+          ]
+        : []
+    );
+    render(<DeliveryBalcao sessao={gerente} aoSair={() => {}} />);
+    fireEvent.click(await screen.findByRole('button', { name: /em andamento/i }));
+    expect((await screen.findAllByText('Balcão Ok')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Mesa Intrusa')).toBeNull();
+    const tiposPedidos = api.pedidos.listarAbertos.mock.calls.map((c) => c[0]);
+    expect(new Set(tiposPedidos)).toEqual(new Set(['DELIVERY', 'BALCAO']));
+  });
+});

@@ -76,7 +76,9 @@ export default function DeliveryBalcao({ sessao, aoSair }) {
         api.publico.cardapio().catch(() => null),
       ]);
       setProdutos(catalogo);
-      setPedidos([...delivery, ...balcao]);
+      // A fila desta tela é só Delivery, Balcão e Venda rápida (que é um BALCAO).
+      // A API já filtra por tipo; o filtro aqui protege contra mesa entrando por engano.
+      setPedidos([...delivery, ...balcao].filter((p) => p.tipo !== TIPOS_PEDIDO.MESA));
       setPendentes(online);
       setBairros(publico?.loja?.bairros ?? []);
       setDeliveryAtivo(publico?.loja?.delivery !== false);
