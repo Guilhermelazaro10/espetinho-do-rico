@@ -15,11 +15,11 @@ export function SkeletonBloco({ className = '' }) {
 export function SkeletonMesas({ quantidade = 10 }) {
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+      className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(148px,calc(50%-6px)),1fr))] sm:gap-4"
       aria-label="Carregando mesas"
     >
       {Array.from({ length: quantidade }, (_, i) => (
-        <SkeletonBloco key={i} className="min-h-36" />
+        <SkeletonBloco key={i} className="h-[148px]" />
       ))}
     </div>
   );

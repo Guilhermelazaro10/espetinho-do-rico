@@ -1,96 +1,96 @@
-import { Armchair, Clock, Flame, Receipt } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { moeda } from '../lib/api';
 import { desdeMin } from '../lib/datas';
 import { STATUS_MESA } from '../lib/constantes';
 
 /*
- * Card de mesa do mapa do salão.
- * Linguagem de cores universal de salão:
- *   VERDE    → LIVRE
- *   VERMELHO → OCUPADA
- *   AMARELO  → AGUARDANDO_PAGAMENTO (conta solicitada/impressa)
+ * Card de mesa do mapa do salão. O status aparece por cor de fundo + borda +
+ * selo curto (o texto completo fica no aria-label e no title):
+ *   Livre   → branco, borda madeira
+ *   Ocupada → fundo e borda vinho
+ *   Conta   → fundo e borda âmbar (conta solicitada/impressa)
+ *
+ * Faixas fixas: topo (selo), centro (número) e base (tempo e valor). O card
+ * tem sempre a mesma altura e o número fica sempre no mesmo lugar, com ou sem
+ * consumo — o olho acha a mesa pela posição.
  */
 const ESTILOS = {
   [STATUS_MESA.LIVRE]: {
-    borda: 'border-rico-wood/45 hover:border-ok/70',
-    fundo: 'bg-white/85',
-    Icone: Armchair,
-    icone: 'text-ok',
-    rotulo: 'Livre',
-    chip: 'bg-ok-fundo text-ok',
+    card: 'border-rico-wood/40 bg-white hover:border-rico-wood',
+    selo: 'bg-ok-fundo text-ok',
+    curto: 'Livre',
+    completo: 'Livre',
   },
   [STATUS_MESA.OCUPADA]: {
-    borda: 'border-rico-red hover:border-rico-red',
-    fundo: 'bg-rico-red/6',
-    Icone: Flame,
-    icone: 'text-rico-red',
-    rotulo: 'Ocupada',
-    chip: 'bg-rico-red/10 text-rico-red',
+    card: 'border-rico-red bg-erro-fundo',
+    selo: 'bg-white text-rico-red',
+    curto: 'Ocupada',
+    completo: 'Ocupada',
   },
   [STATUS_MESA.AGUARDANDO_PAGAMENTO]: {
-    borda: 'border-rico-wood hover:border-rico-wood',
-    fundo: 'bg-rico-wood/12',
-    Icone: Receipt,
-    icone: 'text-rico-wood',
-    rotulo: 'Conta solicitada',
-    chip: 'bg-rico-wood/20 text-rico-dark',
+    card: 'border-atencao bg-atencao-fundo',
+    selo: 'bg-white text-atencao',
+    curto: 'Conta',
+    completo: 'Conta solicitada',
   },
 };
 
+// Valores antigos que ainda podem vir de bancos não migrados
 const ESTILOS_LEGADOS = {
   livre: ESTILOS[STATUS_MESA.LIVRE],
-  ocupada: {
-    ...ESTILOS[STATUS_MESA.OCUPADA],
-    borda: 'border-brasa hover:border-brasa-clara',
-    fundo: 'bg-brasa/10',
-    icone: 'text-brasa',
-  },
-  fechando: {
-    ...ESTILOS[STATUS_MESA.AGUARDANDO_PAGAMENTO],
-    borda: 'border-rico-red hover:border-vinho-profundo',
-    fundo: 'bg-rico-red/5',
-    icone: 'text-rico-red',
-    rotulo: 'Aguardando conta',
-    chip: 'bg-rico-red/10 text-rico-red',
-  },
+  ocupada: ESTILOS[STATUS_MESA.OCUPADA],
+  fechando: ESTILOS[STATUS_MESA.AGUARDANDO_PAGAMENTO],
 };
 
 export default function MesaCard({ mesa, total, desde, selecionada, aoClicar }) {
   const estilo = ESTILOS[mesa.status] ?? ESTILOS_LEGADOS[mesa.status] ?? ESTILOS[STATUS_MESA.LIVRE];
-  const { Icone } = estilo;
-  const ocupada = mesa.status !== STATUS_MESA.LIVRE;
+  const ocupada = estilo !== ESTILOS[STATUS_MESA.LIVRE];
+  const numero = String(mesa.numero).padStart(2, '0');
+  const rotulo = [
+    `Mesa ${mesa.numero}`,
+    estilo.completo,
+    mesa.taxaAtiva ? 'taxa de serviço de 10%' : null,
+    total > 0 ? moeda(total) : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <button
+      type="button"
       onClick={aoClicar}
-      aria-label={`Mesa ${mesa.numero}, ${estilo.rotulo}${total > 0 ? `, ${moeda(total)}` : ''}`}
-      className={`group relative flex min-h-36 flex-col rounded-xl border p-4 text-center
-        shadow-suave transition-all duration-200 hover:-translate-y-1 hover:shadow-media
-        active:translate-y-0 ${estilo.borda} ${estilo.fundo}
-        ${selecionada ? 'ring-2 ring-rico-red/35 ring-offset-2 ring-offset-rico-light' : ''}`}
+      aria-label={rotulo}
+      aria-pressed={selecionada || undefined}
+      title={estilo.completo}
+      className={`grid h-[148px] w-full grid-rows-[24px_1fr_40px] rounded-2xl border-2 px-3 pb-2 pt-3 text-center shadow-suave transition-colors ${estilo.card} ${
+        selecionada ? 'outline-3 outline-offset-2 outline-rico-red/40' : ''
+      }`}
     >
-      <div className="flex w-full items-center justify-between">
-        <Icone size={20} className={estilo.icone} strokeWidth={2.25} />
-        <span className="rounded-full border border-rico-wood/35 bg-rico-light px-2.5 py-1 text-xs font-extrabold text-rico-dark">
-          {estilo.rotulo}
+      {/* Topo: selo curto (nunca quebra) e o 10% quando a taxa está ativa */}
+      <span className="flex items-center justify-between gap-1">
+        <span className={`inline-flex h-6 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-bold ${estilo.selo}`}>
+          {estilo.curto}
         </span>
-      </div>
-
-      <div className="flex flex-1 flex-col items-center justify-center py-2">
-        <span className="font-display text-5xl leading-none text-rico-dark">
-          {String(mesa.numero).padStart(2, '0')}
-        </span>
-        {/* Há quanto tempo a mesa está com a comanda aberta — mesa esperando
-            demais salta aos olhos no mapa sem precisar abrir a conta. */}
-        {ocupada && desde && (
-          <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-carvao-suave">
-            <Clock size={11} /> {desdeMin(desde)}
+        {mesa.taxaAtiva && (
+          <span className="inline-flex h-6 items-center rounded-full border border-carvao/20 bg-white/70 px-2 text-xs font-bold text-carvao tabular-nums">
+            10%
           </span>
         )}
-      </div>
+      </span>
 
-      <span className="mt-auto h-5 w-full border-t border-rico-wood/25 pt-2 text-sm font-extrabold text-rico-red">
-        {total > 0 ? moeda(total) : ''}
+      {/* Centro: número sempre no mesmo lugar */}
+      <span className="flex items-center justify-center font-display text-4xl leading-none text-carvao tabular-nums">
+        {numero}
+      </span>
+
+      {/* Base: tempo e valor (vazia na mesa livre, mas ocupa o mesmo espaço) */}
+      <span className="flex flex-col items-center justify-end gap-0.5 border-t border-carvao/10 pt-1">
+        {ocupada && desde && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-carvao-suave">
+            <Clock size={12} aria-hidden="true" /> {desdeMin(desde)}
+          </span>
+        )}
+        {total > 0 && <span className="text-sm font-bold leading-none text-rico-red tabular-nums">{moeda(total)}</span>}
       </span>
     </button>
   );

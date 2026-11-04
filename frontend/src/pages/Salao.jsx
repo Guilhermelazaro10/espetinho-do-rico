@@ -97,7 +97,7 @@ export default function Salao({ sessao, aoSair }) {
           <span className="hidden sm:inline">Ocupadas ·</span> {resumo.ocupadas}
         </span>
         <span className="flex items-center gap-1.5" title="Aguardando pagamento">
-          <span className="h-2.5 w-2.5 rounded-full bg-rico-wood" />
+          <span className="h-2.5 w-2.5 rounded-full bg-atencao" />
           <span className="hidden sm:inline">Aguardando ·</span> {resumo.aguardando}
         </span>
       </div>
@@ -133,7 +133,7 @@ export default function Salao({ sessao, aoSair }) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(148px,calc(50%-6px)),1fr))] sm:gap-4">
           {mesas.map((mesa) => (
             <MesaCard
               key={mesa.id}

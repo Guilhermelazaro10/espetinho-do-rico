@@ -275,7 +275,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
         </p>
 
         <div className="mt-3 flex h-28 items-center justify-center rounded-2xl bg-rico-light/7 ring-1 ring-rico-light/10">
-          <span className={`font-display text-7xl leading-none ${numero ? 'text-rico-light' : 'text-rico-light/20'}`}>
+          <span className={`font-display text-7xl leading-none ${numero ? 'text-rico-light' : 'text-rico-light/60'}`}>
             {numero || '00'}
           </span>
         </div>
@@ -291,7 +291,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
               {tecla === 'apagar' ? (
                 <Delete size={26} />
               ) : tecla === 'limpar' ? (
-                <span className="text-sm font-extrabold text-rico-light/65">Limpar</span>
+                <span className="text-sm font-bold text-rico-light/80">Limpar</span>
               ) : (
                 tecla
               )}
@@ -302,7 +302,7 @@ function TelaMesa({ numero, setNumero, abrirMesa, abrindo, erroCardapio, recarre
         <button
           onClick={abrirMesa}
           disabled={!numero || abrindo}
-          className="mt-5 flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+          className="mt-5 flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-rico-light/12 disabled:text-rico-light/75 disabled:shadow-none"
         >
           {abrindo ? (
             <>
@@ -439,7 +439,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
             type="button"
             onClick={() => linhas.length > 0 && setComandaAberta(true)}
             disabled={linhas.length === 0}
-            className="mb-2 flex w-full items-center justify-between gap-2 rounded-2xl bg-rico-light/8 px-3.5 py-2.5 text-left ring-1 ring-rico-light/10 transition active:scale-[0.99] disabled:opacity-55"
+            className="mb-2 flex w-full items-center justify-between gap-2 rounded-2xl bg-rico-light/8 px-3.5 py-2.5 text-left ring-1 ring-rico-light/10 transition active:scale-[0.99] disabled:cursor-default"
           >
             <span className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
               <ShoppingCart size={18} className="text-rico-wood" />
@@ -455,7 +455,7 @@ function TelaCardapio({ mesa, cardapio, comanda, acoes }) {
           <button
             onClick={acoes.enviarPedido}
             disabled={linhas.length === 0 || enviando}
-            className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+            className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-rico-red text-lg font-extrabold text-rico-light shadow-suave transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-rico-light/12 disabled:text-rico-light/75 disabled:shadow-none"
           >
             {enviando ? (
               <>
@@ -543,7 +543,7 @@ function ComandaSheet({ aberta, fechar, linhas, total, totalItens, acoes }) {
                     onChange={(e) => acoes.mudarObservacao(i, e.target.value)}
                     placeholder="Observação: sem cebola, bem passado..."
                     maxLength={120}
-                    className="min-h-12 w-full rounded-2xl bg-creme px-4 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 placeholder:text-carvao/35 focus:ring-rico-red"
+                    className="min-h-12 w-full rounded-2xl bg-creme px-4 text-base font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
                   />
                 </label>
 

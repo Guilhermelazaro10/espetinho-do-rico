@@ -479,7 +479,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                       <button
                         onClick={confirmarTransferencia}
                         disabled={!destinoId}
-                        className="rounded-lg bg-sky-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-sky-800 disabled:opacity-40"
+                        className="rounded-lg bg-sky-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-sky-800 disabled:bg-creme-escuro disabled:text-carvao-suave"
                       >
                         Confirmar transferência
                       </button>
@@ -599,7 +599,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                             value={valor}
                             onChange={(e) => setValor(e.target.value)}
                             placeholder="0,00"
-                            className="w-full bg-transparent text-lg font-bold text-carvao outline-none placeholder:text-carvao/25"
+                            className="w-full bg-transparent text-lg font-bold text-carvao outline-none"
                             autoFocus
                           />
                         </div>
@@ -643,7 +643,7 @@ export default function SidebarConta({ mesa, aoFechar, aoAtualizar, sessao }) {
                       className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl
                         bg-rico-red py-3.5 text-base font-bold text-rico-light shadow-suave transition
                         hover:bg-vinho-profundo active:scale-[0.99]
-                        disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                        disabled:cursor-not-allowed disabled:bg-creme-escuro disabled:text-carvao-suave disabled:shadow-none"
                     >
                       {processando ? (
                         <>
