@@ -62,6 +62,36 @@ describe('lib/pin assíncrono', () => {
 });
 
 describe('limite global de falhas de login (ataque distribuído)', () => {
+  /*
+   * Estes testes eram intermitentes. Cada um faz até ~37 logins com scrypt de
+   * verdade; numa máquina carregada o 1º passava dos 5s padrão do Jest, levava
+   * timeout e o laço dele SEGUIA rodando em segundo plano — registrando falhas
+   * depois do _resetar() do teste seguinte, que então tomava 429.
+   *
+   * Agora: (1) o estado do limite é zerado no início de cada teste; (2) o
+   * relógio é falso e parado (só o Date — setTimeout, I/O e nextTick seguem
+   * reais, senão o supertest e o scrypt travam), então a janela de 60s não
+   * depende da velocidade da máquina; (3) o prazo cobre o pior caso, para
+   * nenhum teste largar um laço vivo.
+   */
+  const INICIO = new Date('2026-11-04T20:00:00-03:00').getTime();
+  const PRAZO_MS = 60_000;
+
+  beforeEach(() => {
+    jest.useFakeTimers({
+      now: INICIO,
+      doNotFake: [
+        'nextTick', 'setImmediate', 'clearImmediate', 'setTimeout', 'clearTimeout',
+        'setInterval', 'clearInterval', 'queueMicrotask', 'hrtime', 'performance',
+      ],
+    });
+    limiteLogin._resetar();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   async function prepararGerente() {
     prisma.usuario.findMany.mockResolvedValue([
       { id: 1, nome: 'Rico', papel: 'GERENTE', ativo: true, pinHash: await gerarHashPin('987654') },
@@ -80,7 +110,7 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
     // IP novo, PIN certo: barrado pelo limite global
     const res = await tentarDe('198.51.100.1', '987654');
     expect(res.status).toBe(429);
-  });
+  }, PRAZO_MS);
 
   it('até 30 falhas no minuto o login legítimo segue', async () => {
     process.env.TRUST_PROXY = 'true';
@@ -88,7 +118,7 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
 
     for (let i = 0; i < 30; i++) await tentarDe(`203.0.113.${i}`);
     expect((await tentarDe('198.51.100.1', '987654')).status).toBe(200);
-  });
+  }, PRAZO_MS);
 
   it('durante o bloqueio global, IP que já logou antes entra; IP novo recebe 429', async () => {
     process.env.TRUST_PROXY = 'true';
@@ -99,7 +129,7 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
 
     expect((await tentarDe('198.51.100.7', '987654')).status).toBe(200);
     expect((await tentarDe('198.51.100.8', '987654')).status).toBe(429);
-  });
+  }, PRAZO_MS);
 
   it('IP conhecido continua sujeito ao limite por IP durante o bloqueio global', async () => {
     process.env.TRUST_PROXY = 'true';
@@ -110,22 +140,16 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
     for (let i = 0; i < limiteLogin.MAX_FALHAS; i++) await tentarDe('198.51.100.7');
 
     expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
-  });
+  }, PRAZO_MS);
 
   it('IP que não loga há mais de 7 dias deixa de ser conhecido', async () => {
     process.env.TRUST_PROXY = 'true';
     await prepararGerente();
-    const agora = Date.now();
-    const relogio = jest.spyOn(Date, 'now').mockReturnValue(agora);
-    try {
-      await tentarDe('198.51.100.7', '987654');
-      relogio.mockReturnValue(agora + 7 * 24 * 60 * 60 * 1000 + 1000);
-      for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
-      expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
-    } finally {
-      relogio.mockRestore();
-    }
-  });
+    await tentarDe('198.51.100.7', '987654');
+    jest.setSystemTime(INICIO + 7 * 24 * 60 * 60 * 1000 + 1000);
+    for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+    expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
+  }, PRAZO_MS);
 
   it('lista de IPs conhecidos guarda no máximo 500 (sai o mais antigo)', async () => {
     process.env.TRUST_PROXY = 'true';
@@ -137,23 +161,17 @@ describe('limite global de falhas de login (ataque distribuído)', () => {
 
     expect((await tentarDe('198.51.100.7', '987654')).status).toBe(429);
     expect((await tentarDe('10.0.1.243', '987654')).status).toBe(200); // o 500º, mais recente
-  });
+  }, PRAZO_MS);
 
   it('o bloqueio global dura 60s', async () => {
     process.env.TRUST_PROXY = 'true';
     await prepararGerente();
-    const agora = Date.now();
-    const relogio = jest.spyOn(Date, 'now').mockReturnValue(agora);
-    try {
-      for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
-      relogio.mockReturnValue(agora + 59_000);
-      expect((await tentarDe('198.51.100.1', '987654')).status).toBe(429);
-      relogio.mockReturnValue(agora + 61_000);
-      expect((await tentarDe('198.51.100.1', '987654')).status).toBe(200);
-    } finally {
-      relogio.mockRestore();
-    }
-  });
+    for (let i = 0; i < 31; i++) await tentarDe(`203.0.113.${i}`);
+    jest.setSystemTime(INICIO + 59_000);
+    expect((await tentarDe('198.51.100.1', '987654')).status).toBe(429);
+    jest.setSystemTime(INICIO + 61_000);
+    expect((await tentarDe('198.51.100.1', '987654')).status).toBe(200);
+  }, PRAZO_MS);
 });
 
 describe('gerente com PIN de 6 dígitos', () => {
