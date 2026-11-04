@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Printer, RefreshCw, CheckCircle2, Clock, Loader2, AlertTriangle,
+  Printer, RefreshCw, CheckCircle2, Clock, AlertTriangle,
   Wifi, WifiOff, RotateCcw, FlaskConical,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
@@ -8,6 +8,8 @@ import { api } from '../lib/api';
 import { horaLoja } from '../lib/datas';
 import { notificar } from '../ui/toast';
 import AcaoTopo from '../ui/AcaoTopo';
+import Botao from '../ui/Botao';
+import Selo from '../ui/Selo';
 
 // Mapa fixo: o tipo cru da API ("fechamento", "pre_conta") nunca aparece na tela.
 const ROTULO_TIPO = {
@@ -18,11 +20,12 @@ const ROTULO_TIPO = {
   teste: 'Teste',
 };
 
+// Status com cor semântica (Selo): o tom vem dos tokens, nunca de sky-*/amber-* soltos
 const STATUS = {
-  pendente: { rotulo: 'Na fila', classe: 'bg-atencao-fundo text-atencao', Icone: Clock, girar: false },
-  processando: { rotulo: 'Imprimindo', classe: 'bg-sky-100 text-sky-700', Icone: Loader2, girar: true },
-  impresso: { rotulo: 'Impresso', classe: 'bg-ok-fundo text-ok', Icone: CheckCircle2, girar: false },
-  erro: { rotulo: 'Erro', classe: 'bg-rico-red/10 text-rico-red', Icone: AlertTriangle, girar: false },
+  pendente: { rotulo: 'Na fila', tom: 'atencao', classe: 'bg-atencao-fundo text-atencao', Icone: Clock },
+  processando: { rotulo: 'Imprimindo', tom: 'neutro', classe: 'bg-creme-escuro text-carvao', Icone: Printer },
+  impresso: { rotulo: 'Impresso', tom: 'ok', classe: 'bg-ok-fundo text-ok', Icone: CheckCircle2 },
+  erro: { rotulo: 'Erro', tom: 'erro', classe: 'bg-erro-fundo text-erro', Icone: AlertTriangle },
 };
 
 function horaCurta(iso) {
@@ -38,12 +41,12 @@ function desdeContato(ts) {
 
 function Cartao({ rotulo, valor, classe, Icone }) {
   return (
-    <div className="rounded-xl bg-white/80 p-4 shadow-suave ring-1 ring-rico-wood/20">
+    <div className="rounded-2xl border border-rico-wood/30 bg-white p-4 shadow-suave">
       <div className="flex items-center justify-between">
         <span className="text-rotulo font-semibold text-carvao-suave">{rotulo}</span>
-        <span className={`rounded-lg p-1.5 ${classe}`}><Icone size={16} /></span>
+        <span className={`rounded-lg p-1.5 ${classe}`}><Icone size={16} aria-hidden="true" /></span>
       </div>
-      <p className="mt-1 font-display text-3xl text-rico-dark">{valor ?? 0}</p>
+      <p className="mt-1 font-display text-3xl text-carvao tabular-nums">{valor ?? 0}</p>
     </div>
   );
 }
@@ -106,7 +109,7 @@ export default function Impressora({ sessao, aoSair }) {
         {/* Status do agente */}
         <section
           className={`rounded-xl p-5 shadow-media ring-1 ${
-            online ? 'bg-ok-fundo ring-ok-borda' : 'bg-rico-red/5 ring-rico-red/25'
+            online ? 'bg-ok-fundo ring-ok-borda' : 'bg-erro-fundo ring-rico-red/25'
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -119,7 +122,7 @@ export default function Impressora({ sessao, aoSair }) {
                 {online ? <Wifi size={24} /> : <WifiOff size={24} />}
               </span>
               <div>
-                <p className="font-display text-xl text-rico-dark">
+                <p className="font-display text-xl text-carvao">
                   {online ? 'Agente online' : 'Agente offline'}
                 </p>
                 <p className="text-sm font-semibold text-carvao-suave">
@@ -127,14 +130,9 @@ export default function Impressora({ sessao, aoSair }) {
                 </p>
               </div>
             </div>
-            <button
-              onClick={imprimirTeste}
-              disabled={testando}
-              className="flex items-center gap-2 rounded-xl bg-rico-red px-4 py-3 text-sm font-extrabold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
-            >
-              {testando ? <Loader2 size={18} className="animate-spin" /> : <FlaskConical size={18} />}
+            <Botao icone={FlaskConical} carregando={testando} onClick={imprimirTeste}>
               Imprimir teste
-            </button>
+            </Botao>
           </div>
 
           {!online && (
@@ -155,10 +153,10 @@ export default function Impressora({ sessao, aoSair }) {
         </section>
 
         {/* Últimos cupons */}
-        <section className="rounded-xl bg-white/80 shadow-media ring-1 ring-rico-wood/25">
+        <section className="rounded-2xl border border-rico-wood/30 bg-white shadow-suave">
           <div className="flex items-center gap-2 border-b border-rico-wood/25 px-5 py-4">
             <Printer size={18} className="text-rico-red" />
-            <h2 className="text-sm font-bold text-rico-dark">Últimos cupons</h2>
+            <h2 className="text-sm font-bold text-carvao">Últimos cupons</h2>
           </div>
 
           {recentes.length === 0 ? (
@@ -172,26 +170,26 @@ export default function Impressora({ sessao, aoSair }) {
                 return (
                   <li key={job.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="font-bold text-carvao">#{job.id}</span>
+                      <span className="font-bold text-carvao tabular-nums">#{job.id}</span>
                       <span className="text-sm font-semibold text-carvao-claro">{ROTULO_TIPO[job.tipo] ?? 'Cupom'}</span>
                       <span className="text-xs font-semibold text-carvao-suave">{horaCurta(job.criadoEm)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${s.classe}`}>
-                        <s.Icone size={13} className={s.girar ? 'animate-spin' : ''} />
-                        {s.rotulo}
-                      </span>
+                      <Selo tom={s.tom} icone={s.Icone}>{s.rotulo}</Selo>
+                      {/* No erro, Reimprimir fica ao lado do selo e em destaque */}
                       {(job.status === 'impresso' || job.status === 'erro') && (
-                        <button
+                        <Botao
+                          variante={job.status === 'erro' ? 'primario' : 'secundario'}
+                          icone={RotateCcw}
                           onClick={() => reimprimir(job.id)}
-                          className="flex items-center gap-1.5 rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro"
+                          aria-label={`Reimprimir ${(ROTULO_TIPO[job.tipo] ?? 'cupom').toLowerCase()} #${job.id}`}
                         >
-                          <RotateCcw size={13} /> Reimprimir
-                        </button>
+                          Reimprimir
+                        </Botao>
                       )}
                     </div>
                     {job.status === 'erro' && job.erro && (
-                      <p className="w-full text-xs font-semibold text-rico-red/80">{job.erro}</p>
+                      <p className="w-full rounded-lg bg-erro-fundo px-3 py-2 text-rotulo font-semibold text-erro">{job.erro}</p>
                     )}
                   </li>
                 );

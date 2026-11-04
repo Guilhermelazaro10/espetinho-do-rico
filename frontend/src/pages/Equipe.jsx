@@ -10,6 +10,10 @@ import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 import { plural } from '../lib/plural';
 import AcaoTopo from '../ui/AcaoTopo';
+import Campo from '../ui/Campo';
+import Selo from '../ui/Selo';
+
+const NOME_PAPEL = { [PAPEIS.GERENTE]: 'Gerente', [PAPEIS.GARCOM]: 'Garçom' };
 
 export default function Equipe({ sessao, aoSair }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -166,7 +170,7 @@ export default function Equipe({ sessao, aoSair }) {
                 {rede?.urlPreferencialGarcom ?? 'Detectando rede local...'}
               </p>
               {rede?.nomeComputador && (
-                <p className="mt-1 text-xs font-semibold text-rico-light/45">
+                <p className="mt-1 text-xs font-semibold text-rico-light/75">
                   {rede.nomeComputador} - porta {rede.porta}
                 </p>
               )}
@@ -177,7 +181,7 @@ export default function Equipe({ sessao, aoSair }) {
                 type="button"
                 onClick={copiarLinkGarcom}
                 disabled={!rede?.urlPreferencialGarcom}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-rico-red text-sm font-bold text-rico-light shadow-suave transition active:scale-[0.98] disabled:opacity-40"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-rico-red text-sm font-semibold text-white transition-colors hover:bg-vinho-profundo disabled:bg-creme-escuro disabled:text-carvao-suave"
               >
                 <Copy size={17} /> Copiar
               </button>
@@ -185,7 +189,7 @@ export default function Equipe({ sessao, aoSair }) {
                 type="button"
                 onClick={compartilharLinkGarcom}
                 disabled={!rede?.urlPreferencialGarcom}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl border border-rico-wood/45 bg-white text-sm font-bold text-rico-dark transition active:scale-[0.98] disabled:opacity-40"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-rico-wood/45 bg-white text-sm font-semibold text-carvao transition-colors hover:bg-creme-escuro disabled:border-transparent disabled:bg-creme-escuro disabled:text-carvao-suave"
               >
                 <Share2 size={17} /> Enviar
               </button>
@@ -200,45 +204,36 @@ export default function Equipe({ sessao, aoSair }) {
           </div>
 
           <form onSubmit={cadastrar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
-              <Users size={16} /> Novo funcionário
+            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/85">
+              <Users size={16} aria-hidden="true" /> Novo funcionário
             </h2>
             <div className="mt-4 space-y-3">
-              <label className="block">
-                <span className="text-rotulo font-semibold text-rico-light/70">Nome</span>
-                <input
-                  value={form.nome}
-                  onChange={(e) => alterar('nome', e.target.value)}
-                  className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-                  required
-                />
-              </label>
-              <label className="block">
-                <span className="text-rotulo font-semibold text-rico-light/70">Papel</span>
-                <select
-                  value={form.papel}
-                  onChange={(e) => alterar('papel', e.target.value)}
-                  className="mt-1 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-                >
-                  <option value={PAPEIS.GARCOM}>Garçom</option>
-                  <option value={PAPEIS.GERENTE}>Gerente</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-rotulo font-semibold text-rico-light/70">Dígitos do PIN</span>
-                <select
-                  value={form.tamanhoPin}
-                  onChange={(e) => alterar('tamanhoPin', e.target.value)}
-                  disabled={form.papel === PAPEIS.GERENTE}
-                  className="mt-1 disabled:opacity-70 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
-                >
-                  <option value={4}>4 dígitos</option>
-                  <option value={5}>5 dígitos</option>
-                  <option value={6}>6 dígitos</option>
-                </select>
-              </label>
+              <Campo tom="escuro" rotulo="Nome" value={form.nome} onChange={(e) => alterar('nome', e.target.value)} required autoComplete="off" />
+              <Campo
+                tom="escuro"
+                como="select"
+                rotulo="Papel"
+                value={form.papel}
+                onChange={(e) => alterar('papel', e.target.value)}
+                dica={form.papel === PAPEIS.GERENTE ? 'Gerente mexe em dinheiro: o PIN tem sempre 6 dígitos.' : undefined}
+              >
+                <option value={PAPEIS.GARCOM}>Garçom</option>
+                <option value={PAPEIS.GERENTE}>Gerente</option>
+              </Campo>
+              <Campo
+                tom="escuro"
+                como="select"
+                rotulo="Dígitos do PIN"
+                value={form.tamanhoPin}
+                onChange={(e) => alterar('tamanhoPin', e.target.value)}
+                disabled={form.papel === PAPEIS.GERENTE}
+              >
+                <option value={4}>4 dígitos</option>
+                <option value={5}>5 dígitos</option>
+                <option value={6}>6 dígitos</option>
+              </Campo>
             </div>
-            <button className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0">
+            <button type="submit" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-rico-red font-semibold text-white transition-colors hover:bg-vinho-profundo">
               <Plus size={17} /> Cadastrar
             </button>
           </form>
@@ -247,36 +242,38 @@ export default function Equipe({ sessao, aoSair }) {
             <h2 className="flex items-center gap-2 text-sm font-bold text-rico-dark">
               <KeyRound size={16} className="text-rico-red" /> Trocar meu PIN
             </h2>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <input
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <Campo
+                rotulo="PIN atual"
                 value={trocaPin.atual}
                 onChange={(e) => setTrocaPin((p) => ({ ...p, atual: e.target.value.replace(/\D/g, '') }))}
-                placeholder="PIN atual"
                 inputMode="numeric"
+                type="password"
+                autoComplete="current-password"
                 maxLength={6}
-                className="rounded-lg bg-rico-light px-3 py-2 text-sm font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
               />
-              <input
+              <Campo
+                rotulo="Novo PIN"
                 value={trocaPin.novo}
                 onChange={(e) => setTrocaPin((p) => ({ ...p, novo: e.target.value.replace(/\D/g, '') }))}
-                placeholder="Novo PIN"
                 inputMode="numeric"
+                type="password"
+                autoComplete="new-password"
                 maxLength={6}
-                className="rounded-lg bg-rico-light px-3 py-2 text-sm font-bold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-rico-red"
               />
             </div>
-            <button className="mt-3 h-11 w-full rounded-lg bg-carvao text-sm font-bold text-rico-light transition hover:bg-carvao-claro">
+            <button type="submit" className="mt-4 min-h-11 w-full rounded-lg bg-carvao text-sm font-semibold text-creme transition-colors hover:bg-carvao-claro">
               Atualizar meu PIN
             </button>
           </form>
 
           {pinGerado && (
-            <div className="rounded-xl bg-brasa-gradiente p-5 text-white shadow-suave">
-              <p className="flex items-center gap-2 text-rotulo font-semibold text-white/75">
+            <div className="rounded-2xl bg-carvao p-5 text-creme shadow-suave" role="status">
+              <p className="flex items-center gap-2 text-rotulo font-semibold text-creme/80">
                 <KeyRound size={15} /> PIN gerado
               </p>
-              <p className="mt-2 font-display text-5xl">{pinGerado.pin}</p>
-              <p className="mt-1 text-sm font-bold text-white/80">{pinGerado.nome}</p>
+              <p className="mt-2 font-display text-5xl tracking-wide text-brasa-clara tabular-nums">{pinGerado.pin}</p>
+              <p className="mt-1 text-sm font-bold text-creme/85">{pinGerado.nome}</p>
             </div>
           )}
         </section>
@@ -294,45 +291,76 @@ export default function Equipe({ sessao, aoSair }) {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left">
-              <thead className="bg-rico-wood/12 text-rotulo font-semibold text-rico-dark">
+          {/* Celular: um card por pessoa — nada escondido em rolagem lateral */}
+          <ul className="divide-y divide-creme-escuro md:hidden">
+            {usuarios.map((usuario) => (
+              <li key={usuario.id} className="flex flex-col gap-3 px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className={`break-words font-bold ${usuario.ativo ? 'text-carvao' : 'text-carvao-suave'}`}>{usuario.nome}</p>
+                    <p className="text-rotulo text-carvao-suave">{NOME_PAPEL[usuario.papel] ?? usuario.papel}</p>
+                  </div>
+                  <Selo tom={usuario.ativo ? 'ok' : 'neutro'}>{usuario.ativo ? 'Ativo' : 'Desligado'}</Selo>
+                </div>
+                {usuario.ativo && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => novoPin(usuario)}
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-carvao text-sm font-semibold text-creme hover:bg-carvao-claro"
+                    >
+                      <KeyRound size={16} aria-hidden="true" /> Novo PIN
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => desligar(usuario)}
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-white text-sm font-semibold text-rico-red ring-1 ring-inset ring-rico-red/40 hover:bg-erro-fundo"
+                    >
+                      <UserMinus size={16} aria-hidden="true" /> Desligar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden md:block">
+            <table className="w-full text-left">
+              <thead className="bg-creme-escuro text-rotulo font-semibold text-carvao">
                 <tr>
-                  <th className="px-5 py-3">Nome</th>
-                  <th className="px-5 py-3">Papel</th>
-                  <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3 text-right">Ações</th>
+                  <th scope="col" className="px-5 py-3">Nome</th>
+                  <th scope="col" className="px-5 py-3">Papel</th>
+                  <th scope="col" className="px-5 py-3">Status</th>
+                  <th scope="col" className="px-5 py-3 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-rico-wood/18">
+              <tbody className="divide-y divide-creme-escuro">
                 {usuarios.map((usuario) => (
-                  <tr key={usuario.id} className={usuario.ativo ? 'odd:bg-white/60 even:bg-rico-light' : 'bg-carvao/5 opacity-60'}>
-                    <td className="px-5 py-4 font-bold text-carvao">{usuario.nome}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-carvao-claro">{usuario.papel}</td>
-                    <td className="px-5 py-4">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                        usuario.ativo ? 'bg-ok-fundo text-ok' : 'bg-carvao/10 text-carvao-suave'
-                      }`}>
-                        {usuario.ativo ? 'Ativo' : 'Desligado'}
-                      </span>
+                  <tr key={usuario.id} className={usuario.ativo ? '' : 'bg-creme'}>
+                    <td className={`px-5 py-3 font-bold ${usuario.ativo ? 'text-carvao' : 'text-carvao-suave'}`}>{usuario.nome}</td>
+                    <td className="px-5 py-3 text-sm text-carvao-claro">{NOME_PAPEL[usuario.papel] ?? usuario.papel}</td>
+                    <td className="px-5 py-3">
+                      <Selo tom={usuario.ativo ? 'ok' : 'neutro'}>{usuario.ativo ? 'Ativo' : 'Desligado'}</Selo>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
                         {usuario.ativo && (
                           <>
                             <button
+                              type="button"
                               onClick={() => novoPin(usuario)}
-                              className="rounded-lg bg-carvao px-3 py-2 text-xs font-bold text-rico-light"
+                              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-carvao px-3.5 text-sm font-semibold text-creme hover:bg-carvao-claro"
                             >
-                              <KeyRound size={14} className="inline" /> Novo PIN
+                              <KeyRound size={16} aria-hidden="true" /> Novo PIN
                             </button>
                             <button
+                              type="button"
                               onClick={() => desligar(usuario)}
-                              className="rounded-lg p-2 text-rico-red hover:bg-rico-red/10"
-                              aria-label="Desligar"
+                              className="grid h-11 w-11 place-items-center rounded-lg text-rico-red hover:bg-erro-fundo"
+                              aria-label={`Desligar ${usuario.nome}`}
                               title="Desligar"
                             >
-                              <UserMinus size={16} />
+                              <UserMinus size={18} aria-hidden="true" />
                             </button>
                           </>
                         )}

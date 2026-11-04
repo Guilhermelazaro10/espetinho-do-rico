@@ -1,20 +1,25 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Edit3, Eye, EyeOff, Plus, RefreshCw, RotateCcw, Save, Search, UtensilsCrossed } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Edit3, Ellipsis, Eye, EyeOff, Plus, RefreshCw, RotateCcw, Save, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api, moeda, paraCentavos } from '../lib/api';
 import { notificar } from '../ui/toast';
 import { confirmar } from '../lib/dialogos';
 import CampoBase from '../ui/Campo';
 import AcaoTopo from '../ui/AcaoTopo';
+import Botao from '../ui/Botao';
+import Selo from '../ui/Selo';
+import Sheet from '../ui/Sheet';
 
 const FORM_INICIAL = { id: null, nome: '', categoria: '', preco: '' };
 
 export default function Cardapio({ sessao, aoSair }) {
   const [produtos, setProdutos] = useState([]);
   const [form, setForm] = useState(FORM_INICIAL);
+  const [formAberto, setFormAberto] = useState(false);
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(true);
   const [carregando, setCarregando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
   const recarregar = useCallback(async () => {
     setCarregando(true);
@@ -45,6 +50,11 @@ export default function Cardapio({ sessao, aoSair }) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
+  function novo() {
+    setForm(FORM_INICIAL);
+    setFormAberto(true);
+  }
+
   function editar(produto) {
     setForm({
       id: produto.id,
@@ -52,6 +62,7 @@ export default function Cardapio({ sessao, aoSair }) {
       categoria: produto.categoria,
       preco: (produto.preco / 100).toFixed(2).replace('.', ','),
     });
+    setFormAberto(true);
   }
 
   async function salvar(e) {
@@ -61,6 +72,7 @@ export default function Cardapio({ sessao, aoSair }) {
       categoria: form.categoria,
       preco: paraCentavos(form.preco),
     };
+    setSalvando(true);
     try {
       if (form.id) {
         await api.produtos.atualizar(form.id, corpo);
@@ -70,9 +82,12 @@ export default function Cardapio({ sessao, aoSair }) {
         notificar.sucesso('Produto cadastrado', form.nome);
       }
       setForm(FORM_INICIAL);
+      setFormAberto(false);
       await recarregar();
     } catch (erro) {
       notificar.erro('Produto recusado', erro.message);
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -116,115 +131,205 @@ export default function Cardapio({ sessao, aoSair }) {
 
   return (
     <AppShell titulo="Cardápio" acoes={acoes} sessao={sessao} aoSair={aoSair}>
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <section className="space-y-4">
-          <form onSubmit={salvar} className="rounded-xl bg-rico-dark p-5 text-rico-light shadow-media">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-rico-light/70">
-              <UtensilsCrossed size={16} className="text-rico-wood" /> {form.id ? 'Editar produto' : 'Novo produto'}
-            </h2>
-            <div className="mt-4 space-y-3">
-              <Campo rotulo="Nome" valor={form.nome} onChange={(v) => alterar('nome', v)} required />
-              <label className="block">
-                <span className="text-rotulo font-semibold text-rico-light/70">Categoria</span>
-                <input
-                  value={form.categoria}
-                  onChange={(e) => alterar('categoria', e.target.value)}
-                  list="categorias-cardapio"
-                  className="mt-1 min-h-11 w-full rounded-lg bg-rico-light px-3 py-2 text-sm font-semibold text-carvao outline-none ring-1 ring-rico-wood/30 focus:ring-2 focus:ring-rico-red"
-                  required
-                />
-                <datalist id="categorias-cardapio">
-                  {categorias.map((categoria) => (
-                    <option key={categoria} value={categoria} />
-                  ))}
-                </datalist>
-              </label>
-              <Campo rotulo="Preço" valor={form.preco} onChange={(v) => alterar('preco', v)} required />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <label className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg bg-white px-3 ring-1 ring-inset ring-rico-wood/45 focus-within:ring-2 focus-within:ring-rico-red sm:max-w-sm">
+          <Search size={18} className="shrink-0 text-carvao-suave" aria-hidden="true" />
+          <span className="sr-only">Buscar item</span>
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar item"
+            className="min-w-0 flex-1 bg-transparent text-sm text-carvao outline-none"
+          />
+        </label>
+        <Botao icone={Plus} onClick={novo} className="sm:ml-auto">
+          Novo produto
+        </Botao>
+      </div>
+
+      {/* Celular: linhas compactas com menu de ações */}
+      <ul className="mt-4 divide-y divide-creme-escuro overflow-hidden rounded-2xl border border-rico-wood/30 bg-white md:hidden">
+        {filtrados.map((produto) => (
+          <li key={produto.id} className="flex min-h-[72px] items-center gap-3 py-2.5 pl-4 pr-2">
+            <div className="min-w-0 flex-1">
+              <p
+                data-nome-produto
+                className={`line-clamp-2 text-sm font-semibold leading-snug ${produto.ativo ? 'text-carvao' : 'text-carvao-suave'}`}
+              >
+                {produto.nome}
+              </p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-rotulo text-carvao-suave">
+                <span>{produto.categoria}</span>
+                <span className="font-bold text-carvao tabular-nums">{moeda(produto.preco)}</span>
+                {!produto.ativo && <Selo tom="atencao">Esgotado</Selo>}
+              </p>
             </div>
-            <div className="mt-4 flex gap-2">
-              <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rico-red font-bold text-rico-light shadow-suave transition hover:-translate-y-0.5 active:translate-y-0">
-                {form.id ? <Save size={17} /> : <Plus size={17} />} Salvar
-              </button>
-              {form.id && (
-                <button
-                  type="button"
-                  onClick={() => setForm(FORM_INICIAL)}
-                  className="rounded-xl bg-rico-light/10 px-4 font-bold text-rico-light"
+            <MenuAcoes produto={produto} aoEditar={editar} aoEsgotar={desativar} aoReativar={reativar} />
+          </li>
+        ))}
+        {filtrados.length === 0 && <Vazio busca={busca} />}
+      </ul>
+
+      {/* Tablet/desktop: grade de cards, nome sempre inteiro */}
+      <section className="mt-4 hidden grid-cols-2 content-start gap-3 md:grid xl:grid-cols-3 2xl:grid-cols-4">
+        {filtrados.map((produto) => (
+          <article key={produto.id} className="flex flex-col rounded-2xl border border-rico-wood/30 bg-white p-4 shadow-suave">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p
+                  data-nome-produto
+                  className={`break-words text-base font-bold leading-snug ${produto.ativo ? 'text-carvao' : 'text-carvao-suave'}`}
                 >
-                  Cancelar
-                </button>
+                  {produto.nome}
+                </p>
+                <p className="text-rotulo text-carvao-suave">{produto.categoria}</p>
+              </div>
+              <Selo tom={produto.ativo ? 'ok' : 'atencao'}>{produto.ativo ? 'Disponível' : 'Esgotado'}</Selo>
+            </div>
+            <p className="mt-3 text-lg font-bold text-rico-red tabular-nums">{moeda(produto.preco)}</p>
+            <div className="mt-auto flex items-center justify-end gap-2 border-t border-creme-escuro pt-3">
+              <Botao variante="secundario" icone={Edit3} onClick={() => editar(produto)}>
+                Editar
+              </Botao>
+              {produto.ativo ? (
+                <Botao
+                  variante="perigo"
+                  icone={EyeOff}
+                  onClick={() => desativar(produto)}
+                  title="Marcar como esgotado (some do cardápio e dos garçons)"
+                >
+                  Esgotou
+                </Botao>
+              ) : (
+                <Botao variante="secundario" icone={RotateCcw} onClick={() => reativar(produto)} title="Voltar a vender">
+                  Disponibilizar
+                </Botao>
               )}
             </div>
-          </form>
-
-          <div className="rounded-xl bg-white/80 p-4 shadow-suave ring-1 ring-rico-wood/25">
-            <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-rico-wood/35">
-              <Search size={16} className="text-carvao-suave" />
-              <input
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar item"
-                className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-carvao outline-none placeholder:text-carvao-suave"
-              />
-            </label>
+          </article>
+        ))}
+        {filtrados.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-rico-wood/30 bg-white">
+            <Vazio busca={busca} />
           </div>
-        </section>
+        )}
+      </section>
 
-        <section className="grid grid-cols-1 content-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
-          {filtrados.map((produto) => (
-            <article
-              key={produto.id}
-              className={`rounded-xl border border-rico-wood/25 bg-white/82 p-4 shadow-suave ring-1 ring-rico-wood/10 transition hover:-translate-y-0.5 hover:shadow-media ${
-                produto.ativo ? '' : 'opacity-60'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p data-nome-produto className="break-words text-lg font-bold leading-snug text-carvao">{produto.nome}</p>
-                  <p className="text-sm font-semibold text-carvao-suave">{produto.categoria}</p>
-                </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                  produto.ativo ? 'bg-ok-fundo text-ok' : 'bg-atencao-fundo text-atencao'
-                }`}>
-                  {produto.ativo ? 'Disponível' : 'Esgotado'}
-                </span>
-              </div>
-              <p className="mt-4 font-display text-3xl text-rico-red">{moeda(produto.preco)}</p>
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-rico-wood/25 pt-3">
-                <button
-                  onClick={() => editar(produto)}
-                  className="flex min-h-11 items-center gap-1.5 rounded-lg bg-carvao px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-carvao-claro active:scale-95"
-                >
-                  <Edit3 size={14} /> Editar
-                </button>
-                {produto.ativo ? (
-                  <button
-                    onClick={() => desativar(produto)}
-                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-atencao-fundo px-3.5 py-2 text-xs font-bold text-atencao transition hover:bg-atencao-borda active:scale-95"
-                    title="Marcar como esgotado (some do cardápio e dos garçons)"
-                  >
-                    <EyeOff size={14} /> Esgotou
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => reativar(produto)}
-                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-ok px-3.5 py-2 text-xs font-bold text-rico-light transition hover:bg-ok-escuro active:scale-95"
-                    title="Voltar a vender"
-                  >
-                    <RotateCcw size={14} /> Disponibilizar
-                  </button>
-                )}
-              </div>
-            </article>
-          ))}
-        </section>
-      </div>
+      <Sheet
+        aberto={formAberto}
+        aoFechar={() => setFormAberto(false)}
+        titulo={form.id ? 'Editar produto' : 'Novo produto'}
+        rodape={
+          <Botao type="submit" form="form-produto" tamanho="lg" icone={form.id ? Save : Plus} carregando={salvando} className="w-full">
+            Salvar
+          </Botao>
+        }
+      >
+        <form id="form-produto" onSubmit={salvar} className="space-y-4">
+          <CampoBase rotulo="Nome" value={form.nome} onChange={(e) => alterar('nome', e.target.value)} required autoComplete="off" />
+          <CampoBase
+            rotulo="Categoria"
+            value={form.categoria}
+            onChange={(e) => alterar('categoria', e.target.value)}
+            list="categorias-cardapio"
+            dica="Escolha uma existente ou digite uma nova."
+            required
+            autoComplete="off"
+          />
+          <datalist id="categorias-cardapio">
+            {categorias.map((categoria) => (
+              <option key={categoria} value={categoria} />
+            ))}
+          </datalist>
+          <CampoBase
+            rotulo="Preço (R$)"
+            value={form.preco}
+            onChange={(e) => alterar('preco', e.target.value)}
+            inputMode="decimal"
+            placeholder="ex.: 7,00"
+            required
+          />
+        </form>
+      </Sheet>
     </AppShell>
   );
 }
 
-function Campo({ rotulo, valor, onChange, required = false }) {
+function Vazio({ busca }) {
   return (
-    <CampoBase tom="escuro" rotulo={rotulo} value={valor} onChange={(e) => onChange(e.target.value)} required={required} />
+    <p className="px-4 py-8 text-center text-sm text-carvao-suave">
+      {busca.trim() ? `Nenhum item encontrado para “${busca.trim()}”.` : 'Nenhum produto cadastrado.'}
+    </p>
+  );
+}
+
+// Menu "⋯" da linha no celular: Editar e Esgotou/Disponibilizar.
+// Abre para a esquerda (nunca sai da tela), fecha com Esc ou toque fora.
+function MenuAcoes({ produto, aoEditar, aoEsgotar, aoReativar }) {
+  const [aberto, setAberto] = useState(false);
+  const raiz = useRef(null);
+  const gatilho = useRef(null);
+
+  useEffect(() => {
+    if (!aberto) return undefined;
+    const fora = (e) => {
+      if (!raiz.current?.contains(e.target)) setAberto(false);
+    };
+    const tecla = (e) => {
+      if (e.key === 'Escape') {
+        setAberto(false);
+        gatilho.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', fora);
+    document.addEventListener('keydown', tecla);
+    raiz.current?.querySelector('[role="menuitem"]')?.focus();
+    return () => {
+      document.removeEventListener('pointerdown', fora);
+      document.removeEventListener('keydown', tecla);
+    };
+  }, [aberto]);
+
+  const item = 'flex min-h-11 w-full items-center gap-2 px-4 text-left text-sm font-semibold hover:bg-creme-escuro focus:bg-creme-escuro focus:outline-none';
+  const escolher = (acao) => () => {
+    setAberto(false);
+    acao(produto);
+  };
+
+  return (
+    <div ref={raiz} className="relative shrink-0">
+      <button
+        ref={gatilho}
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={aberto}
+        aria-label={`Ações de ${produto.nome}`}
+        className="grid h-11 w-11 place-items-center rounded-lg text-carvao-claro hover:bg-carvao/6"
+      >
+        <Ellipsis size={20} aria-hidden="true" />
+      </button>
+      {aberto && (
+        <div
+          role="menu"
+          aria-label={`Ações de ${produto.nome}`}
+          className="absolute right-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-xl border border-rico-wood/30 bg-white py-1 shadow-media"
+        >
+          <button type="button" role="menuitem" onClick={escolher(aoEditar)} className={`${item} text-carvao`}>
+            <Edit3 size={16} aria-hidden="true" /> Editar
+          </button>
+          {produto.ativo ? (
+            <button type="button" role="menuitem" onClick={escolher(aoEsgotar)} className={`${item} text-rico-red`}>
+              <EyeOff size={16} aria-hidden="true" /> Esgotou
+            </button>
+          ) : (
+            <button type="button" role="menuitem" onClick={escolher(aoReativar)} className={`${item} text-ok`}>
+              <RotateCcw size={16} aria-hidden="true" /> Disponibilizar
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
